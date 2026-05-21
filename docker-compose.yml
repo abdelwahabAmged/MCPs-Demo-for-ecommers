@@ -1,0 +1,72 @@
+services:
+  b2c-commerce:
+    build:
+      context: .
+      args:
+        SERVER: b2c-commerce
+    ports:
+      - "3001:3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - b2c-data:/app/data
+    restart: unless-stopped
+
+  b2b-distributor:
+    build:
+      context: .
+      args:
+        SERVER: b2b-distributor
+    ports:
+      - "3002:3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - b2b-data:/app/data
+    restart: unless-stopped
+
+  parts-finder:
+    build:
+      context: .
+      args:
+        SERVER: parts-finder
+    ports:
+      - "3003:3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - parts-data:/app/data
+    restart: unless-stopped
+
+  service-marketplace:
+    build:
+      context: .
+      args:
+        SERVER: service-marketplace
+    ports:
+      - "3004:3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - marketplace-data:/app/data
+    restart: unless-stopped
+
+  internal-sales-rep:
+    build:
+      context: .
+      args:
+        SERVER: internal-sales-rep
+    ports:
+      - "3005:3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - internal-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  b2c-data:
+  b2b-data:
+  parts-data:
+  marketplace-data:
+  internal-data:

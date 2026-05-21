@@ -1,0 +1,45 @@
+[
+  {
+    "order_id": "ACM-2024-08812",
+    "status": "shipped",
+    "carrier": "DHL",
+    "tracking_number": "DE123456789",
+    "delivery_estimate": "Arriving tomorrow",
+    "order_date": "2026-05-15",
+    "items": [
+      { "sku": "APX-TRL-X2-BLK-10", "name": "Apex Trail Runner X2", "color": "Black", "size": 10, "quantity": 1, "price": 189.00 },
+      { "sku": "TRK-JKT-WP-BLK-L", "name": "TrailShield Waterproof Jacket", "color": "Black", "quantity": 1, "price": 159.00 }
+    ],
+    "total": 348.00,
+    "currency": "EUR"
+  },
+  {
+    "order_id": "ACM-2024-09001",
+    "status": "processing",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_estimate": "Estimated dispatch in 1 business day",
+    "order_date": "2026-05-19",
+    "items": [
+      { "sku": "VLC-RD5-BLK-10", "name": "Velocity Road 5", "color": "Black", "size": 10, "quantity": 1, "price": 199.00 }
+    ],
+    "total": 199.00,
+    "currency": "EUR"
+  },
+  {
+    "order_id": "ACM-2024-07543",
+    "status": "delivered",
+    "carrier": "DPD",
+    "tracking_number": "DPD987654321",
+    "delivery_estimate": "Delivered 10 May 2026",
+    "order_date": "2026-05-06",
+    "eligible_for_return": true,
+    "return_deadline": "2026-06-06",
+    "items": [
+      { "sku": "SMT-HKR-PRO-BLK-10", "name": "Summit Hiker Pro", "color": "Black", "size": 10, "quantity": 1, "price": 249.00 },
+      { "sku": "TRK-JKT-WP-ORG-M", "name": "TrailShield Waterproof Jacket", "color": "Orange", "quantity": 1, "price": 159.00 }
+    ],
+    "total": 408.00,
+    "currency": "EUR"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "name": "mcp-demos",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Five MCP demo servers for B2C, B2B, parts finder, service marketplace, and internal sales rep",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:b2c": "pnpm --filter @mcp-demos/b2c-commerce dev",
+    "dev:b2b": "pnpm --filter @mcp-demos/b2b-distributor dev",
+    "dev:parts": "pnpm --filter @mcp-demos/parts-finder dev",
+    "dev:marketplace": "pnpm --filter @mcp-demos/service-marketplace dev",
+    "dev:internal": "pnpm --filter @mcp-demos/internal-sales-rep dev",
+    "dev:all": "pnpm -r --parallel dev",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.15.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@10.11.0"
+}
