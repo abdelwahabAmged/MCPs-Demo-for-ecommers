@@ -38,4 +38,5 @@ jobs:
           railway up \
             --service ${{ matrix.service.id }} \
             --project ${{ secrets.RAILWAY_PROJECT_ID }} \
+            --environment ${{ secrets.RAILWAY_ENVIRONMENT_ID }} \
             --detach
