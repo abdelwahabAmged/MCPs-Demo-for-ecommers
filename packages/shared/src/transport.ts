@@ -79,7 +79,6 @@ export function createServerApp(
       version: options.serverVersion || "1.0.0",
     });
 
-    console.log("transport", transport.sessionId);
     registerTools(server, db, () => transport.sessionId);
 
     return server;
@@ -87,10 +86,6 @@ export function createServerApp(
 
   const handleMcpPost = async (req: Request, res: Response) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    console.log("sessionId", sessionId);
-    console.log("transports 93", transports);
-
-    console.log("transports 93", transports.sessionId);
 
     try {
       let transport: StreamableHTTPServerTransport;
@@ -109,7 +104,7 @@ export function createServerApp(
         transport.onclose = () => {
           const sid = transport.sessionId;
           if (sid && transports[sid]) {
-            delete transports[sid];
+            console.log(`[session] Transport closed for ${sid}, keeping session alive for reconnection`);
           }
         };
 
@@ -118,8 +113,6 @@ export function createServerApp(
         await transport.handleRequest(req, res, req.body);
         return;
       } else if (sessionId && !transports[sessionId]) {
-        console.log("sessionId not found", sessionId);
-        console.log("transports 122", transports.sessionId);
         // Per MCP spec: expired/unknown session → 404 tells client to re-initialize
         res.status(404).json({
           jsonrpc: "2.0",
@@ -177,6 +170,11 @@ export function createServerApp(
       console.error("Error handling session termination:", error);
       if (!res.headersSent) {
         res.status(500).send("Error processing session termination");
+      }
+    } finally {
+      if (sessionId && transports[sessionId]) {
+        delete transports[sessionId];
+        console.log(`[session] Deleted session ${sessionId} via client DELETE`);
       }
     }
   };
