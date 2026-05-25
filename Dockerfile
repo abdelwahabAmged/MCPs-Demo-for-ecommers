@@ -13,8 +13,7 @@ COPY servers/internal-sales-rep/package.json servers/internal-sales-rep/
 RUN pnpm install --frozen-lockfile
 
 FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=deps /app ./
 COPY . .
 RUN pnpm --filter @mcp-demos/shared build
 ARG SERVER
@@ -26,6 +25,7 @@ ENV NODE_ENV=production
 ENV SERVER_NAME=${SERVER}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+COPY --from=deps /app/servers/${SERVER}/node_modules ./servers/${SERVER}/node_modules
 COPY --from=build /app/packages/shared/dist ./packages/shared/dist
 COPY --from=build /app/packages/shared/package.json ./packages/shared/
 COPY --from=build /app/servers/${SERVER}/dist ./servers/${SERVER}/dist
