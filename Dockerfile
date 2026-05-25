@@ -23,6 +23,7 @@ RUN pnpm --filter @mcp-demos/${SERVER} build
 FROM base AS runtime
 ARG SERVER
 ENV NODE_ENV=production
+ENV SERVER_NAME=${SERVER}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY --from=build /app/packages/shared/dist ./packages/shared/dist
@@ -34,4 +35,4 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/pnpm-workspace.yaml ./
 RUN mkdir -p /app/data
 EXPOSE 3000
-CMD ["node", "servers/${SERVER}/dist/index.js"]
+CMD ["sh", "-c", "node servers/$SERVER_NAME/dist/index.js"]

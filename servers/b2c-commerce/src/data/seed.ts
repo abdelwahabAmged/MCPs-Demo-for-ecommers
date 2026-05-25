@@ -9,11 +9,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export function seedB2CData(db: Database.Database): void {
   const products = JSON.parse(readFileSync(join(__dirname, 'products.json'), 'utf-8'));
   const orders = JSON.parse(readFileSync(join(__dirname, 'orders.json'), 'utf-8'));
+  const reviews = JSON.parse(readFileSync(join(__dirname, 'reviews.json'), 'utf-8'));
 
   seedTableRaw(db, 'products', `
     CREATE TABLE IF NOT EXISTS products (
       sku TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      brand TEXT DEFAULT 'Acme',
       category TEXT NOT NULL,
       description TEXT,
       price REAL NOT NULL,
@@ -24,7 +26,11 @@ export function seedB2CData(db: Database.Database): void {
       stock_status TEXT DEFAULT 'in_stock',
       delivery_estimate TEXT,
       image_url TEXT,
-      tags TEXT
+      tags TEXT,
+      rating REAL DEFAULT 0,
+      review_count INTEGER DEFAULT 0,
+      weight_grams INTEGER,
+      material TEXT
     )
   `, products);
 
@@ -48,6 +54,22 @@ export function seedB2CData(db: Database.Database): void {
     eligible_for_return: o.eligible_for_return ? 1 : 0,
   })));
 
+  seedTableRaw(db, 'reviews', `
+    CREATE TABLE IF NOT EXISTS reviews (
+      review_id TEXT PRIMARY KEY,
+      sku TEXT NOT NULL,
+      author TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT,
+      created_at TEXT,
+      verified_purchase INTEGER DEFAULT 1
+    )
+  `, reviews.map((r: Record<string, unknown>) => ({
+    ...r,
+    verified_purchase: r.verified_purchase ? 1 : 0,
+  })));
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS returns (
       return_id TEXT PRIMARY KEY,
@@ -55,6 +77,47 @@ export function seedB2CData(db: Database.Database): void {
       item_description TEXT,
       status TEXT DEFAULT 'pending',
       created_at TEXT DEFAULT (datetime('now')),
+      session_id TEXT
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS cart_items (
+      id TEXT PRIMARY KEY,
+      cart_id TEXT NOT NULL,
+      sku TEXT NOT NULL,
+      name TEXT NOT NULL,
+      color TEXT,
+      size INTEGER,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      unit_price REAL NOT NULL,
+      currency TEXT DEFAULT 'EUR',
+      image_url TEXT,
+      added_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS wishlist (
+      id TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      sku TEXT NOT NULL,
+      added_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(session_id, sku)
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      ticket_id TEXT PRIMARY KEY,
+      order_id TEXT NOT NULL,
+      issue_type TEXT NOT NULL,
+      description TEXT,
+      status TEXT DEFAULT 'open',
+      priority TEXT DEFAULT 'normal',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      resolution TEXT,
       session_id TEXT
     )
   `);

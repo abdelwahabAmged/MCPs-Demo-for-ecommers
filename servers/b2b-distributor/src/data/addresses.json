@@ -1,0 +1,54 @@
+[
+  {
+    "address_id": "ADDR-001",
+    "account_id": "ACME-ACC-00441",
+    "label": "HQ & Main Stores",
+    "line1": "Hargreaves Engineering Ltd",
+    "line2": "Unit 14 Meadowhall Industrial Park",
+    "city": "Sheffield",
+    "postcode": "S9 2EQ",
+    "country": "GB",
+    "contact_name": "Dave Marshall",
+    "contact_phone": "+44 114 256 7800",
+    "is_default": true
+  },
+  {
+    "address_id": "ADDR-002",
+    "account_id": "ACME-ACC-00441",
+    "label": "Sheffield Factory",
+    "line1": "Hargreaves Precision Division",
+    "line2": "Attercliffe Road Works",
+    "city": "Sheffield",
+    "postcode": "S4 7WZ",
+    "country": "GB",
+    "contact_name": "Karen Priestley",
+    "contact_phone": "+44 114 263 4100",
+    "is_default": false
+  },
+  {
+    "address_id": "ADDR-003",
+    "account_id": "ACME-ACC-00441",
+    "label": "Leeds Warehouse",
+    "line1": "Hargreaves Spares Store",
+    "line2": "Cross Green Industrial Estate, Unit 7B",
+    "city": "Leeds",
+    "postcode": "LS9 0SE",
+    "country": "GB",
+    "contact_name": "Tom Birkett",
+    "contact_phone": "+44 113 248 9200",
+    "is_default": false
+  },
+  {
+    "address_id": "ADDR-004",
+    "account_id": "ACME-ACC-00441",
+    "label": "Glasgow Depot",
+    "line1": "Hargreaves Northern Service Centre",
+    "line2": "Hillington Park, Building 22",
+    "city": "Glasgow",
+    "postcode": "G52 4BL",
+    "country": "GB",
+    "contact_name": "Alistair Craig",
+    "contact_phone": "+44 141 882 3400",
+    "is_default": false
+  }
+]

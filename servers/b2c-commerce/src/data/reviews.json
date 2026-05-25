@@ -1,0 +1,252 @@
+[
+  {
+    "review_id": "REV-001",
+    "sku": "APX-TRL-X2-BLK-10",
+    "author": "TrailBlaze88",
+    "rating": 5,
+    "title": "Best trail shoes I've owned",
+    "body": "Ran a 50K ultra in these and my feet stayed dry the entire time. The Vibram outsole grips everything — mud, wet rock, gravel. Highly recommend for technical terrain.",
+    "created_at": "2026-03-15",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-002",
+    "sku": "APX-TRL-X2-BLK-10",
+    "author": "MountainRunner",
+    "rating": 4,
+    "title": "Great grip, slightly narrow",
+    "body": "The grip and waterproofing are excellent. Only downside is they run a bit narrow — I'd suggest going half a size up if you have wider feet.",
+    "created_at": "2026-02-20",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-003",
+    "sku": "APX-TRL-X2-GRY-10",
+    "author": "WeekendHiker",
+    "rating": 5,
+    "title": "Survived a week in Scotland",
+    "body": "Took these to the Scottish Highlands for 7 days of wet trail hiking. Not a single blister, feet stayed dry even in standing water crossings. The grey colour looks great too.",
+    "created_at": "2026-04-02",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-004",
+    "sku": "VLC-RD5-BLK-10",
+    "author": "MarathonPB",
+    "rating": 5,
+    "title": "Sub-3 marathon thanks to these",
+    "body": "Finally broke the 3-hour barrier wearing the Velocity Road 5. The carbon plate gives insane energy return and they weigh nothing. Worth every euro.",
+    "created_at": "2026-04-10",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-005",
+    "sku": "VLC-RD5-BLK-10",
+    "author": "CasualJogger",
+    "rating": 4,
+    "title": "Fast but not for daily training",
+    "body": "These are pure race shoes. Amazing for race day but the cushioning wears out quickly if you use them for daily runs. Keep them for race day only.",
+    "created_at": "2026-03-28",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-006",
+    "sku": "SMT-HKR-PRO-BLK-10",
+    "author": "AlpineExplorer",
+    "rating": 5,
+    "title": "Tank-like durability",
+    "body": "500km of Alpine trails and these boots look barely worn. Ankle support is excellent on scree slopes. The leather has developed a beautiful patina.",
+    "created_at": "2026-01-15",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-007",
+    "sku": "SMT-HKR-PRO-BRN-09",
+    "author": "DayWalker",
+    "rating": 4,
+    "title": "Solid boot, needs break-in",
+    "body": "Takes about 50km to break in properly — first few hikes gave me heel blisters. After that, they're incredibly comfortable and supportive.",
+    "created_at": "2026-02-08",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-008",
+    "sku": "END-CYC-BIB-BLK-M",
+    "author": "CenturyRider",
+    "rating": 5,
+    "title": "8 hours in the saddle, no issues",
+    "body": "Did a 200km charity ride and the chamois padding was still comfortable at the end. The compression fit doesn't ride up and the reflective details are a nice safety touch.",
+    "created_at": "2026-03-20",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-009",
+    "sku": "CYC-HLM-AERO-WHT-M",
+    "author": "VeloPro",
+    "rating": 5,
+    "title": "Noticeable speed improvement",
+    "body": "Switched from my old helmet and immediately noticed less wind resistance. The MIPS system gives peace of mind and the magnetic buckle is genius for quick on/off.",
+    "created_at": "2026-04-25",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-010",
+    "sku": "CYC-HLM-AERO-WHT-M",
+    "author": "WeekendCyclist",
+    "rating": 4,
+    "title": "Great helmet, runs warm",
+    "body": "Aerodynamics are excellent but ventilation could be better on hot days. If you ride in warm climates, keep that in mind. Otherwise it's fantastic.",
+    "created_at": "2026-05-01",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-011",
+    "sku": "GRD-GYM-TEE-GRY-L",
+    "author": "IronPumper",
+    "rating": 4,
+    "title": "Best gym tee at this price",
+    "body": "Bought 3 of these. They wick sweat like crazy, don't smell after a workout, and the stretch is perfect for lifting. Only wish they came in more colours.",
+    "created_at": "2026-01-30",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-012",
+    "sku": "GYM-RST-BND-SET",
+    "author": "HomeGymHero",
+    "rating": 5,
+    "title": "Perfect for home workouts",
+    "body": "These fabric bands don't roll up like rubber ones. Great resistance range from light warmups to heavy glute work. The carrying pouch is a nice bonus for travel.",
+    "created_at": "2026-02-14",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-013",
+    "sku": "GYM-RST-BND-SET",
+    "author": "PTCoach_Lisa",
+    "rating": 5,
+    "title": "I recommend these to all my clients",
+    "body": "As a personal trainer, I've tried dozens of resistance band sets. These are the most durable and the fabric grip stays put during exercises. Excellent value.",
+    "created_at": "2026-03-05",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-014",
+    "sku": "TRK-JKT-WP-BLK-L",
+    "author": "UltraRunner_K",
+    "rating": 5,
+    "title": "Mandatory kit, no regrets",
+    "body": "Carried this in every ultra as mandatory waterproof kit. Weighs nothing, packs into its own pocket, and actually keeps you dry — unlike many 'waterproof' jackets I've tried.",
+    "created_at": "2026-04-18",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-015",
+    "sku": "TRK-JKT-WP-ORG-M",
+    "author": "VisibleRunner",
+    "rating": 4,
+    "title": "Love the orange, wish it was longer",
+    "body": "The orange colour is perfect for visibility on trails. Waterproofing is solid. My only gripe is the cut is quite short — doesn't cover the lower back when bending.",
+    "created_at": "2026-05-05",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-016",
+    "sku": "PKB-HYD-15L-BLK",
+    "author": "UltraHiker",
+    "rating": 4,
+    "title": "Great pack, bladder could be better",
+    "body": "The vest fit is perfect and bounces zero. Pole attachments are genius. The included bladder is OK but I replaced it with a better one. Pockets are well placed.",
+    "created_at": "2026-05-12",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-017",
+    "sku": "HK-TRK-POL-CRB",
+    "author": "ThruHiker2026",
+    "rating": 5,
+    "title": "Lightest poles I've ever used",
+    "body": "Coming from aluminium poles, these feel like holding air. The cork grips absorb sweat and the quick-lock mechanism is dead reliable. Worth the premium.",
+    "created_at": "2026-04-01",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-018",
+    "sku": "SWM-GGL-PRO-BLU",
+    "author": "LapSwimmer",
+    "rating": 4,
+    "title": "Clear vision, good seal",
+    "body": "Anti-fog coating works well for about 6 months. Wide lens gives great visibility in open water. The nose bridge adjustment is easy to get right.",
+    "created_at": "2026-04-20",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-019",
+    "sku": "SWM-FIN-TRN-BLU-M",
+    "author": "SwimCoach_Mike",
+    "rating": 5,
+    "title": "Best training fins for technique",
+    "body": "Short blade forces proper kick technique without overloading the ankles. I use these with my swim squad for every kick drill set. Soft silicone means no blisters.",
+    "created_at": "2026-05-02",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-020",
+    "sku": "CYC-SH-CLK-BLK-43",
+    "author": "CritRacer",
+    "rating": 5,
+    "title": "Stiffest shoes I've ridden in",
+    "body": "Zero flex means every watt goes to the pedals. The dual BOA dials let you fine-tune pressure across the foot. Hot spots are a thing of the past.",
+    "created_at": "2026-03-25",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-021",
+    "sku": "RD-GPS-WCH-BLK",
+    "author": "DataRunner",
+    "rating": 4,
+    "title": "Great data, slight GPS lag",
+    "body": "Heart rate accuracy is spot on and VO2max tracking is motivating. GPS can take 30 seconds to lock in urban areas. Battery life is genuinely 14 days with daily tracking.",
+    "created_at": "2026-05-18",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-022",
+    "sku": "GYM-TRN-SH-BLK-10",
+    "author": "CrossFitFan",
+    "rating": 4,
+    "title": "Solid all-rounder for the gym",
+    "body": "Flat sole is perfect for deadlifts and squats. The wide toe box lets my feet spread naturally. Rope climb tread actually works. Not ideal for running though.",
+    "created_at": "2026-04-05",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-023",
+    "sku": "HK-BSL-MRN-BLK-M",
+    "author": "FourSeasonHiker",
+    "rating": 5,
+    "title": "Merino is magic",
+    "body": "Wore this for 4 consecutive days on a hut-to-hut trek. No smell. Regulates temperature perfectly whether climbing uphill in sun or descending in wind. Worth the investment.",
+    "created_at": "2026-03-12",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-024",
+    "sku": "TRL-HLM-300-BLK",
+    "author": "NightOwlRunner",
+    "rating": 5,
+    "title": "Bright enough for pitch-black trails",
+    "body": "300 lumens is plenty for technical night running. Red light mode preserves night vision. USB-C charging means one cable for everything. Battery lasts my 3-hour night runs.",
+    "created_at": "2026-04-28",
+    "verified_purchase": true
+  },
+  {
+    "review_id": "REV-025",
+    "sku": "CYC-JRS-PRO-RED-M",
+    "author": "GranFondoRider",
+    "rating": 4,
+    "title": "Race fit means RACE fit",
+    "body": "Beautiful jersey with great pocket space. Be warned: the race fit is very snug. If you're between sizes, go up. The fabric breathes well on hot climbs.",
+    "created_at": "2026-05-08",
+    "verified_purchase": false
+  }
+]

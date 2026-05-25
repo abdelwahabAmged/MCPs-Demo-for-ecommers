@@ -1,45 +1,288 @@
 [
   {
-    "order_id": "ACM-2024-08812",
+    "order_id": "ACM-2025-06201",
+    "status": "delivered",
+    "carrier": "DHL",
+    "tracking_number": "DE100000001",
+    "delivery_estimate": "Delivered 22 Dec 2025",
+    "order_date": "2025-12-18",
+    "items": [
+      { "sku": "SMT-HKR-PRO-BLK-10", "name": "Summit Hiker Pro", "category": "Hiking", "color": "Black", "size": 10, "quantity": 1, "price": 249.00 },
+      { "sku": "SMT-PLZ-TRK-GRN-M", "name": "Summit Polar Fleece", "category": "Hiking", "color": "Green", "quantity": 1, "price": 89.00 }
+    ],
+    "total": 338.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-01-18"
+  },
+  {
+    "order_id": "ACM-2025-06315",
+    "status": "delivered",
+    "carrier": "DPD",
+    "tracking_number": "DPD200000002",
+    "delivery_estimate": "Delivered 30 Dec 2025",
+    "order_date": "2025-12-27",
+    "items": [
+      { "sku": "GRD-GYM-TEE-GRY-L", "name": "GridCore Gym Tee", "category": "Gym", "color": "Grey", "quantity": 2, "price": 49.00 },
+      { "sku": "GRD-SHR-BLK-L", "name": "GridCore Training Shorts", "category": "Gym", "color": "Black", "quantity": 1, "price": 59.00 }
+    ],
+    "total": 157.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-01-27"
+  },
+  {
+    "order_id": "ACM-2026-00112",
+    "status": "delivered",
+    "carrier": "UPS",
+    "tracking_number": "UPS300000003",
+    "delivery_estimate": "Delivered 16 Jan 2026",
+    "order_date": "2026-01-12",
+    "items": [
+      { "sku": "VLC-RD5-BLK-10", "name": "Velocity Road 5", "category": "Road running", "color": "Black", "size": 10, "quantity": 1, "price": 199.00 },
+      { "sku": "RD-SCK-PRF-WHT-M", "name": "ProStride Running Socks", "category": "Road running", "color": "White", "quantity": 2, "price": 19.00 }
+    ],
+    "total": 237.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-02-12"
+  },
+  {
+    "order_id": "ACM-2026-00298",
+    "status": "delivered",
+    "carrier": "Hermes",
+    "tracking_number": "HRM400000004",
+    "delivery_estimate": "Delivered 28 Jan 2026",
+    "order_date": "2026-01-24",
+    "items": [
+      { "sku": "GYM-RST-BND-SET", "name": "PowerLoop Resistance Band Set", "category": "Gym", "color": "Multi", "quantity": 1, "price": 29.00 }
+    ],
+    "total": 29.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-02-24"
+  },
+  {
+    "order_id": "ACM-2026-01050",
+    "status": "delivered",
+    "carrier": "DHL",
+    "tracking_number": "DE500000005",
+    "delivery_estimate": "Delivered 14 Feb 2026",
+    "order_date": "2026-02-10",
+    "items": [
+      { "sku": "APX-TRL-X2-BLK-10", "name": "Apex Trail Runner X2", "category": "Trail running", "color": "Black", "size": 10, "quantity": 1, "price": 189.00 },
+      { "sku": "TRL-GTR-PRO-BLK-M", "name": "TrailGuard Gaiter Pro", "category": "Trail running", "color": "Black", "quantity": 1, "price": 39.00 },
+      { "sku": "TRK-JKT-WP-BLK-L", "name": "TrailShield Waterproof Jacket", "category": "Trail running", "color": "Black", "quantity": 1, "price": 159.00 }
+    ],
+    "total": 387.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-03-10"
+  },
+  {
+    "order_id": "ACM-2026-01422",
+    "status": "cancelled",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_estimate": "Cancelled by customer",
+    "order_date": "2026-02-20",
+    "items": [
+      { "sku": "CYC-SH-CLK-BLK-43", "name": "SpeedClip Road Shoes", "category": "Cycling", "color": "Black", "size": 43, "quantity": 1, "price": 269.00 }
+    ],
+    "total": 269.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": null
+  },
+  {
+    "order_id": "ACM-2026-01789",
+    "status": "delivered",
+    "carrier": "DPD",
+    "tracking_number": "DPD600000006",
+    "delivery_estimate": "Delivered 8 Mar 2026",
+    "order_date": "2026-03-04",
+    "items": [
+      { "sku": "END-CYC-BIB-BLK-M", "name": "Endurance Cycling Bib", "category": "Cycling", "color": "Black", "quantity": 1, "price": 129.00 },
+      { "sku": "CYC-JRS-PRO-RED-M", "name": "ProTour Cycling Jersey", "category": "Cycling", "color": "Red", "quantity": 1, "price": 99.00 },
+      { "sku": "CYC-GLV-GEL-BLK-L", "name": "GripRide Cycling Gloves", "category": "Cycling", "color": "Black", "quantity": 1, "price": 45.00 }
+    ],
+    "total": 273.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-04-04"
+  },
+  {
+    "order_id": "ACM-2026-02100",
+    "status": "delivered",
+    "carrier": "DHL",
+    "tracking_number": "DE700000007",
+    "delivery_estimate": "Delivered 18 Mar 2026",
+    "order_date": "2026-03-15",
+    "items": [
+      { "sku": "HK-TRK-POL-CRB", "name": "CarbonLite Trekking Poles", "category": "Hiking", "color": "Black", "quantity": 1, "price": 139.00 },
+      { "sku": "HK-BSL-MRN-BLK-M", "name": "ThermoCore Base Layer", "category": "Hiking", "color": "Black", "quantity": 1, "price": 79.00 }
+    ],
+    "total": 218.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-04-15"
+  },
+  {
+    "order_id": "ACM-2026-02455",
+    "status": "returned",
+    "carrier": "DHL",
+    "tracking_number": "DE800000008",
+    "delivery_estimate": "Returned — refund processed",
+    "order_date": "2026-03-28",
+    "items": [
+      { "sku": "GYM-TRN-SH-BLK-10", "name": "FlexLift Training Shoe", "category": "Gym", "color": "Black", "size": 10, "quantity": 1, "price": 129.00 }
+    ],
+    "total": 129.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": null
+  },
+  {
+    "order_id": "ACM-2026-02800",
+    "status": "delivered",
+    "carrier": "UPS",
+    "tracking_number": "UPS900000009",
+    "delivery_estimate": "Delivered 12 Apr 2026",
+    "order_date": "2026-04-08",
+    "items": [
+      { "sku": "SWM-GGL-PRO-BLU", "name": "AquaVision Pro Goggles", "category": "Swimming", "color": "Blue", "quantity": 1, "price": 39.00 },
+      { "sku": "SWM-CAP-SLC-BLK", "name": "SpeedCap Silicone Swim Cap", "category": "Swimming", "color": "Black", "quantity": 1, "price": 15.00 },
+      { "sku": "SWM-FIN-TRN-BLU-M", "name": "PowerKick Training Fins", "category": "Swimming", "color": "Blue", "quantity": 1, "price": 49.00 }
+    ],
+    "total": 103.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": "2026-05-08"
+  },
+  {
+    "order_id": "ACM-2026-03150",
+    "status": "delivered",
+    "carrier": "DPD",
+    "tracking_number": "DPD101000010",
+    "delivery_estimate": "Delivered 22 Apr 2026",
+    "order_date": "2026-04-18",
+    "items": [
+      { "sku": "CYC-HLM-AERO-WHT-M", "name": "AeroCrest Cycling Helmet", "category": "Cycling", "color": "White", "quantity": 1, "price": 219.00 },
+      { "sku": "CYC-BTL-CGE-CRB", "name": "CarbonCage Bottle Holder", "category": "Cycling", "color": "Black", "quantity": 2, "price": 35.00 }
+    ],
+    "total": 289.00,
+    "currency": "EUR",
+    "eligible_for_return": true,
+    "return_deadline": "2026-05-18"
+  },
+  {
+    "order_id": "ACM-2026-03500",
+    "status": "delivered",
+    "carrier": "Hermes",
+    "tracking_number": "HRM110000011",
+    "delivery_estimate": "Delivered 2 May 2026",
+    "order_date": "2026-04-29",
+    "items": [
+      { "sku": "GYM-FRM-RLR-BLK", "name": "DeepRoll Foam Roller", "category": "Gym", "color": "Black", "quantity": 1, "price": 39.00 },
+      { "sku": "GYM-CMP-TGT-BLK-M", "name": "CompressionX Tights", "category": "Gym", "color": "Black", "quantity": 1, "price": 69.00 }
+    ],
+    "total": 108.00,
+    "currency": "EUR",
+    "eligible_for_return": true,
+    "return_deadline": "2026-05-29"
+  },
+  {
+    "order_id": "ACM-2026-03890",
+    "status": "delivered",
+    "carrier": "DHL",
+    "tracking_number": "DE120000012",
+    "delivery_estimate": "Delivered 10 May 2026",
+    "order_date": "2026-05-06",
+    "items": [
+      { "sku": "PKB-HYD-15L-BLK", "name": "PeakBound Hydration Pack 15L", "category": "Hiking", "color": "Black", "quantity": 1, "price": 119.00 },
+      { "sku": "TRL-HLM-300-BLK", "name": "NightTrail Headlamp 300", "category": "Trail running", "color": "Black", "quantity": 1, "price": 69.00 }
+    ],
+    "total": 188.00,
+    "currency": "EUR",
+    "eligible_for_return": true,
+    "return_deadline": "2026-06-06"
+  },
+  {
+    "order_id": "ACM-2026-04120",
     "status": "shipped",
     "carrier": "DHL",
-    "tracking_number": "DE123456789",
+    "tracking_number": "DE130000013",
     "delivery_estimate": "Arriving tomorrow",
     "order_date": "2026-05-15",
     "items": [
-      { "sku": "APX-TRL-X2-BLK-10", "name": "Apex Trail Runner X2", "color": "Black", "size": 10, "quantity": 1, "price": 189.00 },
-      { "sku": "TRK-JKT-WP-BLK-L", "name": "TrailShield Waterproof Jacket", "color": "Black", "quantity": 1, "price": 159.00 }
+      { "sku": "RD-GPS-WCH-BLK", "name": "PaceMaster GPS Watch", "category": "Road running", "color": "Black", "quantity": 1, "price": 349.00 }
     ],
-    "total": 348.00,
-    "currency": "EUR"
+    "total": 349.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": null
   },
   {
-    "order_id": "ACM-2024-09001",
+    "order_id": "ACM-2026-04350",
     "status": "processing",
     "carrier": null,
     "tracking_number": null,
     "delivery_estimate": "Estimated dispatch in 1 business day",
     "order_date": "2026-05-19",
     "items": [
-      { "sku": "VLC-RD5-BLK-10", "name": "Velocity Road 5", "color": "Black", "size": 10, "quantity": 1, "price": 199.00 }
+      { "sku": "HK-BPK-45L-NVY", "name": "Ridgeline Backpack 45L", "category": "Hiking", "color": "Navy", "quantity": 1, "price": 189.00 },
+      { "sku": "HK-BSL-MRN-BLK-M", "name": "ThermoCore Base Layer", "category": "Hiking", "color": "Black", "quantity": 1, "price": 79.00 }
     ],
-    "total": 199.00,
-    "currency": "EUR"
+    "total": 268.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": null
   },
   {
-    "order_id": "ACM-2024-07543",
-    "status": "delivered",
-    "carrier": "DPD",
-    "tracking_number": "DPD987654321",
-    "delivery_estimate": "Delivered 10 May 2026",
-    "order_date": "2026-05-06",
-    "eligible_for_return": true,
-    "return_deadline": "2026-06-06",
+    "order_id": "ACM-2026-04500",
+    "status": "processing",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_estimate": "Estimated dispatch in 2 business days",
+    "order_date": "2026-05-22",
     "items": [
-      { "sku": "SMT-HKR-PRO-BLK-10", "name": "Summit Hiker Pro", "color": "Black", "size": 10, "quantity": 1, "price": 249.00 },
-      { "sku": "TRK-JKT-WP-ORG-M", "name": "TrailShield Waterproof Jacket", "color": "Orange", "quantity": 1, "price": 159.00 }
+      { "sku": "SWM-JST-TRI-BLK-M", "name": "TriForce Swim Jammer", "category": "Swimming", "color": "Black", "quantity": 1, "price": 59.00 },
+      { "sku": "SWM-PDB-KCK-BLU", "name": "AquaDrill Kickboard", "category": "Swimming", "color": "Blue", "quantity": 1, "price": 25.00 }
     ],
-    "total": 408.00,
-    "currency": "EUR"
+    "total": 84.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": null
+  },
+  {
+    "order_id": "ACM-2026-04610",
+    "status": "cancelled",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_estimate": "Cancelled — item out of stock",
+    "order_date": "2026-05-10",
+    "items": [
+      { "sku": "VLC-RD5-WHT-10", "name": "Velocity Road 5", "category": "Road running", "color": "White", "size": 10, "quantity": 1, "price": 199.00 }
+    ],
+    "total": 199.00,
+    "currency": "EUR",
+    "eligible_for_return": false,
+    "return_deadline": null
+  },
+  {
+    "order_id": "ACM-2026-03000",
+    "status": "delivered",
+    "carrier": "DHL",
+    "tracking_number": "DE140000014",
+    "delivery_estimate": "Delivered 15 Apr 2026",
+    "order_date": "2026-04-11",
+    "items": [
+      { "sku": "RD-RFL-VEST-YLW-M", "name": "HighViz Running Vest", "category": "Road running", "color": "Yellow", "quantity": 1, "price": 35.00 },
+      { "sku": "RD-SCK-PRF-WHT-M", "name": "ProStride Running Socks", "category": "Road running", "color": "White", "quantity": 3, "price": 19.00 }
+    ],
+    "total": 92.00,
+    "currency": "EUR",
+    "eligible_for_return": true,
+    "return_deadline": "2026-05-11"
   }
 ]

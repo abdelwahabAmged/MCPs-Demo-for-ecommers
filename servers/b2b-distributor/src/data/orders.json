@@ -1,0 +1,418 @@
+[
+  {
+    "order_id": "ORD-40112",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2025-06-18",
+    "delivery_date": "2025-06-21",
+    "total": 946.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-0618",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7750012",
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 50, "unit_price": 7.73 },
+      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 100, "unit_price": 2.28 },
+      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 20, "unit_price": 6.80 },
+      { "sku": "FAST-M10x30-A2", "name": "Hex Bolt M10×30 A2 Stainless (50pk)", "qty": 5, "unit_price": 14.20 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-06-18T09:22:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2025-06-18T14:10:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2025-06-19T07:30:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2025-06-20T06:15:00Z", "note": "In transit — Sheffield depot" },
+      { "status": "delivered", "timestamp": "2025-06-21T10:42:00Z", "note": "Delivered — signed by D. Marshall" }
+    ]
+  },
+  {
+    "order_id": "ORD-40389",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2025-07-14",
+    "delivery_date": "2025-07-17",
+    "total": 1560.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-0714",
+    "carrier": "Parcelforce",
+    "tracking_number": "PF-98234561",
+    "delivery_address_id": "ADDR-002",
+    "items": [
+      { "sku": "BRG-22212-E1", "name": "Spherical Roller Bearing 22212", "qty": 10, "unit_price": 77.28 },
+      { "sku": "FILT-HYD-10M", "name": "Hydraulic Return Filter 10 µm", "qty": 8, "unit_price": 38.50 },
+      { "sku": "LUB-HYD-ISO46-5L", "name": "Hydraulic Oil ISO 46 — 5 L", "qty": 10, "unit_price": 22.40 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-07-14T11:05:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2025-07-14T16:40:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2025-07-15T08:00:00Z", "note": "Dispatched via Parcelforce" },
+      { "status": "in_transit", "timestamp": "2025-07-16T14:20:00Z", "note": "At Sheffield sorting hub" },
+      { "status": "delivered", "timestamp": "2025-07-17T09:15:00Z", "note": "Delivered — signed by K. Priestley" }
+    ]
+  },
+  {
+    "order_id": "ORD-40755",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2025-08-22",
+    "delivery_date": "2025-08-26",
+    "total": 724.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-0822",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7751498",
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "PNEU-CYL-32x100", "name": "Pneumatic Cylinder ISO 6432 32×100", "qty": 4, "unit_price": 63.92 },
+      { "sku": "PNEU-FIT-QS-8", "name": "Push-In Fitting QS 8 mm (10pk)", "qty": 3, "unit_price": 28.50 },
+      { "sku": "PNEU-TUBE-8-BLU", "name": "PU Tubing 8×5.5 mm Blue (50 m)", "qty": 2, "unit_price": 36.00 },
+      { "sku": "SEAL-TC-40x62", "name": "TC Oil Seal 40×62×8 mm", "qty": 30, "unit_price": 3.99 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-08-22T08:50:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2025-08-22T15:30:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2025-08-23T07:15:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2025-08-25T09:00:00Z", "note": "In transit — M1 corridor" },
+      { "status": "delivered", "timestamp": "2025-08-26T11:20:00Z", "note": "Delivered — signed by D. Marshall" }
+    ]
+  },
+  {
+    "order_id": "ORD-41022",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2025-09-10",
+    "delivery_date": "2025-09-12",
+    "total": 488.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-0910",
+    "carrier": "Parcelforce",
+    "tracking_number": "PF-98237812",
+    "delivery_address_id": "ADDR-003",
+    "items": [
+      { "sku": "ABRA-CUT-230", "name": "Cutting Disc 230×2×22.2 mm (10pk)", "qty": 5, "unit_price": 24.00 },
+      { "sku": "ABRA-CUT-125", "name": "Cutting Disc 125×1×22.2 mm (25pk)", "qty": 4, "unit_price": 28.00 },
+      { "sku": "ABRA-FLAP-P60", "name": "Flap Disc 125 mm P60 Zirconia", "qty": 20, "unit_price": 4.80 },
+      { "sku": "SAFE-GOGG-CHEM", "name": "Chemical Splash Safety Goggles", "qty": 10, "unit_price": 14.80 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-09-10T10:00:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2025-09-10T14:45:00Z", "note": "Picked at Birmingham warehouse" },
+      { "status": "dispatched", "timestamp": "2025-09-11T07:00:00Z", "note": "Dispatched via Parcelforce" },
+      { "status": "delivered", "timestamp": "2025-09-12T08:50:00Z", "note": "Delivered — signed by T. Birkett" }
+    ]
+  },
+  {
+    "order_id": "ORD-41398",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2025-10-03",
+    "delivery_date": "2025-10-07",
+    "total": 2312.50,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-1003",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7753201",
+    "delivery_address_id": "ADDR-002",
+    "items": [
+      { "sku": "ELEC-VFD-2-2", "name": "Variable Frequency Drive 2.2 kW 230V", "qty": 3, "unit_price": 273.60 },
+      { "sku": "ELEC-CONT-25A", "name": "Contactor 25A 11 kW 230VAC Coil", "qty": 6, "unit_price": 49.92 },
+      { "sku": "ELEC-MCB-C16", "name": "MCB C16 1-Pole 6kA", "qty": 20, "unit_price": 8.50 },
+      { "sku": "ELEC-TB-10-GRY", "name": "DIN Rail Terminal Block 10 mm² Grey (20pk)", "qty": 10, "unit_price": 26.00 },
+      { "sku": "ELEC-RELAY-24DC", "name": "Plug-In Relay 4PDT 6A 24VDC", "qty": 15, "unit_price": 18.20 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-10-03T09:30:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2025-10-03T16:00:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2025-10-04T07:45:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2025-10-06T11:00:00Z", "note": "In transit — Sheffield depot" },
+      { "status": "delivered", "timestamp": "2025-10-07T10:30:00Z", "note": "Delivered — signed by K. Priestley" }
+    ]
+  },
+  {
+    "order_id": "ORD-41750",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2025-11-05",
+    "delivery_date": "2025-11-07",
+    "total": 836.80,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-1105",
+    "carrier": "Parcelforce",
+    "tracking_number": "PF-98241003",
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 50, "unit_price": 7.73 },
+      { "sku": "BRG-6304-2RS", "name": "Deep Groove Ball Bearing 6304-2RS", "qty": 30, "unit_price": 7.18 },
+      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 100, "unit_price": 2.28 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-11-05T08:15:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2025-11-05T13:50:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2025-11-06T07:00:00Z", "note": "Dispatched via Parcelforce" },
+      { "status": "delivered", "timestamp": "2025-11-07T09:40:00Z", "note": "Delivered — signed by D. Marshall" }
+    ]
+  },
+  {
+    "order_id": "ORD-42100",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2025-12-02",
+    "delivery_date": "2025-12-05",
+    "total": 1145.60,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-1202",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7755402",
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "SAFE-GLOVE-CUT5", "name": "Cut-Resistant Gloves Level 5 (12 pairs)", "qty": 8, "unit_price": 48.00 },
+      { "sku": "SAFE-BOOT-S3", "name": "Safety Boot S3 SRC Composite Toe", "qty": 6, "unit_price": 78.00 },
+      { "sku": "SAFE-HELM-WHITE", "name": "Industrial Safety Helmet White", "qty": 12, "unit_price": 16.50 },
+      { "sku": "SAFE-EAR-MUFF", "name": "Ear Defenders SNR 31 dB", "qty": 10, "unit_price": 22.50 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-12-02T10:30:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2025-12-02T15:20:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2025-12-03T08:00:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2025-12-04T12:30:00Z", "note": "In transit — M1 corridor" },
+      { "status": "delivered", "timestamp": "2025-12-05T09:00:00Z", "note": "Delivered — signed by D. Marshall" }
+    ]
+  },
+  {
+    "order_id": "ORD-42455",
+    "account_id": "ACME-ACC-00441",
+    "status": "cancelled",
+    "order_date": "2025-12-19",
+    "delivery_date": null,
+    "total": 310.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2025-1219",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "ELEC-VFD-2-2", "name": "Variable Frequency Drive 2.2 kW 230V", "qty": 1, "unit_price": 285.00 },
+      { "sku": "ELEC-MCB-C16", "name": "MCB C16 1-Pole 6kA", "qty": 3, "unit_price": 8.50 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2025-12-19T14:00:00Z", "note": "Order confirmed" },
+      { "status": "cancelled", "timestamp": "2025-12-19T16:30:00Z", "note": "Cancelled by customer — duplicate order" }
+    ]
+  },
+  {
+    "order_id": "ORD-42887",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2026-01-15",
+    "delivery_date": "2026-01-18",
+    "total": 2194.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0115",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7756810",
+    "delivery_address_id": "ADDR-002",
+    "items": [
+      { "sku": "BRG-22212-E1", "name": "Spherical Roller Bearing 22212", "qty": 20, "unit_price": 77.28 },
+      { "sku": "FILT-HYD-10M", "name": "Hydraulic Return Filter 10 µm", "qty": 12, "unit_price": 38.50 },
+      { "sku": "LUB-HYD-ISO46-5L", "name": "Hydraulic Oil ISO 46 — 5 L", "qty": 6, "unit_price": 22.40 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-01-15T09:00:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-01-15T14:30:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-01-16T07:30:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-01-17T10:00:00Z", "note": "In transit — Sheffield depot" },
+      { "status": "delivered", "timestamp": "2026-01-18T11:15:00Z", "note": "Delivered — signed by K. Priestley" }
+    ]
+  },
+  {
+    "order_id": "ORD-43021",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2026-02-10",
+    "delivery_date": "2026-02-13",
+    "total": 826.40,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0210",
+    "carrier": "Parcelforce",
+    "tracking_number": "PF-98245510",
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "BRG-6304-2RS", "name": "Deep Groove Ball Bearing 6304-2RS", "qty": 50, "unit_price": 7.18 },
+      { "sku": "FAST-M10x30-A2", "name": "Hex Bolt M10×30 A2 Stainless (50pk)", "qty": 10, "unit_price": 14.20 },
+      { "sku": "BELT-A-1250", "name": "Classical V-Belt A1250", "qty": 20, "unit_price": 12.22 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-02-10T10:45:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-02-10T15:15:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-02-11T07:30:00Z", "note": "Dispatched via Parcelforce" },
+      { "status": "delivered", "timestamp": "2026-02-13T08:45:00Z", "note": "Delivered — signed by D. Marshall" }
+    ]
+  },
+  {
+    "order_id": "ORD-43400",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2026-03-05",
+    "delivery_date": "2026-03-08",
+    "total": 1482.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0305",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7758003",
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 100, "unit_price": 7.73 },
+      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 200, "unit_price": 2.28 },
+      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 12, "unit_price": 6.80 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-03-05T09:00:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-03-05T14:00:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-03-06T07:30:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-03-07T08:00:00Z", "note": "In transit — M1 corridor" },
+      { "status": "delivered", "timestamp": "2026-03-08T10:00:00Z", "note": "Delivered — signed by D. Marshall" }
+    ]
+  },
+  {
+    "order_id": "ORD-44109",
+    "account_id": "ACME-ACC-00441",
+    "status": "delivered",
+    "order_date": "2026-04-11",
+    "delivery_date": "2026-04-14",
+    "total": 1284.60,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0411",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7759100",
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 100, "unit_price": 7.73 },
+      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 200, "unit_price": 2.28 },
+      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 10, "unit_price": 6.80 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-04-11T08:30:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-04-11T13:45:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-04-12T07:00:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-04-13T09:30:00Z", "note": "In transit — Sheffield depot" },
+      { "status": "delivered", "timestamp": "2026-04-14T10:15:00Z", "note": "Delivered — signed by D. Marshall" }
+    ]
+  },
+  {
+    "order_id": "ORD-44550",
+    "account_id": "ACME-ACC-00441",
+    "status": "shipped",
+    "order_date": "2026-05-12",
+    "delivery_date": null,
+    "total": 892.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0512",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7760055",
+    "delivery_address_id": "ADDR-002",
+    "items": [
+      { "sku": "PNEU-CYL-63x200", "name": "Pneumatic Cylinder ISO 15552 63×200", "qty": 2, "unit_price": 133.48 },
+      { "sku": "PNEU-VALVE-5-2", "name": "5/2 Solenoid Valve G1/4 24VDC", "qty": 4, "unit_price": 80.84 },
+      { "sku": "PNEU-FRL-14", "name": "FRL Air Preparation Unit G1/4", "qty": 2, "unit_price": 67.68 },
+      { "sku": "PNEU-REG-14", "name": "Pressure Regulator G1/4 0.5–8 bar", "qty": 2, "unit_price": 39.48 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-05-12T10:00:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-05-12T15:30:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-05-13T07:30:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-05-14T11:00:00Z", "note": "In transit — M62 corridor heading to Sheffield" }
+    ]
+  },
+  {
+    "order_id": "ORD-44620",
+    "account_id": "ACME-ACC-00441",
+    "status": "shipped",
+    "order_date": "2026-05-16",
+    "delivery_date": null,
+    "total": 648.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0516",
+    "carrier": "Parcelforce",
+    "tracking_number": "PF-98249700",
+    "delivery_address_id": "ADDR-003",
+    "items": [
+      { "sku": "ABRA-CUT-125", "name": "Cutting Disc 125×1×22.2 mm (25pk)", "qty": 6, "unit_price": 28.00 },
+      { "sku": "ABRA-GRIND-125", "name": "Grinding Disc 125×6×22.2 mm (10pk)", "qty": 5, "unit_price": 22.00 },
+      { "sku": "ABRA-FLAP-P60", "name": "Flap Disc 125 mm P60 Zirconia", "qty": 30, "unit_price": 4.80 },
+      { "sku": "SAFE-GLOVE-CUT5", "name": "Cut-Resistant Gloves Level 5 (12 pairs)", "qty": 4, "unit_price": 48.00 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-05-16T09:15:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-05-16T14:00:00Z", "note": "Picked at Birmingham warehouse" },
+      { "status": "dispatched", "timestamp": "2026-05-17T07:00:00Z", "note": "Dispatched via Parcelforce" }
+    ]
+  },
+  {
+    "order_id": "ORD-44780",
+    "account_id": "ACME-ACC-00441",
+    "status": "shipped",
+    "order_date": "2026-05-20",
+    "delivery_date": null,
+    "total": 425.50,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0520",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7760412",
+    "delivery_address_id": "ADDR-004",
+    "items": [
+      { "sku": "BRG-NU210-ECJ", "name": "Cylindrical Roller Bearing NU210", "qty": 5, "unit_price": 31.83 },
+      { "sku": "BRG-7206-BEP", "name": "Angular Contact Ball Bearing 7206", "qty": 8, "unit_price": 20.52 },
+      { "sku": "SEAL-HYD-PU50", "name": "Hydraulic Piston Seal 50 mm PU", "qty": 10, "unit_price": 11.88 },
+      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 6, "unit_price": 6.80 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-05-20T11:30:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-05-20T16:15:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-05-21T08:00:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-05-22T07:00:00Z", "note": "In transit — heading north on M6" }
+    ]
+  },
+  {
+    "order_id": "ORD-45001",
+    "account_id": "ACME-ACC-00441",
+    "status": "processing",
+    "order_date": "2026-05-22",
+    "delivery_date": null,
+    "total": 543.80,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0522",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_address_id": "ADDR-001",
+    "items": [
+      { "sku": "BRG-NU210-ECJ", "name": "Cylindrical Roller Bearing NU210", "qty": 10, "unit_price": 31.83 },
+      { "sku": "SEAL-TC-40x62", "name": "TC Oil Seal 40×62×8 mm", "qty": 50, "unit_price": 3.99 },
+      { "sku": "FAST-M8x25-A2", "name": "Hex Bolt M8×25 A2 Stainless (100pk)", "qty": 2, "unit_price": 18.50 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-05-22T09:00:00Z", "note": "Order confirmed" }
+    ]
+  },
+  {
+    "order_id": "ORD-45050",
+    "account_id": "ACME-ACC-00441",
+    "status": "processing",
+    "order_date": "2026-05-23",
+    "delivery_date": null,
+    "total": 786.00,
+    "currency": "GBP",
+    "po_number": "PO-HEL-2026-0523",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_address_id": "ADDR-002",
+    "items": [
+      { "sku": "ELEC-CONT-9A", "name": "Contactor 9A 4 kW 24VDC Coil", "qty": 6, "unit_price": 33.12 },
+      { "sku": "ELEC-PROX-M12", "name": "Inductive Proximity Sensor M12 4mm PNP", "qty": 8, "unit_price": 36.48 },
+      { "sku": "ELEC-TIMER-DIN", "name": "DIN Rail Timer Relay 0.1s–100h", "qty": 3, "unit_price": 62.00 },
+      { "sku": "FILT-DUST-CART", "name": "Dust Collector Cartridge Filter 325×660", "qty": 2, "unit_price": 125.00 }
+    ],
+    "tracking_milestones": [
+      { "status": "order_placed", "timestamp": "2026-05-23T14:20:00Z", "note": "Order confirmed" }
+    ]
+  }
+]

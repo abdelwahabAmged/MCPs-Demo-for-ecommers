@@ -1,7 +1,52 @@
 import type Database from 'better-sqlite3';
 import { seedTableRaw } from '@mcp-demos/shared';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function loadJSON<T>(filename: string): T {
+  const raw = readFileSync(join(__dirname, filename), 'utf-8');
+  return JSON.parse(raw) as T;
+}
+
+interface ProductRow {
+  sku: string; name: string; brand: string; category: string;
+  description: string; list_price: number; unit: string;
+  lead_time_days: number; min_order_qty: number; weight_kg: number;
+  specifications: Record<string, unknown>;
+}
+
+interface OrderRow {
+  order_id: string; account_id: string; status: string;
+  order_date: string; delivery_date: string | null; total: number;
+  currency: string; po_number: string; carrier: string | null;
+  tracking_number: string | null; delivery_address_id: string;
+  items: Array<{ sku: string; name: string; qty: number; unit_price: number }>;
+  tracking_milestones: Array<{ status: string; timestamp: string; note: string }>;
+}
+
+interface InvoiceRow {
+  invoice_id: string; order_id: string; account_id: string;
+  issue_date: string; due_date: string; paid_date: string | null;
+  amount: number; vat: number; total_inc_vat: number;
+  currency: string; status: string;
+}
+
+interface AddressRow {
+  address_id: string; account_id: string; label: string;
+  line1: string; line2: string; city: string; postcode: string;
+  country: string; contact_name: string; contact_phone: string;
+  is_default: boolean;
+}
 
 export function seedB2BData(db: Database.Database): void {
+  const products = loadJSON<ProductRow[]>('products.json');
+  const orders = loadJSON<OrderRow[]>('orders.json');
+  const invoices = loadJSON<InvoiceRow[]>('invoices.json');
+  const addresses = loadJSON<AddressRow[]>('addresses.json');
+
   // ── Account ──────────────────────────────────────────────────
   seedTableRaw(db, 'accounts', `
     CREATE TABLE IF NOT EXISTS accounts (
@@ -13,7 +58,10 @@ export function seedB2BData(db: Database.Database): void {
       currency TEXT DEFAULT 'GBP',
       rep_name TEXT NOT NULL,
       rep_email TEXT NOT NULL,
-      open_orders INTEGER DEFAULT 0
+      open_orders INTEGER DEFAULT 0,
+      tier TEXT DEFAULT 'Tier 2',
+      ytd_spend REAL DEFAULT 0,
+      last_order_date TEXT
     )
   `, [{
     account_id: 'ACME-ACC-00441',
@@ -24,50 +72,33 @@ export function seedB2BData(db: Database.Database): void {
     currency: 'GBP',
     rep_name: 'James Whitfield',
     rep_email: 'j.whitfield@acmeindustrial.co.uk',
-    open_orders: 2,
+    open_orders: 5,
+    tier: 'Tier 2',
+    ytd_spend: 15834.90,
+    last_order_date: '2026-05-23',
   }]);
 
   // ── Products / SKUs ──────────────────────────────────────────
-  const products = [
-    { sku: 'BRG-6205-ZZ',    name: 'Deep Groove Ball Bearing 6205-ZZ',   category: 'bearings',   list_price: 8.40,  unit: 'each', lead_time_days: 1 },
-    { sku: 'BRG-6205-2RS',   name: 'Deep Groove Ball Bearing 6205-2RS',  category: 'bearings',   list_price: 9.10,  unit: 'each', lead_time_days: 1 },
-    { sku: 'BRG-6304-2RS',   name: 'Deep Groove Ball Bearing 6304-2RS',  category: 'bearings',   list_price: 7.80,  unit: 'each', lead_time_days: 1 },
-    { sku: 'BRG-6308-ZZ',    name: 'Deep Groove Ball Bearing 6308-ZZ',   category: 'bearings',   list_price: 14.50, unit: 'each', lead_time_days: 2 },
-    { sku: 'BRG-NU210-ECJ',  name: 'Cylindrical Roller Bearing NU210',   category: 'bearings',   list_price: 34.60, unit: 'each', lead_time_days: 3 },
-    { sku: 'BRG-22212-E1',   name: 'Spherical Roller Bearing 22212',     category: 'bearings',   list_price: 84.00, unit: 'each', lead_time_days: 5 },
-    { sku: 'SEAL-V-25x42',   name: 'V-Ring Seal 25×42 mm',               category: 'seals',      list_price: 2.40,  unit: 'each', lead_time_days: 1 },
-    { sku: 'SEAL-V-30x47',   name: 'V-Ring Seal 30×47 mm',               category: 'seals',      list_price: 2.80,  unit: 'each', lead_time_days: 1 },
-    { sku: 'SEAL-TC-40x62',  name: 'TC Oil Seal 40×62×8 mm',             category: 'seals',      list_price: 4.20,  unit: 'each', lead_time_days: 2 },
-    { sku: 'BELT-A-1250',    name: 'Classical V-Belt A1250',              category: 'belts',      list_price: 12.60, unit: 'each', lead_time_days: 1 },
-    { sku: 'BELT-A-1250-GATES', name: 'Gates V-Belt A1250 Hi-Power',     category: 'belts',      list_price: 18.90, unit: 'each', lead_time_days: 2 },
-    { sku: 'FAST-M10x30-A2', name: 'Hex Bolt M10×30 A2 Stainless (50pk)',category: 'fasteners',  list_price: 14.20, unit: 'pack', lead_time_days: 1 },
-    { sku: 'FAST-M8x25-A2',  name: 'Hex Bolt M8×25 A2 Stainless (100pk)',category: 'fasteners',  list_price: 18.50, unit: 'pack', lead_time_days: 1 },
-    { sku: 'LUB-EP2-400G',   name: 'EP2 Lithium Grease Cartridge 400 g', category: 'lubricants', list_price: 6.80,  unit: 'each', lead_time_days: 1 },
-    { sku: 'LUB-HYD-ISO46-5L', name: 'Hydraulic Oil ISO 46 — 5 L',      category: 'lubricants', list_price: 22.40, unit: 'each', lead_time_days: 1 },
-    { sku: 'FILT-HYD-10M',   name: 'Hydraulic Return Filter 10 µm',      category: 'filters',    list_price: 38.50, unit: 'each', lead_time_days: 3 },
-  ];
-
   seedTableRaw(db, 'products', `
     CREATE TABLE IF NOT EXISTS products (
       sku TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      brand TEXT NOT NULL DEFAULT '',
       category TEXT NOT NULL,
+      description TEXT DEFAULT '',
       list_price REAL NOT NULL,
       unit TEXT DEFAULT 'each',
-      lead_time_days INTEGER DEFAULT 1
+      lead_time_days INTEGER DEFAULT 1,
+      min_order_qty INTEGER DEFAULT 1,
+      weight_kg REAL DEFAULT 0,
+      specifications TEXT DEFAULT '{}'
     )
-  `, products);
+  `, products.map(p => ({
+    ...p,
+    specifications: JSON.stringify(p.specifications),
+  })));
 
-  // ── Contract Pricing (Tier 2) ────────────────────────────────
-  const contractPricing = [
-    { account_id: 'ACME-ACC-00441', category: 'bearings', discount_pct: 8,  tier: 'Tier 2' },
-    { account_id: 'ACME-ACC-00441', category: 'seals',    discount_pct: 5,  tier: 'Tier 2' },
-    { account_id: 'ACME-ACC-00441', category: 'belts',    discount_pct: 3,  tier: 'Tier 2' },
-    { account_id: 'ACME-ACC-00441', category: 'fasteners',discount_pct: 0,  tier: 'Tier 2' },
-    { account_id: 'ACME-ACC-00441', category: 'lubricants',discount_pct: 0, tier: 'Tier 2' },
-    { account_id: 'ACME-ACC-00441', category: 'filters',  discount_pct: 0,  tier: 'Tier 2' },
-  ];
-
+  // ── Contract Pricing ─────────────────────────────────────────
   seedTableRaw(db, 'contract_pricing', `
     CREATE TABLE IF NOT EXISTS contract_pricing (
       account_id TEXT NOT NULL,
@@ -76,59 +107,46 @@ export function seedB2BData(db: Database.Database): void {
       tier TEXT NOT NULL,
       PRIMARY KEY (account_id, category)
     )
-  `, contractPricing);
+  `, [
+    { account_id: 'ACME-ACC-00441', category: 'bearings',    discount_pct: 8,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'seals',       discount_pct: 5,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'belts',       discount_pct: 3,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'fasteners',   discount_pct: 0,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'lubricants',  discount_pct: 0,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'filters',     discount_pct: 0,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'pneumatics',  discount_pct: 6,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'electrical',  discount_pct: 4,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'abrasives',   discount_pct: 0,  tier: 'Tier 2' },
+    { account_id: 'ACME-ACC-00441', category: 'safety',      discount_pct: 0,  tier: 'Tier 2' },
+  ]);
 
   // ── Warehouse Stock ──────────────────────────────────────────
-  const warehouseStock = [
-    { sku: 'BRG-6205-ZZ',    warehouse: 'Manchester', qty: 540 },
-    { sku: 'BRG-6205-ZZ',    warehouse: 'Birmingham', qty: 220 },
-    { sku: 'BRG-6205-ZZ',    warehouse: 'Glasgow',    qty: 85 },
-    { sku: 'BRG-6205-2RS',   warehouse: 'Manchester', qty: 310 },
-    { sku: 'BRG-6205-2RS',   warehouse: 'Birmingham', qty: 0 },
-    { sku: 'BRG-6205-2RS',   warehouse: 'Glasgow',    qty: 45 },
-    { sku: 'BRG-6304-2RS',   warehouse: 'Manchester', qty: 420 },
-    { sku: 'BRG-6304-2RS',   warehouse: 'Birmingham', qty: 180 },
-    { sku: 'BRG-6304-2RS',   warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'BRG-6308-ZZ',    warehouse: 'Manchester', qty: 75 },
-    { sku: 'BRG-6308-ZZ',    warehouse: 'Birmingham', qty: 30 },
-    { sku: 'BRG-6308-ZZ',    warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'BRG-NU210-ECJ',  warehouse: 'Manchester', qty: 24 },
-    { sku: 'BRG-NU210-ECJ',  warehouse: 'Birmingham', qty: 8 },
-    { sku: 'BRG-NU210-ECJ',  warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'BRG-22212-E1',   warehouse: 'Manchester', qty: 6 },
-    { sku: 'BRG-22212-E1',   warehouse: 'Birmingham', qty: 0 },
-    { sku: 'BRG-22212-E1',   warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'SEAL-V-25x42',   warehouse: 'Manchester', qty: 1200 },
-    { sku: 'SEAL-V-25x42',   warehouse: 'Birmingham', qty: 600 },
-    { sku: 'SEAL-V-25x42',   warehouse: 'Glasgow',    qty: 300 },
-    { sku: 'SEAL-V-30x47',   warehouse: 'Manchester', qty: 880 },
-    { sku: 'SEAL-V-30x47',   warehouse: 'Birmingham', qty: 410 },
-    { sku: 'SEAL-V-30x47',   warehouse: 'Glasgow',    qty: 120 },
-    { sku: 'SEAL-TC-40x62',  warehouse: 'Manchester', qty: 150 },
-    { sku: 'SEAL-TC-40x62',  warehouse: 'Birmingham', qty: 60 },
-    { sku: 'SEAL-TC-40x62',  warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'BELT-A-1250',    warehouse: 'Manchester', qty: 95 },
-    { sku: 'BELT-A-1250',    warehouse: 'Birmingham', qty: 40 },
-    { sku: 'BELT-A-1250',    warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'BELT-A-1250-GATES', warehouse: 'Manchester', qty: 30 },
-    { sku: 'BELT-A-1250-GATES', warehouse: 'Birmingham', qty: 12 },
-    { sku: 'BELT-A-1250-GATES', warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'FAST-M10x30-A2', warehouse: 'Manchester', qty: 200 },
-    { sku: 'FAST-M10x30-A2', warehouse: 'Birmingham', qty: 80 },
-    { sku: 'FAST-M10x30-A2', warehouse: 'Glasgow',    qty: 50 },
-    { sku: 'FAST-M8x25-A2',  warehouse: 'Manchester', qty: 340 },
-    { sku: 'FAST-M8x25-A2',  warehouse: 'Birmingham', qty: 120 },
-    { sku: 'FAST-M8x25-A2',  warehouse: 'Glasgow',    qty: 90 },
-    { sku: 'LUB-EP2-400G',   warehouse: 'Manchester', qty: 500 },
-    { sku: 'LUB-EP2-400G',   warehouse: 'Birmingham', qty: 200 },
-    { sku: 'LUB-EP2-400G',   warehouse: 'Glasgow',    qty: 100 },
-    { sku: 'LUB-HYD-ISO46-5L', warehouse: 'Manchester', qty: 60 },
-    { sku: 'LUB-HYD-ISO46-5L', warehouse: 'Birmingham', qty: 20 },
-    { sku: 'LUB-HYD-ISO46-5L', warehouse: 'Glasgow',    qty: 0 },
-    { sku: 'FILT-HYD-10M',   warehouse: 'Manchester', qty: 18 },
-    { sku: 'FILT-HYD-10M',   warehouse: 'Birmingham', qty: 5 },
-    { sku: 'FILT-HYD-10M',   warehouse: 'Glasgow',    qty: 0 },
-  ];
+  const warehouses = ['Manchester', 'Birmingham', 'Glasgow'];
+  const stockRows: Array<{ sku: string; warehouse: string; qty: number }> = [];
+
+  for (const p of products) {
+    const base = getBaseStock(p.category, p.list_price);
+    stockRows.push({ sku: p.sku, warehouse: 'Manchester', qty: base });
+    stockRows.push({ sku: p.sku, warehouse: 'Birmingham', qty: Math.floor(base * 0.4) });
+    stockRows.push({ sku: p.sku, warehouse: 'Glasgow',    qty: Math.floor(base * 0.15) });
+  }
+
+  // Deliberately set some SKUs low/zero for demo flows
+  setStock(stockRows, 'FILT-DUST-CART', 'Manchester', 2);
+  setStock(stockRows, 'FILT-DUST-CART', 'Birmingham', 0);
+  setStock(stockRows, 'FILT-DUST-CART', 'Glasgow', 0);
+  setStock(stockRows, 'ELEC-VFD-2-2', 'Manchester', 3);
+  setStock(stockRows, 'ELEC-VFD-2-2', 'Birmingham', 0);
+  setStock(stockRows, 'ELEC-VFD-2-2', 'Glasgow', 0);
+  setStock(stockRows, 'PNEU-CYL-63x200', 'Manchester', 4);
+  setStock(stockRows, 'PNEU-CYL-63x200', 'Birmingham', 1);
+  setStock(stockRows, 'PNEU-CYL-63x200', 'Glasgow', 0);
+  setStock(stockRows, 'BRG-22212-E1', 'Manchester', 6);
+  setStock(stockRows, 'BRG-22212-E1', 'Birmingham', 0);
+  setStock(stockRows, 'BRG-22212-E1', 'Glasgow', 0);
+  setStock(stockRows, 'LUB-SYNTH-ISO68-20L', 'Manchester', 8);
+  setStock(stockRows, 'LUB-SYNTH-ISO68-20L', 'Birmingham', 2);
+  setStock(stockRows, 'LUB-SYNTH-ISO68-20L', 'Glasgow', 0);
 
   seedTableRaw(db, 'warehouse_stock', `
     CREATE TABLE IF NOT EXISTS warehouse_stock (
@@ -137,17 +155,9 @@ export function seedB2BData(db: Database.Database): void {
       qty INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (sku, warehouse)
     )
-  `, warehouseStock);
+  `, stockRows);
 
   // ── Substitute Parts ─────────────────────────────────────────
-  const substitutes = [
-    { sku: 'BRG-6205-ZZ',       substitute_sku: 'BRG-6205-2RS',      notes: 'Rubber-sealed variant, suitable for dusty environments' },
-    { sku: 'BRG-6205-2RS',      substitute_sku: 'BRG-6205-ZZ',       notes: 'Metal-shielded variant, higher speed rating' },
-    { sku: 'BELT-A-1250',       substitute_sku: 'BELT-A-1250-GATES', notes: 'Gates Hi-Power equivalent, longer service life' },
-    { sku: 'BELT-A-1250-GATES', substitute_sku: 'BELT-A-1250',       notes: 'Standard classical belt, cost-effective replacement' },
-    { sku: 'SEAL-V-25x42',      substitute_sku: 'SEAL-V-30x47',      notes: 'Larger ring, suitable for 30 mm shafts' },
-  ];
-
   seedTableRaw(db, 'substitutes', `
     CREATE TABLE IF NOT EXISTS substitutes (
       sku TEXT NOT NULL,
@@ -155,68 +165,26 @@ export function seedB2BData(db: Database.Database): void {
       notes TEXT,
       PRIMARY KEY (sku, substitute_sku)
     )
-  `, substitutes);
+  `, [
+    { sku: 'BRG-6205-ZZ',      substitute_sku: 'BRG-6205-2RS',     notes: 'Rubber-sealed variant, suitable for dusty environments' },
+    { sku: 'BRG-6205-2RS',     substitute_sku: 'BRG-6205-ZZ',      notes: 'Metal-shielded variant, higher speed rating' },
+    { sku: 'BELT-A-1250',      substitute_sku: 'BELT-A-1250-GATES', notes: 'Gates Hi-Power equivalent, longer service life' },
+    { sku: 'BELT-A-1250-GATES', substitute_sku: 'BELT-A-1250',     notes: 'Standard classical belt, cost-effective replacement' },
+    { sku: 'SEAL-V-25x42',     substitute_sku: 'SEAL-V-30x47',     notes: 'Larger ring, suitable for 30 mm shafts' },
+    { sku: 'ABRA-CUT-230',     substitute_sku: 'ABRA-CUT-125',     notes: 'Smaller disc for 125 mm angle grinders' },
+    { sku: 'ABRA-FLAP-P60',    substitute_sku: 'ABRA-FLAP-P120',   notes: 'Finer grit for finishing passes' },
+    { sku: 'ABRA-FLAP-P120',   substitute_sku: 'ABRA-FLAP-P60',    notes: 'Coarser grit for heavy material removal' },
+    { sku: 'ELEC-CONT-9A',     substitute_sku: 'ELEC-CONT-25A',    notes: 'Higher-rated contactor, fits same DIN rail' },
+    { sku: 'LUB-EP2-400G',     substitute_sku: 'LUB-CHAIN-SPRAY',  notes: 'Spray alternative for chain/cable lubrication only' },
+    { sku: 'PNEU-CYL-32x100',  substitute_sku: 'PNEU-CYL-63x200', notes: 'Larger bore/stroke for higher force applications' },
+    { sku: 'FILT-HYD-10M',     substitute_sku: 'FILT-OIL-W940',    notes: 'Oil filter alternative for engine applications' },
+    { sku: 'SAFE-GLOVE-CUT5',  substitute_sku: 'SAFE-GLOVE-NITR',  notes: 'Chemical-resistant alternative, lower cut protection' },
+    { sku: 'SAFE-GLOVE-NITR',  substitute_sku: 'SAFE-GLOVE-CUT5',  notes: 'Cut-resistant alternative for sharp material handling' },
+    { sku: 'FAST-M10x30-A2',   substitute_sku: 'FAST-M12x50-88',   notes: 'Larger high-tensile bolt for structural applications' },
+    { sku: 'BRG-7206-BEP',     substitute_sku: 'BRG-30205-J2',     notes: 'Tapered roller bearing for combined load applications' },
+  ]);
 
   // ── Orders ───────────────────────────────────────────────────
-  const orders = [
-    {
-      order_id: 'ORD-44109',
-      account_id: 'ACME-ACC-00441',
-      status: 'delivered',
-      order_date: '2026-04-11',
-      delivery_date: '2026-04-14',
-      total: 1284.60,
-      currency: 'GBP',
-      items: JSON.stringify([
-        { sku: 'BRG-6205-ZZ', name: 'Deep Groove Ball Bearing 6205-ZZ', qty: 100, unit_price: 7.73 },
-        { sku: 'SEAL-V-25x42', name: 'V-Ring Seal 25×42 mm', qty: 200, unit_price: 2.28 },
-        { sku: 'LUB-EP2-400G', name: 'EP2 Lithium Grease Cartridge 400 g', qty: 10, unit_price: 6.80 },
-      ]),
-    },
-    {
-      order_id: 'ORD-43021',
-      account_id: 'ACME-ACC-00441',
-      status: 'delivered',
-      order_date: '2026-03-05',
-      delivery_date: '2026-03-08',
-      total: 826.40,
-      currency: 'GBP',
-      items: JSON.stringify([
-        { sku: 'BRG-6304-2RS', name: 'Deep Groove Ball Bearing 6304-2RS', qty: 50, unit_price: 7.18 },
-        { sku: 'FAST-M10x30-A2', name: 'Hex Bolt M10×30 A2 Stainless (50pk)', qty: 10, unit_price: 14.20 },
-        { sku: 'BELT-A-1250', name: 'Classical V-Belt A1250', qty: 20, unit_price: 12.22 },
-      ]),
-    },
-    {
-      order_id: 'ORD-42887',
-      account_id: 'ACME-ACC-00441',
-      status: 'delivered',
-      order_date: '2026-02-18',
-      delivery_date: '2026-02-21',
-      total: 2194.00,
-      currency: 'GBP',
-      items: JSON.stringify([
-        { sku: 'BRG-22212-E1', name: 'Spherical Roller Bearing 22212', qty: 20, unit_price: 77.28 },
-        { sku: 'FILT-HYD-10M', name: 'Hydraulic Return Filter 10 µm', qty: 12, unit_price: 38.50 },
-        { sku: 'LUB-HYD-ISO46-5L', name: 'Hydraulic Oil ISO 46 — 5 L', qty: 6, unit_price: 22.40 },
-      ]),
-    },
-    {
-      order_id: 'ORD-45001',
-      account_id: 'ACME-ACC-00441',
-      status: 'processing',
-      order_date: '2026-05-19',
-      delivery_date: null,
-      total: 543.80,
-      currency: 'GBP',
-      items: JSON.stringify([
-        { sku: 'BRG-NU210-ECJ', name: 'Cylindrical Roller Bearing NU210', qty: 10, unit_price: 31.83 },
-        { sku: 'SEAL-TC-40x62', name: 'TC Oil Seal 40×62×8 mm', qty: 50, unit_price: 3.99 },
-        { sku: 'FAST-M8x25-A2', name: 'Hex Bolt M8×25 A2 Stainless (100pk)', qty: 2, unit_price: 18.50 },
-      ]),
-    },
-  ];
-
   seedTableRaw(db, 'orders', `
     CREATE TABLE IF NOT EXISTS orders (
       order_id TEXT PRIMARY KEY,
@@ -226,9 +194,76 @@ export function seedB2BData(db: Database.Database): void {
       delivery_date TEXT,
       total REAL NOT NULL,
       currency TEXT DEFAULT 'GBP',
-      items TEXT NOT NULL
+      po_number TEXT,
+      carrier TEXT,
+      tracking_number TEXT,
+      delivery_address_id TEXT,
+      items TEXT NOT NULL,
+      tracking_milestones TEXT DEFAULT '[]'
     )
-  `, orders);
+  `, orders.map(o => ({
+    ...o,
+    items: JSON.stringify(o.items),
+    tracking_milestones: JSON.stringify(o.tracking_milestones),
+  })));
+
+  // ── Invoices ─────────────────────────────────────────────────
+  seedTableRaw(db, 'invoices', `
+    CREATE TABLE IF NOT EXISTS invoices (
+      invoice_id TEXT PRIMARY KEY,
+      order_id TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      issue_date TEXT NOT NULL,
+      due_date TEXT NOT NULL,
+      paid_date TEXT,
+      amount REAL NOT NULL,
+      vat REAL NOT NULL DEFAULT 0,
+      total_inc_vat REAL NOT NULL,
+      currency TEXT DEFAULT 'GBP',
+      status TEXT NOT NULL DEFAULT 'open'
+    )
+  `, invoices as unknown as Record<string, unknown>[]);
+
+  // ── Delivery Addresses ───────────────────────────────────────
+  seedTableRaw(db, 'delivery_addresses', `
+    CREATE TABLE IF NOT EXISTS delivery_addresses (
+      address_id TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL,
+      label TEXT NOT NULL,
+      line1 TEXT NOT NULL,
+      line2 TEXT,
+      city TEXT NOT NULL,
+      postcode TEXT NOT NULL,
+      country TEXT DEFAULT 'GB',
+      contact_name TEXT,
+      contact_phone TEXT,
+      is_default INTEGER DEFAULT 0
+    )
+  `, addresses.map(a => ({ ...a, is_default: a.is_default ? 1 : 0 })));
+
+  // ── Reorder Patterns (pre-computed consumption data) ─────────
+  seedTableRaw(db, 'reorder_patterns', `
+    CREATE TABLE IF NOT EXISTS reorder_patterns (
+      sku TEXT PRIMARY KEY,
+      avg_order_qty INTEGER NOT NULL,
+      avg_interval_days INTEGER NOT NULL,
+      last_ordered TEXT NOT NULL,
+      next_predicted TEXT NOT NULL,
+      times_ordered INTEGER NOT NULL
+    )
+  `, [
+    { sku: 'BRG-6205-ZZ',   avg_order_qty: 75,  avg_interval_days: 60,  last_ordered: '2026-04-11', next_predicted: '2026-06-10', times_ordered: 8 },
+    { sku: 'SEAL-V-25x42',  avg_order_qty: 150, avg_interval_days: 60,  last_ordered: '2026-04-11', next_predicted: '2026-06-10', times_ordered: 7 },
+    { sku: 'LUB-EP2-400G',  avg_order_qty: 12,  avg_interval_days: 45,  last_ordered: '2026-05-20', next_predicted: '2026-07-04', times_ordered: 6 },
+    { sku: 'BRG-22212-E1',  avg_order_qty: 15,  avg_interval_days: 90,  last_ordered: '2026-01-15', next_predicted: '2026-04-15', times_ordered: 3 },
+    { sku: 'FILT-HYD-10M',  avg_order_qty: 10,  avg_interval_days: 90,  last_ordered: '2026-01-15', next_predicted: '2026-04-15', times_ordered: 3 },
+    { sku: 'BRG-6304-2RS',  avg_order_qty: 40,  avg_interval_days: 75,  last_ordered: '2026-02-10', next_predicted: '2026-04-26', times_ordered: 4 },
+    { sku: 'FAST-M10x30-A2', avg_order_qty: 8,  avg_interval_days: 120, last_ordered: '2026-02-10', next_predicted: '2026-06-10', times_ordered: 3 },
+    { sku: 'ABRA-CUT-125',  avg_order_qty: 5,   avg_interval_days: 90,  last_ordered: '2026-05-16', next_predicted: '2026-08-14', times_ordered: 3 },
+    { sku: 'SAFE-GLOVE-CUT5', avg_order_qty: 6, avg_interval_days: 90,  last_ordered: '2026-05-16', next_predicted: '2026-08-14', times_ordered: 3 },
+    { sku: 'LUB-HYD-ISO46-5L', avg_order_qty: 8, avg_interval_days: 90, last_ordered: '2026-01-15', next_predicted: '2026-04-15', times_ordered: 3 },
+    { sku: 'BELT-A-1250',   avg_order_qty: 15,  avg_interval_days: 120, last_ordered: '2026-02-10', next_predicted: '2026-06-10', times_ordered: 2 },
+  ]);
 
   // ── Quotes (created at runtime) ──────────────────────────────
   db.exec(`
@@ -239,6 +274,8 @@ export function seedB2BData(db: Database.Database): void {
       total REAL NOT NULL,
       currency TEXT DEFAULT 'GBP',
       items TEXT NOT NULL,
+      delivery_address_id TEXT,
+      notes TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       session_id TEXT
     )
@@ -251,9 +288,42 @@ export function seedB2BData(db: Database.Database): void {
       account_id TEXT NOT NULL,
       rep_name TEXT NOT NULL,
       message TEXT NOT NULL,
+      urgency TEXT DEFAULT 'medium',
+      topic TEXT,
       status TEXT DEFAULT 'pending',
       created_at TEXT DEFAULT (datetime('now')),
       session_id TEXT
     )
   `);
+
+  // ── Backorders (created at runtime) ──────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS backorders (
+      backorder_id TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL,
+      sku TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      expected_date TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at TEXT DEFAULT (datetime('now')),
+      session_id TEXT
+    )
+  `);
+}
+
+function getBaseStock(category: string, price: number): number {
+  const stockMap: Record<string, number> = {
+    bearings: 300, seals: 800, belts: 80, fasteners: 200,
+    lubricants: 120, filters: 30, pneumatics: 25,
+    electrical: 50, abrasives: 150, safety: 60,
+  };
+  const base = stockMap[category] ?? 50;
+  if (price > 100) return Math.max(3, Math.floor(base * 0.1));
+  if (price > 50)  return Math.max(8, Math.floor(base * 0.25));
+  return base;
+}
+
+function setStock(rows: Array<{ sku: string; warehouse: string; qty: number }>, sku: string, warehouse: string, qty: number): void {
+  const row = rows.find(r => r.sku === sku && r.warehouse === warehouse);
+  if (row) row.qty = qty;
 }

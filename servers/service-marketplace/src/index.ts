@@ -6,7 +6,6 @@ const PORT = parseInt(process.env['PORT'] || '3004', 10);
 
 const { db, start } = createServerApp(
   (server, db, getSessionId) => {
-    seedServiceMarketplaceData(db);
     registerServiceMarketplaceTools(server, db, getSessionId);
   },
   {
@@ -16,4 +15,5 @@ const { db, start } = createServerApp(
   },
 );
 
+seedServiceMarketplaceData(db);
 start();

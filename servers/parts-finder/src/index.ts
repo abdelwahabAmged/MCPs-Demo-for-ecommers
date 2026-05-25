@@ -6,7 +6,6 @@ const PORT = parseInt(process.env['PORT'] || '3003', 10);
 
 const { db, start } = createServerApp(
   (server, db, getSessionId) => {
-    seedPartsData(db);
     registerPartsTools(server, db, getSessionId);
   },
   {
@@ -16,4 +15,5 @@ const { db, start } = createServerApp(
   },
 );
 
+seedPartsData(db);
 start();
