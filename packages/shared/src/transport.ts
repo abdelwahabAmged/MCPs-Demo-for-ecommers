@@ -63,6 +63,11 @@ export function createServerApp(
     next();
   });
 
+  const mcpWellKnownRouter = createWellKnownRouter();
+  const mcpOAuthRouter = createOAuthRouter();
+  app.use("/.well-known", mcpWellKnownRouter);
+  app.use("/api/mcp/oauth", mcpOAuthRouter);
+
   app.get(
     "/health",
     createHealthHandler(db, options.serverName, options.getSessionCount),
@@ -87,7 +92,8 @@ export function createServerApp(
   const handleMcpPost = async (req: Request, res: Response) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     const method = req.body?.method || "unknown";
-    console.log(`[mcp] POST ${req.path} | method=${method} | session=${sessionId ?? "none"} | sessions_alive=${Object.keys(transports).length}`);
+    const accept = req.headers["accept"] || "none";
+    console.log(`[mcp] POST ${req.path} | method=${method} | session=${sessionId ?? "none"} | accept=${accept} | sessions_alive=${Object.keys(transports).length}`);
 
     try {
       let transport: StreamableHTTPServerTransport;
@@ -95,11 +101,12 @@ export function createServerApp(
       if (sessionId && transports[sessionId]) {
         transport = transports[sessionId]!;
       } else if (isInitializeRequest(req.body)) {
-        // New session — accept with or without a stale session ID
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
+          enableJsonResponse: true,
           onsessioninitialized: (newSessionId: string) => {
             transports[newSessionId] = transport;
+            console.log(`[session] New session initialized: ${newSessionId}`);
           },
         });
 

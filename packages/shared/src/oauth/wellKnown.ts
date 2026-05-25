@@ -1,28 +1,34 @@
 import express from "express";
 import type { Request, Response } from "express";
 
-export function createWellKnownRouter(port: number): express.Router {
+function getBaseUrl(req: Request): string {
+  const proto = req.headers["x-forwarded-proto"] || req.protocol || "http";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
+  return `${proto}://${host}`;
+}
+
+export function createWellKnownRouter(): express.Router {
   const router = express.Router();
 
-  router.get("/oauth-protected-resource", (_req: Request, res: Response) => {
-    console.log("oauth-protected-resource ", port);
+  router.get("/oauth-protected-resource", (req: Request, res: Response) => {
+    const base = getBaseUrl(req);
     res.json({
-      resource: `http://localhost:${port}`,
+      resource: base,
       bearer_methods_supported: ["header"],
-      resource_documentation: `http://localhost:${port}/health`,
+      resource_documentation: `${base}/health`,
     });
   });
 
-  router.get("/oauth-authorization-server", (_req: Request, res: Response) => {
-    console.log("oauth-authorization-server", port);
+  router.get("/oauth-authorization-server", (req: Request, res: Response) => {
+    const base = getBaseUrl(req);
     res.json({
-      issuer: `http://localhost:${port}`,
-      authorization_endpoint: `http://localhost:${port}/authorize`,
-      token_endpoint: `http://localhost:${port}/token`,
+      issuer: base,
+      authorization_endpoint: `${base}/authorize`,
+      token_endpoint: `${base}/token`,
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code"],
       code_challenge_methods_supported: ["S256"],
-      registration_endpoint: `http://localhost:${port}/register`,
+      registration_endpoint: `${base}/api/mcp/oauth/register`,
     });
   });
 
