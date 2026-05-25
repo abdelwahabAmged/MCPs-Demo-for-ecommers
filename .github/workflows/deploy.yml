@@ -1,0 +1,41 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: b2c-commerce
+            id: 253b937c-67ac-4213-9001-a010f90c05bb
+          - name: b2b-distributor
+            id: 72eea509-4415-40f1-a32a-79765aca2514
+          - name: parts-finder
+            id: 980ae8fc-1d7e-45a0-99e7-1c6f50f11624
+          - name: service-marketplace
+            id: bd7d36e7-ba7a-438c-bc68-c73eed51ab64
+          - name: internal-sales-rep
+            id: cccbed29-a035-4b79-ab33-be1a9f370ec9
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy ${{ matrix.service.name }}
+        run: |
+          railway up \
+            --service ${{ matrix.service.id }} \
+            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
+            --detach
