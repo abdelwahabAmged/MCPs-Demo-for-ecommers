@@ -85,6 +85,9 @@ importers:
       better-sqlite3:
         specifier: ^11.9.0
         version: 11.10.0
+      express:
+        specifier: ^5.1.0
+        version: 5.2.1
       zod:
         specifier: ^3.25.0
         version: 3.25.76
