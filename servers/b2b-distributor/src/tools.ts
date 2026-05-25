@@ -75,6 +75,9 @@ function getTotalStock(db: Database.Database, sku: string): number {
 }
 
 function getBaseUrl(): string {
+  if (process.env['RAILWAY_PUBLIC_DOMAIN']) {
+    return `https://${process.env['RAILWAY_PUBLIC_DOMAIN']}`;
+  }
   const port = process.env['PORT'] || '3002';
   return `http://localhost:${port}`;
 }

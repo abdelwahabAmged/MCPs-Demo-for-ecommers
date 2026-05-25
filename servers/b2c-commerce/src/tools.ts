@@ -4,8 +4,10 @@ import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 
 const BASE_URL =
-  process.env["BASE_URL"] ||
-  `http://localhost:${process.env["PORT"] || "3001"}`;
+  process.env["RAILWAY_PUBLIC_DOMAIN"]
+    ? `https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`
+    : process.env["BASE_URL"] ||
+      `http://localhost:${process.env["PORT"] || "3001"}`;
 
 interface Product {
   sku: string;
