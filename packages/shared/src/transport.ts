@@ -91,9 +91,6 @@ export function createServerApp(
 
   const handleMcpPost = async (req: Request, res: Response) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    const method = req.body?.method || "unknown";
-    const accept = req.headers["accept"] || "none";
-    console.log(`[mcp] POST ${req.path} | method=${method} | session=${sessionId ?? "none"} | accept=${accept} | sessions_alive=${Object.keys(transports).length}`);
 
     try {
       let transport: StreamableHTTPServerTransport;
@@ -101,18 +98,20 @@ export function createServerApp(
       if (sessionId && transports[sessionId]) {
         transport = transports[sessionId]!;
       } else if (isInitializeRequest(req.body)) {
+        // New session — accept with or without a stale session ID
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           enableJsonResponse: true,
           onsessioninitialized: (newSessionId: string) => {
             transports[newSessionId] = transport;
-            console.log(`[session] New session initialized: ${newSessionId}`);
           },
         });
 
         transport.onclose = () => {
           const sid = transport.sessionId;
-          console.log(`[session] onclose fired for ${sid} | still in map=${!!(sid && transports[sid])}`);
+          if (sid && transports[sid]) {
+            delete transports[sid];
+          }
         };
 
         const server = createMcpServer(transport);
@@ -120,7 +119,6 @@ export function createServerApp(
         await transport.handleRequest(req, res, req.body);
         return;
       } else if (sessionId && !transports[sessionId]) {
-        console.log(`[mcp] Session NOT FOUND: ${sessionId} | known sessions: [${Object.keys(transports).join(", ")}]`);
         // Per MCP spec: expired/unknown session → 404 tells client to re-initialize
         res.status(404).json({
           jsonrpc: "2.0",
@@ -146,7 +144,7 @@ export function createServerApp(
 
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
-      console.error(`[mcp] Error handling POST ${req.path} | method=${method} | session=${sessionId}:`, error);
+      console.error("Error handling MCP POST:", error);
       if (!res.headersSent) {
         res.status(500).json({
           jsonrpc: "2.0",
@@ -159,7 +157,6 @@ export function createServerApp(
 
   const handleMcpGet = async (req: Request, res: Response) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    console.log(`[mcp] GET ${req.path} | session=${sessionId ?? "none"} | found=${!!(sessionId && transports[sessionId])}`);
     if (!sessionId || !transports[sessionId]) {
       res.status(400).send("Invalid or missing session ID");
       return;
@@ -179,11 +176,6 @@ export function createServerApp(
       console.error("Error handling session termination:", error);
       if (!res.headersSent) {
         res.status(500).send("Error processing session termination");
-      }
-    } finally {
-      if (sessionId && transports[sessionId]) {
-        delete transports[sessionId];
-        console.log(`[session] Deleted session ${sessionId} via client DELETE`);
       }
     }
   };
