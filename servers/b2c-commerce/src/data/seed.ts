@@ -6,7 +6,39 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Bump this number whenever products.json, orders.json or reviews.json change.
+ * On next start the server will drop stale catalogue tables and re-seed.
+ */
+const DATA_VERSION = 2;
+
+function isDataCurrent(db: Database.Database): boolean {
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS _data_meta (key TEXT PRIMARY KEY, value TEXT)`);
+    const row = db.prepare(`SELECT value FROM _data_meta WHERE key = 'data_version'`).get() as { value: string } | undefined;
+    return row ? parseInt(row.value, 10) >= DATA_VERSION : false;
+  } catch {
+    return false;
+  }
+}
+
+function dropCatalogueTables(db: Database.Database): void {
+  db.exec(`DROP TABLE IF EXISTS products`);
+  db.exec(`DROP TABLE IF EXISTS orders`);
+  db.exec(`DROP TABLE IF EXISTS reviews`);
+}
+
+function stampVersion(db: Database.Database): void {
+  db.prepare(`INSERT OR REPLACE INTO _data_meta (key, value) VALUES ('data_version', ?)`).run(String(DATA_VERSION));
+}
+
 export function seedB2CData(db: Database.Database): void {
+  if (isDataCurrent(db)) {
+    return;
+  }
+
+  dropCatalogueTables(db);
+
   const products = JSON.parse(readFileSync(join(__dirname, 'products.json'), 'utf-8'));
   const orders = JSON.parse(readFileSync(join(__dirname, 'orders.json'), 'utf-8'));
   const reviews = JSON.parse(readFileSync(join(__dirname, 'reviews.json'), 'utf-8'));
@@ -17,11 +49,13 @@ export function seedB2CData(db: Database.Database): void {
       name TEXT NOT NULL,
       brand TEXT DEFAULT 'Acme',
       category TEXT NOT NULL,
+      subcategory TEXT,
       description TEXT,
       price REAL NOT NULL,
       currency TEXT DEFAULT 'EUR',
       color TEXT,
-      size INTEGER,
+      color_hex TEXT,
+      size TEXT,
       stock_qty INTEGER DEFAULT 0,
       stock_status TEXT DEFAULT 'in_stock',
       delivery_estimate TEXT,
@@ -30,7 +64,10 @@ export function seedB2CData(db: Database.Database): void {
       rating REAL DEFAULT 0,
       review_count INTEGER DEFAULT 0,
       weight_grams INTEGER,
-      material TEXT
+      material TEXT,
+      specs TEXT,
+      dimensions TEXT,
+      frequently_bought_together TEXT
     )
   `, products);
 
@@ -88,7 +125,7 @@ export function seedB2CData(db: Database.Database): void {
       sku TEXT NOT NULL,
       name TEXT NOT NULL,
       color TEXT,
-      size INTEGER,
+      size TEXT,
       quantity INTEGER NOT NULL DEFAULT 1,
       unit_price REAL NOT NULL,
       currency TEXT DEFAULT 'EUR',
@@ -121,4 +158,6 @@ export function seedB2CData(db: Database.Database): void {
       session_id TEXT
     )
   `);
+
+  stampVersion(db);
 }

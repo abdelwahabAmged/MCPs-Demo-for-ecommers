@@ -7,10 +7,10 @@
     "delivery_estimate": "Delivered 22 Dec 2025",
     "order_date": "2025-12-18",
     "items": [
-      { "sku": "SMT-HKR-PRO-BLK-10", "name": "Summit Hiker Pro", "category": "Hiking", "color": "Black", "size": 10, "quantity": 1, "price": 249.00 },
-      { "sku": "SMT-PLZ-TRK-GRN-M", "name": "Summit Polar Fleece", "category": "Hiking", "color": "Green", "quantity": 1, "price": 89.00 }
+      { "sku": "ELEC-AUD-001-BLK", "name": "SoundWave Studio Pro Headphones", "category": "Electronics", "color": "Black", "quantity": 1, "price": 249.00 },
+      { "sku": "ELEC-CHR-001", "name": "PowerCore Qi Wireless Charger Pad", "category": "Electronics", "color": "White", "quantity": 1, "price": 29.00 }
     ],
-    "total": 338.00,
+    "total": 278.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-01-18"
@@ -23,10 +23,10 @@
     "delivery_estimate": "Delivered 30 Dec 2025",
     "order_date": "2025-12-27",
     "items": [
-      { "sku": "GRD-GYM-TEE-GRY-L", "name": "GridCore Gym Tee", "category": "Gym", "color": "Grey", "quantity": 2, "price": 49.00 },
-      { "sku": "GRD-SHR-BLK-L", "name": "GridCore Training Shorts", "category": "Gym", "color": "Black", "quantity": 1, "price": 59.00 }
+      { "sku": "CLTH-TEE-002-WHT-M", "name": "UrbanThread Essential Crew Tee", "category": "Clothing & Apparel", "color": "White", "size": "M", "quantity": 2, "price": 29.00 },
+      { "sku": "CLTH-JNS-001-BLU-L", "name": "UrbanThread Slim Straight Jeans", "category": "Clothing & Apparel", "color": "Indigo Blue", "size": "L", "quantity": 1, "price": 79.00 }
     ],
-    "total": 157.00,
+    "total": 137.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-01-27"
@@ -39,10 +39,10 @@
     "delivery_estimate": "Delivered 16 Jan 2026",
     "order_date": "2026-01-12",
     "items": [
-      { "sku": "VLC-RD5-BLK-10", "name": "Velocity Road 5", "category": "Road running", "color": "Black", "size": 10, "quantity": 1, "price": 199.00 },
-      { "sku": "RD-SCK-PRF-WHT-M", "name": "ProStride Running Socks", "category": "Road running", "color": "White", "quantity": 2, "price": 19.00 }
+      { "sku": "HOME-COF-001", "name": "HomeEssence BrewMaster Drip Coffee Maker", "category": "Home & Kitchen", "color": "Stainless Steel", "quantity": 1, "price": 89.00 },
+      { "sku": "HOME-KNF-001", "name": "ChefCraft Pro Knife Set (8-Piece)", "category": "Home & Kitchen", "color": "Silver/Wood", "quantity": 1, "price": 149.00 }
     ],
-    "total": 237.00,
+    "total": 238.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-02-12"
@@ -55,9 +55,10 @@
     "delivery_estimate": "Delivered 28 Jan 2026",
     "order_date": "2026-01-24",
     "items": [
-      { "sku": "GYM-RST-BND-SET", "name": "PowerLoop Resistance Band Set", "category": "Gym", "color": "Multi", "quantity": 1, "price": 29.00 }
+      { "sku": "SPRT-RSB-001", "name": "PeakForm Resistance Band Set (5-Pack)", "category": "Sports & Fitness", "color": "Multi-Color", "quantity": 1, "price": 24.00 },
+      { "sku": "SPRT-YOG-001", "name": "PeakForm EcoGrip Yoga Mat", "category": "Sports & Fitness", "color": "Sage Green", "quantity": 1, "price": 39.00 }
     ],
-    "total": 29.00,
+    "total": 63.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-02-24"
@@ -70,11 +71,10 @@
     "delivery_estimate": "Delivered 14 Feb 2026",
     "order_date": "2026-02-10",
     "items": [
-      { "sku": "APX-TRL-X2-BLK-10", "name": "Apex Trail Runner X2", "category": "Trail running", "color": "Black", "size": 10, "quantity": 1, "price": 189.00 },
-      { "sku": "TRL-GTR-PRO-BLK-M", "name": "TrailGuard Gaiter Pro", "category": "Trail running", "color": "Black", "quantity": 1, "price": 39.00 },
-      { "sku": "TRK-JKT-WP-BLK-L", "name": "TrailShield Waterproof Jacket", "category": "Trail running", "color": "Black", "quantity": 1, "price": 159.00 }
+      { "sku": "ELEC-PHN-001-BLK", "name": "ProVision Smartphone X1", "category": "Electronics", "color": "Black", "quantity": 1, "price": 799.00 },
+      { "sku": "ELEC-AUD-003-WHT", "name": "SoundWave AirPods Wireless Earbuds", "category": "Electronics", "color": "White", "quantity": 1, "price": 149.00 }
     ],
-    "total": 387.00,
+    "total": 948.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-03-10"
@@ -87,9 +87,9 @@
     "delivery_estimate": "Cancelled by customer",
     "order_date": "2026-02-20",
     "items": [
-      { "sku": "CYC-SH-CLK-BLK-43", "name": "SpeedClip Road Shoes", "category": "Cycling", "color": "Black", "size": 43, "quantity": 1, "price": 269.00 }
+      { "sku": "ELEC-MON-001", "name": "VisionPro UltraWide Monitor 34\"", "category": "Electronics", "color": "Black", "quantity": 1, "price": 599.00 }
     ],
-    "total": 269.00,
+    "total": 599.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": null
@@ -102,11 +102,11 @@
     "delivery_estimate": "Delivered 8 Mar 2026",
     "order_date": "2026-03-04",
     "items": [
-      { "sku": "END-CYC-BIB-BLK-M", "name": "Endurance Cycling Bib", "category": "Cycling", "color": "Black", "quantity": 1, "price": 129.00 },
-      { "sku": "CYC-JRS-PRO-RED-M", "name": "ProTour Cycling Jersey", "category": "Cycling", "color": "Red", "quantity": 1, "price": 99.00 },
-      { "sku": "CYC-GLV-GEL-BLK-L", "name": "GripRide Cycling Gloves", "category": "Cycling", "color": "Black", "quantity": 1, "price": 45.00 }
+      { "sku": "BEAU-MST-001", "name": "GlowLab HydraBoost Moisturizer", "category": "Beauty & Personal Care", "color": "White", "quantity": 1, "price": 32.00 },
+      { "sku": "BEAU-SER-001", "name": "GlowLab Vitamin C Brightening Serum", "category": "Beauty & Personal Care", "color": "Amber", "quantity": 1, "price": 38.00 },
+      { "sku": "BEAU-SPF-001", "name": "GlowLab ShieldGlow Sunscreen SPF50", "category": "Beauty & Personal Care", "color": "Transparent", "quantity": 1, "price": 28.00 }
     ],
-    "total": 273.00,
+    "total": 98.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-04-04"
@@ -119,10 +119,11 @@
     "delivery_estimate": "Delivered 18 Mar 2026",
     "order_date": "2026-03-15",
     "items": [
-      { "sku": "HK-TRK-POL-CRB", "name": "CarbonLite Trekking Poles", "category": "Hiking", "color": "Black", "quantity": 1, "price": 139.00 },
-      { "sku": "HK-BSL-MRN-BLK-M", "name": "ThermoCore Base Layer", "category": "Hiking", "color": "Black", "quantity": 1, "price": 79.00 }
+      { "sku": "BOOK-SCI-001", "name": "The Last Signal — A Novel", "category": "Books & Media", "color": "N/A", "quantity": 1, "price": 16.00 },
+      { "sku": "BOOK-CKB-001", "name": "The Mediterranean Table: 120 Recipes", "category": "Books & Media", "color": "N/A", "quantity": 1, "price": 35.00 },
+      { "sku": "BOOK-JRN-001", "name": "Mindful Moments Dotted Journal", "category": "Books & Media", "color": "Forest Green", "quantity": 1, "price": 19.00 }
     ],
-    "total": 218.00,
+    "total": 70.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-04-15"
@@ -135,9 +136,9 @@
     "delivery_estimate": "Returned — refund processed",
     "order_date": "2026-03-28",
     "items": [
-      { "sku": "GYM-TRN-SH-BLK-10", "name": "FlexLift Training Shoe", "category": "Gym", "color": "Black", "size": 10, "quantity": 1, "price": 129.00 }
+      { "sku": "CLTH-SNK-001-WHT-42", "name": "StrideCraft CloudWalk Sneakers", "category": "Clothing & Apparel", "color": "White", "size": "42", "quantity": 1, "price": 99.00 }
     ],
-    "total": 129.00,
+    "total": 99.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": null
@@ -150,11 +151,11 @@
     "delivery_estimate": "Delivered 12 Apr 2026",
     "order_date": "2026-04-08",
     "items": [
-      { "sku": "SWM-GGL-PRO-BLU", "name": "AquaVision Pro Goggles", "category": "Swimming", "color": "Blue", "quantity": 1, "price": 39.00 },
-      { "sku": "SWM-CAP-SLC-BLK", "name": "SpeedCap Silicone Swim Cap", "category": "Swimming", "color": "Black", "quantity": 1, "price": 15.00 },
-      { "sku": "SWM-FIN-TRN-BLU-M", "name": "PowerKick Training Fins", "category": "Swimming", "color": "Blue", "quantity": 1, "price": 49.00 }
+      { "sku": "TOYS-STR-001", "name": "FunFactory Realm of Conquest Strategy Game", "category": "Toys & Games", "color": "Multi-Color", "quantity": 1, "price": 54.00 },
+      { "sku": "TOYS-PZL-001", "name": "BrainBox 1000-Piece World Wonders Puzzle", "category": "Toys & Games", "color": "Multi-Color", "quantity": 1, "price": 22.00 },
+      { "sku": "TOYS-SPD-001", "name": "BrainBox SpeedCube 3x3", "category": "Toys & Games", "color": "Stickerless Multi", "quantity": 1, "price": 14.00 }
     ],
-    "total": 103.00,
+    "total": 90.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": "2026-05-08"
@@ -167,10 +168,10 @@
     "delivery_estimate": "Delivered 22 Apr 2026",
     "order_date": "2026-04-18",
     "items": [
-      { "sku": "CYC-HLM-AERO-WHT-M", "name": "AeroCrest Cycling Helmet", "category": "Cycling", "color": "White", "quantity": 1, "price": 219.00 },
-      { "sku": "CYC-BTL-CGE-CRB", "name": "CarbonCage Bottle Holder", "category": "Cycling", "color": "Black", "quantity": 2, "price": 35.00 }
+      { "sku": "GRDN-GRL-001", "name": "GrillMaster Classic Charcoal Grill", "category": "Garden & Outdoor", "color": "Black", "quantity": 1, "price": 179.00 },
+      { "sku": "GRDN-CLR-001", "name": "GrillMaster IceBox 52L Cooler", "category": "Garden & Outdoor", "color": "Desert Tan", "quantity": 1, "price": 199.00 }
     ],
-    "total": 289.00,
+    "total": 378.00,
     "currency": "EUR",
     "eligible_for_return": true,
     "return_deadline": "2026-05-18"
@@ -183,10 +184,11 @@
     "delivery_estimate": "Delivered 2 May 2026",
     "order_date": "2026-04-29",
     "items": [
-      { "sku": "GYM-FRM-RLR-BLK", "name": "DeepRoll Foam Roller", "category": "Gym", "color": "Black", "quantity": 1, "price": 39.00 },
-      { "sku": "GYM-CMP-TGT-BLK-M", "name": "CompressionX Tights", "category": "Gym", "color": "Black", "quantity": 1, "price": 69.00 }
+      { "sku": "SPRT-FMR-001", "name": "PeakForm Textured Foam Roller 45cm", "category": "Sports & Fitness", "color": "Blue", "quantity": 1, "price": 22.00 },
+      { "sku": "SPRT-WTR-001", "name": "PeakForm HydroFlask Insulated Bottle 750ml", "category": "Sports & Fitness", "color": "Pacific Blue", "quantity": 1, "price": 29.00 },
+      { "sku": "SPRT-JMP-001", "name": "PeakForm Speed Jump Rope", "category": "Sports & Fitness", "color": "Black", "quantity": 1, "price": 15.00 }
     ],
-    "total": 108.00,
+    "total": 66.00,
     "currency": "EUR",
     "eligible_for_return": true,
     "return_deadline": "2026-05-29"
@@ -199,10 +201,10 @@
     "delivery_estimate": "Delivered 10 May 2026",
     "order_date": "2026-05-06",
     "items": [
-      { "sku": "PKB-HYD-15L-BLK", "name": "PeakBound Hydration Pack 15L", "category": "Hiking", "color": "Black", "quantity": 1, "price": 119.00 },
-      { "sku": "TRL-HLM-300-BLK", "name": "NightTrail Headlamp 300", "category": "Trail running", "color": "Black", "quantity": 1, "price": 69.00 }
+      { "sku": "HOME-BLK-001", "name": "CozyNest Sherpa Throw Blanket", "category": "Home & Kitchen", "color": "Charcoal Gray", "quantity": 1, "price": 49.00 },
+      { "sku": "HOME-CND-001", "name": "CozyNest Soy Wax Scented Candle", "category": "Home & Kitchen", "color": "Amber", "quantity": 2, "price": 24.00 }
     ],
-    "total": 188.00,
+    "total": 97.00,
     "currency": "EUR",
     "eligible_for_return": true,
     "return_deadline": "2026-06-06"
@@ -215,7 +217,7 @@
     "delivery_estimate": "Arriving tomorrow",
     "order_date": "2026-05-15",
     "items": [
-      { "sku": "RD-GPS-WCH-BLK", "name": "PaceMaster GPS Watch", "category": "Road running", "color": "Black", "quantity": 1, "price": 349.00 }
+      { "sku": "ELEC-WCH-001-BLK", "name": "VisionPro FitWatch Ultra", "category": "Electronics", "color": "Black", "quantity": 1, "price": 349.00 }
     ],
     "total": 349.00,
     "currency": "EUR",
@@ -230,10 +232,10 @@
     "delivery_estimate": "Estimated dispatch in 1 business day",
     "order_date": "2026-05-19",
     "items": [
-      { "sku": "HK-BPK-45L-NVY", "name": "Ridgeline Backpack 45L", "category": "Hiking", "color": "Navy", "quantity": 1, "price": 189.00 },
-      { "sku": "HK-BSL-MRN-BLK-M", "name": "ThermoCore Base Layer", "category": "Hiking", "color": "Black", "quantity": 1, "price": 79.00 }
+      { "sku": "GRDN-HMK-001", "name": "TerraCraft Brazilian Cotton Hammock", "category": "Garden & Outdoor", "color": "Natural/Stripe", "quantity": 1, "price": 99.00 },
+      { "sku": "GRDN-SLR-001", "name": "GreenThumb Solar Path Lights (6-Pack)", "category": "Garden & Outdoor", "color": "Stainless Steel", "quantity": 1, "price": 34.00 }
     ],
-    "total": 268.00,
+    "total": 133.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": null
@@ -246,10 +248,10 @@
     "delivery_estimate": "Estimated dispatch in 2 business days",
     "order_date": "2026-05-22",
     "items": [
-      { "sku": "SWM-JST-TRI-BLK-M", "name": "TriForce Swim Jammer", "category": "Swimming", "color": "Black", "quantity": 1, "price": 59.00 },
-      { "sku": "SWM-PDB-KCK-BLU", "name": "AquaDrill Kickboard", "category": "Swimming", "color": "Blue", "quantity": 1, "price": 25.00 }
+      { "sku": "CLTH-HOD-001-GRY-L", "name": "UrbanThread Pullover Hoodie", "category": "Clothing & Apparel", "color": "Heather Gray", "size": "L", "quantity": 1, "price": 59.00 },
+      { "sku": "CLTH-BMB-001-BLK-M", "name": "UrbanThread Bomber Jacket", "category": "Clothing & Apparel", "color": "Black", "size": "M", "quantity": 1, "price": 129.00 }
     ],
-    "total": 84.00,
+    "total": 188.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": null
@@ -262,9 +264,9 @@
     "delivery_estimate": "Cancelled — item out of stock",
     "order_date": "2026-05-10",
     "items": [
-      { "sku": "VLC-RD5-WHT-10", "name": "Velocity Road 5", "category": "Road running", "color": "White", "size": 10, "quantity": 1, "price": 199.00 }
+      { "sku": "ELEC-LPT-001-SLV", "name": "TechNova UltraBook Pro 15", "category": "Electronics", "color": "Silver", "quantity": 1, "price": 1299.00 }
     ],
-    "total": 199.00,
+    "total": 1299.00,
     "currency": "EUR",
     "eligible_for_return": false,
     "return_deadline": null
@@ -277,10 +279,10 @@
     "delivery_estimate": "Delivered 15 Apr 2026",
     "order_date": "2026-04-11",
     "items": [
-      { "sku": "RD-RFL-VEST-YLW-M", "name": "HighViz Running Vest", "category": "Road running", "color": "Yellow", "quantity": 1, "price": 35.00 },
-      { "sku": "RD-SCK-PRF-WHT-M", "name": "ProStride Running Socks", "category": "Road running", "color": "White", "quantity": 3, "price": 19.00 }
+      { "sku": "BEAU-CLG-001", "name": "PureScent Oakmoss & Bergamot Cologne", "category": "Beauty & Personal Care", "color": "Clear/Amber", "quantity": 1, "price": 79.00 },
+      { "sku": "BEAU-HDR-001", "name": "VelvetTouch IonPro Hair Dryer", "category": "Beauty & Personal Care", "color": "Rose Gold", "quantity": 1, "price": 69.00 }
     ],
-    "total": 92.00,
+    "total": 148.00,
     "currency": "EUR",
     "eligible_for_return": true,
     "return_deadline": "2026-05-11"

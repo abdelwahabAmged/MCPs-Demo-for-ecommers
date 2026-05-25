@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc && cp src/data/*.json dist/data/",
+    "build": "tsc && cp src/data/*.json dist/data/ && cp -r src/public dist/public",
     "dev": "tsx --watch src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
