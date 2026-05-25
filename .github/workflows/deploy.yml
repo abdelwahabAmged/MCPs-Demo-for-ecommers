@@ -15,6 +15,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service:
           - name: b2c-commerce
@@ -34,9 +35,4 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deploy ${{ matrix.service.name }}
-        run: |
-          railway up \
-            --service ${{ matrix.service.id }} \
-            --project ${{ secrets.RAILWAY_PROJECT_ID }} \
-            --environment ${{ secrets.RAILWAY_ENVIRONMENT_ID }} \
-            --detach
+        run: railway up --service ${{ matrix.service.id }} --detach
