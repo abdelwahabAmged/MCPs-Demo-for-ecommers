@@ -3,7 +3,8 @@ import type { Request, Response } from "express";
 
 function getBaseUrl(req: Request): string {
   const proto = req.headers["x-forwarded-proto"] || req.protocol || "http";
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
+  const host =
+    req.headers["x-forwarded-host"] || req.headers.host || "localhost";
   return `${proto}://${host}`;
 }
 
@@ -11,7 +12,9 @@ export interface WellKnownOptions {
   authEnabled?: boolean;
 }
 
-export function createWellKnownRouter(options?: WellKnownOptions): express.Router {
+export function createWellKnownRouter(
+  options?: WellKnownOptions,
+): express.Router {
   const router = express.Router();
   const authEnabled = options?.authEnabled ?? false;
 

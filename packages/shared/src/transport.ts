@@ -135,10 +135,7 @@ export function createServerApp(
     return server;
   };
 
-  const resolveUserFromSession = (
-    req: Request,
-    sessionId: string,
-  ) => {
+  const resolveUserFromSession = (req: Request, sessionId: string) => {
     if (sessionUsers.has(sessionId)) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mcpSession = (req as any).mcpSession as McpSession | undefined;

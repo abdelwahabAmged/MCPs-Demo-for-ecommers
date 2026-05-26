@@ -1642,7 +1642,7 @@
     "stock_qty": 2,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800",
+    "image_url": "https://www.mytheresa.com/image/1094/1238/100/20/P01014433.jpg",
     "tags": [
       "dress",
       "wrap",
@@ -1685,7 +1685,7 @@
     "stock_qty": 10,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800",
+    "image_url": "https://www.mytheresa.com/image/1094/1238/100/20/P01014433.jpg",
     "tags": [
       "dress",
       "wrap",
@@ -1854,7 +1854,7 @@
     "stock_qty": 32,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    "image_url": "https://media.istockphoto.com/id/1498868174/photo/yoga-pants-leggings-mockup-women-leggins-template-black-sport-yoga-pants.jpg?s=2048x2048&w=is&k=20&c=HQW7TZYd97Qz4brmC1nfkDWR3h36jAaGfBg7oG5JO0U=",
     "tags": [
       "yoga-pants",
       "high-rise",
@@ -1897,7 +1897,7 @@
     "stock_qty": 26,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    "image_url": "https://media.istockphoto.com/id/1498868174/photo/yoga-pants-leggings-mockup-women-leggins-template-black-sport-yoga-pants.jpg?s=2048x2048&w=is&k=20&c=HQW7TZYd97Qz4brmC1nfkDWR3h36jAaGfBg7oG5JO0U=",
     "tags": [
       "yoga-pants",
       "high-rise",
@@ -2533,7 +2533,7 @@
     "stock_qty": 25,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800",
+    "image_url": "https://makka.store/wp-content/uploads/2024/10/%D8%B9%D8%AC%D8%A7%D9%86-%D9%83%D9%8A%D8%AA%D8%B4%D9%86-%D8%A7%D9%8A%D8%AF-%D8%A3%D8%B3%D9%88%D8%AF-300-%D9%88%D8%A7%D8%AA-4.8-%D9%84%D8%AA%D8%B1-5KSM150PSBOB-1.webp",
     "tags": [
       "skillet",
       "cast-iron",
@@ -2662,7 +2662,7 @@
     "stock_qty": 1,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800",
+    "image_url": "https://i.ebayimg.com/images/g/~B8AAOSw9qtioMFz/s-l1600.webp",
     "tags": [
       "stand-mixer",
       "planetary",
@@ -3501,49 +3501,6 @@
     ]
   },
   {
-    "sku": "SPRT-BRA-001-BLK-S",
-    "name": "TrailBlazer PowerHold Sports Bra",
-    "brand": "TrailBlazer",
-    "category": "Sports & Fitness",
-    "subcategory": "Running",
-    "description": "High-support sports bra with encapsulated cups, adjustable racerback straps, moisture-wicking fabric, and mesh ventilation panels.",
-    "price": 45.0,
-    "currency": "EUR",
-    "color": "Black",
-    "color_hex": "#1A1A1A",
-    "size": "S",
-    "stock_qty": 20,
-    "stock_status": "in_stock",
-    "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
-    "tags": [
-      "sports-bra",
-      "high-support",
-      "racerback",
-      "moisture-wicking"
-    ],
-    "rating": 4.4,
-    "review_count": 156,
-    "weight_grams": 95,
-    "material": "85% Nylon / 15% Spandex",
-    "specs": {
-      "support": "High impact",
-      "closure": "Back clasp",
-      "straps": "Adjustable racerback",
-      "care": "Hand wash recommended"
-    },
-    "dimensions": {
-      "length": 28.0,
-      "width": 30.0,
-      "height": 1.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-YOG-001-BLK-S",
-      "SPRT-RUN-001-BLK"
-    ]
-  },
-  {
     "sku": "SPRT-ARM-001",
     "name": "TrailBlazer RunBand Phone Armband",
     "brand": "TrailBlazer",
@@ -3643,7 +3600,7 @@
     "stock_qty": 11,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "image_url": "https://i.ebayimg.com/images/g/JjMAAeSwgERpwmRs/s-l1600.webp",
     "tags": [
       "trekking-poles",
       "carbon-fiber",
@@ -6391,7 +6348,7 @@
     "stock_qty": 0,
     "stock_status": "out_of_stock",
     "delivery_estimate": "Out of stock — back July 5, 2026",
-    "image_url": "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800",
+    "image_url": "https://m.media-amazon.com/images/I/7177W38BlCL._AC_SY695_.jpg",
     "tags": [
       "hiking-shoes",
       "waterproof",
