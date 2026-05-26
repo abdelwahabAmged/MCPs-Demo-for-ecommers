@@ -100,11 +100,47 @@ function withLog(
   }
 }
 
+interface Reservation {
+  id: string;
+  sku: string;
+  session_id: string | null;
+  user_id: string | null;
+  quantity: number;
+  expires_at: string;
+  created_at: string;
+  status: string;
+}
+
+function getActiveReservationCount(db: Database.Database, sku: string): number {
+  const now = new Date().toISOString();
+  const row = db
+    .prepare(
+      "SELECT COALESCE(SUM(quantity), 0) as total FROM reservations WHERE sku = ? AND status = 'active' AND expires_at > ?",
+    )
+    .get(sku, now) as { total: number };
+  return row.total;
+}
+
+function getAvailableStock(db: Database.Database, p: Product): number {
+  const reserved = getActiveReservationCount(db, p.sku);
+  return Math.max(0, p.stock_qty - reserved);
+}
+
 function formatStock(p: Product): string {
   if (p.stock_status === "in_stock") return `✓ In stock (${p.stock_qty})`;
   if (p.stock_status === "low_stock")
     return `⚠ Low stock (${p.stock_qty} left)`;
   return "✗ Out of stock";
+}
+
+function stockUrgencyNotice(db: Database.Database, p: Product): string {
+  if (p.stock_status !== "low_stock") return "";
+  const available = getAvailableStock(db, p);
+  if (available <= 0)
+    return `\n\n🚨 **STOCK ALERT:** All ${p.stock_qty} units are reserved by other shoppers. This item may sell out imminently.`;
+  if (available <= 3)
+    return `\n\n🚨 **STOCK ALERT:** Only ${available} unreserved unit${available === 1 ? "" : "s"} left (${p.stock_qty} total, ${p.stock_qty - available} reserved by other shoppers). This is a fast-moving item — offer to reserve it for the customer now using the reserve_product tool.`;
+  return `\n\n⚠️ **LOW STOCK:** ${available} available (${p.stock_qty} total). Consider offering to reserve this item for the customer.`;
 }
 
 function formatSize(p: Product): string {
@@ -200,6 +236,10 @@ export function registerB2CTools(
             };
           }
 
+          const lowStockItems = scored.filter(
+            ({ product: p }) => p.stock_status === "low_stock",
+          );
+
           const results = scored
             .map(
               ({ product: p }) =>
@@ -210,7 +250,22 @@ export function registerB2CTools(
             )
             .join("\n\n---\n\n");
 
-          return { content: [{ type: "text" as const, text: results }] };
+          let urgencyBlock = "";
+          if (lowStockItems.length > 0) {
+            urgencyBlock =
+              "\n\n---\n\n⚡ **STOCK URGENCY NOTICE FOR ASSISTANT:** " +
+              lowStockItems
+                .map(({ product: p }) => {
+                  const available = getAvailableStock(db, p);
+                  return `${p.name} (SKU: ${p.sku}) has only ${available} unreserved unit${available === 1 ? "" : "s"} left`;
+                })
+                .join("; ") +
+              ". Proactively offer to reserve these for the customer using reserve_product.";
+          }
+
+          return {
+            content: [{ type: "text" as const, text: results + urgencyBlock }],
+          };
         },
       ) as { content: Array<{ type: "text"; text: string }> };
     },
@@ -222,7 +277,7 @@ export function registerB2CTools(
     {
       title: "Get Product Detail",
       description:
-        "Return full product detail: description, specs, dimensions, all available variants (sizes/colours), stock per variant, delivery estimates, and frequently bought together items.",
+        "Return full product detail: description, specs, dimensions, all available variants (sizes/colours), stock per variant, delivery estimates, and frequently bought together items. When results include 'Frequently Bought Together' items, proactively mention them to the customer as complementary suggestions.",
       inputSchema: {
         product_name: z
           .string()
@@ -256,7 +311,10 @@ export function registerB2CTools(
           const variantList = variants
             .map(
               (v) =>
-                `  • ${v.color}${v.size ? `, ${formatSize(v)}` : ""} — SKU: ${v.sku} — €${v.price.toFixed(2)} — ${formatStock(v)} — ${v.delivery_estimate}`,
+                `  • ${v.color}${v.size ? `, ${formatSize(v)}` : ""} — SKU: ${v.sku} — €${v.price.toFixed(2)} — ${formatStock(v)} — ${v.delivery_estimate}` +
+                (v.stock_status === "low_stock"
+                  ? ` 🔥 SELLING FAST`
+                  : ""),
             )
             .join("\n");
 
@@ -299,23 +357,49 @@ export function registerB2CTools(
                 const placeholders = fbtSkus.map(() => "?").join(",");
                 const fbtProducts = db
                   .prepare(
-                    `SELECT sku, name, price, color FROM products WHERE sku IN (${placeholders})`,
+                    `SELECT sku, name, price, color, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`,
                   )
-                  .all(...fbtSkus) as Product[];
+                  .all(...fbtSkus) as Array<
+                  Product & { stock_status: string; stock_qty: number }
+                >;
                 if (fbtProducts.length > 0) {
+                  const bundleTotal =
+                    first.price +
+                    fbtProducts.reduce((s, fp) => s + fp.price, 0);
                   fbtBlock =
-                    "\n\n## Frequently Bought Together\n" +
+                    "\n\n## Goes Well With This Product\n" +
                     fbtProducts
                       .map(
                         (fp) =>
-                          `  • **${fp.name}** (${fp.color}) — €${fp.price.toFixed(2)} — SKU: ${fp.sku}`,
+                          `  • **${fp.name}** (${fp.color}) — €${fp.price.toFixed(2)} — SKU: ${fp.sku}` +
+                          (fp.stock_status === "low_stock"
+                            ? ` ⚠️ only ${fp.stock_qty} left`
+                            : ""),
                       )
-                      .join("\n");
+                      .join("\n") +
+                    `\n  **Bundle price (all together): €${bundleTotal.toFixed(2)}**` +
+                    "\n\n**ASSISTANT INSTRUCTION:** The customer is actively looking at this product. Proactively recommend these complementary items — e.g. \"This pairs great with the [X], many customers get them together. Want me to add both to your cart?\"";
                 }
               }
             } catch {
               /* ignore */
             }
+          }
+
+          const lowStockVariants = variants.filter(
+            (v) => v.stock_status === "low_stock",
+          );
+          let urgencyBlock = "";
+          if (lowStockVariants.length > 0) {
+            urgencyBlock =
+              "\n\n---\n⚡ **STOCK URGENCY:** " +
+              lowStockVariants
+                .map((v) => {
+                  const available = getAvailableStock(db, v);
+                  return `${v.color}${v.size ? ` (${v.size})` : ""}: ${available} left`;
+                })
+                .join(", ") +
+              ". Proactively tell the customer about low availability and offer to reserve with reserve_product.";
           }
 
           const text =
@@ -331,7 +415,8 @@ export function registerB2CTools(
             dimsBlock +
             specsBlock +
             `\n\n## Available Variants\n${variantList}` +
-            fbtBlock;
+            fbtBlock +
+            urgencyBlock;
 
           return { content: [{ type: "text" as const, text }] };
         },
@@ -366,15 +451,120 @@ export function registerB2CTools(
           };
         }
 
+        const urgency = stockUrgencyNotice(db, product);
+
         return {
           content: [
             {
               type: "text" as const,
-              text: `**${product.name}** (${product.color}${product.size ? `, ${formatSize(product)}` : ""})\nSKU: ${product.sku}\nStock: ${formatStock(product)}\nDelivery: ${product.delivery_estimate}`,
+              text:
+                `**${product.name}** (${product.color}${product.size ? `, ${formatSize(product)}` : ""})\nSKU: ${product.sku}\nStock: ${formatStock(product)}\nDelivery: ${product.delivery_estimate}` +
+                urgency,
             },
           ],
         };
       }) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── reserve_product ──
+  server.registerTool(
+    "reserve_product",
+    {
+      title: "Reserve Product",
+      description:
+        "Temporarily hold a low-stock item for the customer (15-minute reservation). PROACTIVE USE: When you see a product with low stock (≤5 units), proactively offer to reserve it — say something like \"I notice there are only X left — want me to hold one for you for 15 minutes while you decide?\" This creates urgency and demonstrates care for the customer.",
+      inputSchema: {
+        sku: z.string().describe("Product SKU to reserve"),
+        quantity: z
+          .number()
+          .min(1)
+          .max(3)
+          .default(1)
+          .describe("Quantity to reserve (max 3)"),
+      },
+    },
+    async ({ sku, quantity }) => {
+      return withLog(
+        db,
+        "reserve_product",
+        getSessionId(),
+        { sku, quantity },
+        () => {
+          const product = db
+            .prepare("SELECT * FROM products WHERE sku = ?")
+            .get(sku) as Product | undefined;
+          if (!product)
+            return {
+              content: [
+                { type: "text" as const, text: `SKU "${sku}" not found.` },
+              ],
+            };
+
+          if (product.stock_status === "out_of_stock") {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Sorry, **${product.name}** is currently out of stock and cannot be reserved.`,
+                },
+              ],
+            };
+          }
+
+          const available = getAvailableStock(db, product);
+          if (available < quantity) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Cannot reserve ${quantity} unit${quantity > 1 ? "s" : ""} of **${product.name}** — only ${available} available (others have reserved the rest). ${available > 0 ? `I can reserve ${available} instead if you'd like.` : "Would you like to be notified when it's back in stock?"}`,
+                },
+              ],
+            };
+          }
+
+          const user = getUser();
+          const sessionId = getSessionId();
+          const reservationId = randomUUID();
+          const expiresAt = new Date(
+            Date.now() + 15 * 60 * 1000,
+          ).toISOString();
+
+          db.prepare(
+            "INSERT INTO reservations (id, sku, session_id, user_id, quantity, expires_at, status) VALUES (?, ?, ?, ?, ?, ?, 'active')",
+          ).run(
+            reservationId,
+            sku,
+            sessionId ?? null,
+            user?.id ?? null,
+            quantity,
+            expiresAt,
+          );
+
+          const newAvailable = getAvailableStock(db, product);
+          const expiryTime = new Date(expiresAt).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text:
+                  `✓ **Reserved!**\n\n` +
+                  `**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""})\n` +
+                  `Quantity: ${quantity} held for you\n` +
+                  `**Expires:** 15 minutes (at ${expiryTime})\n` +
+                  `**Reservation ID:** ${reservationId.substring(0, 8).toUpperCase()}\n\n` +
+                  `${newAvailable === 0 ? "🔥 You got the last one!" : `Only ${newAvailable} left unreserved after yours.`}\n\n` +
+                  `Add to cart within 15 minutes to complete your purchase. The reservation will automatically release after that.`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 
@@ -529,7 +719,7 @@ export function registerB2CTools(
     {
       title: "Get Recommendations",
       description:
-        'Return 3–5 product recommendations based on a described use case or product the user is viewing. Uses keyword matching and "frequently bought together" data.',
+        'Return 3–5 product recommendations based on a described use case or product the user is viewing. Uses keyword matching and "frequently bought together" data. Use proactively when the customer seems undecided or is browsing — offer tailored suggestions based on what they\'ve looked at.',
       inputSchema: {
         context: z
           .string()
@@ -656,6 +846,13 @@ export function registerB2CTools(
               ],
             };
           }
+
+          // Consume any active reservation this user/session has for this SKU
+          const now = new Date().toISOString();
+          db.prepare(
+            `UPDATE reservations SET status = 'fulfilled' WHERE sku = ? AND user_id = ? AND status = 'active' AND expires_at > ?`,
+          ).run(sku, user.id, now);
+
           const cartId = user.id;
 
           const existing = db
@@ -701,11 +898,58 @@ export function registerB2CTools(
           );
           const cartUrl = `${BASE_URL}/cart`;
 
+          // Build cross-sell recommendations from FBT data
+          let crossSellBlock = "";
+          if (product.frequently_bought_together) {
+            try {
+              const fbtSkus = JSON.parse(
+                product.frequently_bought_together,
+              ) as string[];
+              const cartSkus = cartItems.map((i) => i.sku);
+              const newSuggestions = fbtSkus.filter(
+                (s) => !cartSkus.includes(s),
+              );
+              if (newSuggestions.length > 0) {
+                const placeholders = newSuggestions.map(() => "?").join(",");
+                const companions = db
+                  .prepare(
+                    `SELECT sku, name, price, color, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`,
+                  )
+                  .all(...newSuggestions) as Array<{
+                  sku: string;
+                  name: string;
+                  price: number;
+                  color: string;
+                  stock_status: string;
+                  stock_qty: number;
+                }>;
+                if (companions.length > 0) {
+                  crossSellBlock =
+                    "\n\n---\n🛍️ **Pairs well with this purchase:**\n" +
+                    companions
+                      .map(
+                        (c) =>
+                          `• **${c.name}** (${c.color}) — €${c.price.toFixed(2)} — SKU: ${c.sku}` +
+                          (c.stock_status === "low_stock"
+                            ? ` ⚠️ only ${c.stock_qty} left`
+                            : ""),
+                      )
+                      .join("\n") +
+                    "\n\n**ASSISTANT INSTRUCTION:** Proactively suggest these complementary products to the customer. Frame it naturally, e.g. \"Many customers also grab the [X] with this — want me to add it?\"";
+                }
+              }
+            } catch {
+              /* ignore parse errors */
+            }
+          }
+
           return {
             content: [
               {
                 type: "text" as const,
-                text: `✓ Added to cart!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""})\nQuantity: ${quantity} | Unit Price: €${product.price.toFixed(2)} | Subtotal: €${(product.price * quantity).toFixed(2)}\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\nView your cart: ${cartUrl}`,
+                text:
+                  `✓ Added to cart!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""})\nQuantity: ${quantity} | Unit Price: €${product.price.toFixed(2)} | Subtotal: €${(product.price * quantity).toFixed(2)}\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\nView your cart: ${cartUrl}` +
+                  crossSellBlock,
               },
             ],
           };
@@ -1822,6 +2066,165 @@ export function registerB2CTools(
               ],
             };
           }
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── get_personalized_recommendations ──
+  server.registerTool(
+    "get_personalized_recommendations",
+    {
+      title: "Personalized Recommendations",
+      description:
+        "Recommend products based on the customer's purchase history. Finds accessories and complementary items for things they've already bought but haven't purchased yet. PROACTIVE USE: Call this when greeting a returning customer or when they seem to be browsing without a clear goal — say something like \"Based on your GPS watch purchase last month, here are some compatible accessories you might like.\"",
+      inputSchema: {},
+    },
+    async () => {
+      return withLog(
+        db,
+        "get_personalized_recommendations",
+        getSessionId(),
+        {},
+        () => {
+          const user = getUser();
+          if (!user) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Customer is not signed in. Sign in to see personalized recommendations based on purchase history.",
+                },
+              ],
+            };
+          }
+
+          const orders = db
+            .prepare(
+              "SELECT items, order_date FROM orders WHERE user_id = ? AND status IN ('delivered', 'shipped', 'processing') ORDER BY order_date DESC",
+            )
+            .all(user.id) as Array<{ items: string; order_date: string }>;
+
+          if (orders.length === 0) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "No purchase history found. Use get_recommendations with a context query to suggest products based on interests instead.",
+                },
+              ],
+            };
+          }
+
+          // Collect all SKUs the customer has purchased
+          const purchasedSkus = new Set<string>();
+          const purchasedItems: Array<{
+            sku: string;
+            name: string;
+            order_date: string;
+          }> = [];
+          for (const order of orders) {
+            const items = JSON.parse(order.items) as Array<{
+              sku: string;
+              name: string;
+            }>;
+            for (const item of items) {
+              if (!purchasedSkus.has(item.sku)) {
+                purchasedSkus.add(item.sku);
+                purchasedItems.push({
+                  sku: item.sku,
+                  name: item.name,
+                  order_date: order.order_date,
+                });
+              }
+            }
+          }
+
+          // Also exclude anything currently in cart
+          const cartSkus = new Set(
+            (
+              db
+                .prepare("SELECT sku FROM cart_items WHERE cart_id = ?")
+                .all(user.id) as Array<{ sku: string }>
+            ).map((r) => r.sku),
+          );
+
+          // Find FBT items for purchased products that the customer hasn't bought
+          const recommendations: Array<{
+            product: Product;
+            reason: string;
+            sourceDate: string;
+          }> = [];
+          const seenSkus = new Set<string>();
+
+          for (const purchased of purchasedItems) {
+            const product = db
+              .prepare("SELECT * FROM products WHERE sku = ?")
+              .get(purchased.sku) as Product | undefined;
+            if (!product?.frequently_bought_together) continue;
+
+            try {
+              const fbtSkus = JSON.parse(
+                product.frequently_bought_together,
+              ) as string[];
+              for (const fbtSku of fbtSkus) {
+                if (
+                  purchasedSkus.has(fbtSku) ||
+                  cartSkus.has(fbtSku) ||
+                  seenSkus.has(fbtSku)
+                )
+                  continue;
+                seenSkus.add(fbtSku);
+
+                const companion = db
+                  .prepare("SELECT * FROM products WHERE sku = ?")
+                  .get(fbtSku) as Product | undefined;
+                if (companion && companion.stock_status !== "out_of_stock") {
+                  recommendations.push({
+                    product: companion,
+                    reason: `complements your ${purchased.name}`,
+                    sourceDate: purchased.order_date,
+                  });
+                }
+              }
+            } catch {
+              /* ignore */
+            }
+
+            if (recommendations.length >= 6) break;
+          }
+
+          if (recommendations.length === 0) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Found ${purchasedItems.length} item(s) in purchase history but no new complementary products to suggest. The customer may already own the common accessories. Try get_recommendations with a context query for fresh ideas.`,
+                },
+              ],
+            };
+          }
+
+          const lines = recommendations.map((r) => {
+            const p = r.product;
+            const stockNote =
+              p.stock_status === "low_stock"
+                ? ` — ⚠️ only ${p.stock_qty} left!`
+                : "";
+            return (
+              `• **${p.name}** (${p.color}) — €${p.price.toFixed(2)}${stockNote}\n` +
+              `  _${r.reason} (purchased ${r.sourceDate})_\n` +
+              `  SKU: ${p.sku}`
+            );
+          });
+
+          const text =
+            `## Recommended For You\n\n` +
+            `Based on your recent purchases, here are compatible accessories and complementary products:\n\n` +
+            lines.join("\n\n") +
+            `\n\n---\n**ASSISTANT INSTRUCTION:** Present these naturally to the customer, referencing their specific past purchases. For example: "Since you got the [product] last month, you might like [recommendation] — it pairs really well with it." If any item is low stock, mention the urgency.`;
+
+          return { content: [{ type: "text" as const, text }] };
         },
       ) as { content: Array<{ type: "text"; text: string }> };
     },

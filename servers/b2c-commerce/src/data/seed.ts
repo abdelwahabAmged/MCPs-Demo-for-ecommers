@@ -197,6 +197,19 @@ function ensureRuntimeTables(db: Database.Database): void {
     )
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS reservations (
+      id TEXT PRIMARY KEY,
+      sku TEXT NOT NULL,
+      session_id TEXT,
+      user_id TEXT,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      expires_at TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      status TEXT DEFAULT 'active'
+    )
+  `);
+
   // Add user_id columns to existing tables if missing (upgrade path)
   const tablesToPatch = [
     "cart_items",
