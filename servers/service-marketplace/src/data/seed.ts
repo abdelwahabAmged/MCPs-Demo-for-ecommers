@@ -1,205 +1,49 @@
 import type Database from 'better-sqlite3';
-import { seedTableRaw } from '@mcp-demos/shared';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const DATA_VERSION = 2;
+
+function loadJSON<T>(filename: string): T {
+  const raw = readFileSync(join(__dirname, filename), 'utf-8');
+  return JSON.parse(raw) as T;
+}
+
+function isDataCurrent(db: Database.Database): boolean {
+  try {
+    const row = db.prepare("SELECT version FROM _data_meta WHERE id = 'marketplace_data'").get() as { version: number } | undefined;
+    return row?.version === DATA_VERSION;
+  } catch {
+    return false;
+  }
+}
+
+function dropCatalogueTables(db: Database.Database): void {
+  db.exec('DROP TABLE IF EXISTS reviews');
+  db.exec('DROP TABLE IF EXISTS availability');
+  db.exec('DROP TABLE IF EXISTS bookings');
+  db.exec('DROP TABLE IF EXISTS quote_estimates');
+  db.exec('DROP TABLE IF EXISTS providers');
+}
 
 export function seedServiceMarketplaceData(db: Database.Database): void {
-  const providers = [
-    {
-      id: 'prov-001',
-      name: "Dave's Plumbing Services",
-      job_type: 'plumbing',
-      rating: 4.8,
-      review_count: 234,
-      hourly_rate: 85,
-      callout_fee: 65,
-      currency: 'GBP',
-      location: 'Manchester,Salford',
-      response_time: 'under 1 hour',
-      bio: 'Family-run plumbing business serving Greater Manchester for over 15 years. Gas Safe registered. Specialising in emergency repairs, boiler servicing, and bathroom installations.',
-      specialisms: 'Emergency repairs,Boiler servicing,Bathroom installations,Pipe work,Leak detection',
-      sample_jobs: 'Replaced burst pipe under kitchen sink (£120),Full bathroom refit including tiling (£3,200),Annual boiler service and safety check (£85)',
-    },
-    {
-      id: 'prov-002',
-      name: 'Manchester Electrics Ltd',
-      job_type: 'electrical',
-      rating: 4.7,
-      review_count: 189,
-      hourly_rate: 95,
-      callout_fee: 75,
-      currency: 'GBP',
-      location: 'Manchester,Stretford',
-      response_time: 'within 4 hours',
-      bio: 'NICEIC-approved electrical contractors. From rewires to smart home installations, we handle all domestic and light commercial electrical work across Manchester.',
-      specialisms: 'Rewiring,Fuse board upgrades,Smart home installations,EV charger fitting,Lighting design',
-      sample_jobs: 'Full house rewire 3-bed semi (£4,500),Consumer unit upgrade (£380),EV charger installation (£850)',
-    },
-    {
-      id: 'prov-003',
-      name: 'Green Boiler Co',
-      job_type: 'boiler/heating',
-      rating: 4.9,
-      review_count: 340,
-      hourly_rate: 120,
-      callout_fee: 0,
-      currency: 'GBP',
-      location: 'Manchester,Stockport',
-      response_time: 'under 1 hour',
-      bio: 'Award-winning heating specialists. Gas Safe registered with 20+ years experience. Free call-outs for all boiler breakdowns. Finance available on new installations.',
-      specialisms: 'Boiler installations,Central heating,Underfloor heating,Power flushing,Smart thermostats',
-      sample_jobs: 'New combi boiler install with 10-year warranty (£2,800),Power flush 8-radiator system (£450),Smart thermostat fitting (£180)',
-    },
-    {
-      id: 'prov-004',
-      name: 'All-Round Builders NW',
-      job_type: 'general building',
-      rating: 4.3,
-      review_count: 78,
-      hourly_rate: 75,
-      callout_fee: 0,
-      currency: 'GBP',
-      location: 'Manchester,Bolton,Bury',
-      response_time: 'within 4 hours',
-      bio: 'Experienced general builders covering all aspects of construction and renovation. Extensions, loft conversions, and structural alterations. Fully insured.',
-      specialisms: 'Extensions,Loft conversions,Structural work,Brickwork,Plastering',
-      sample_jobs: 'Single-storey rear extension (£28,000),Loft conversion with dormer (£35,000),Garden wall rebuild (£1,200)',
-    },
-    {
-      id: 'prov-005',
-      name: 'ProCoat Painters & Decorators',
-      job_type: 'painting/decorating',
-      rating: 4.6,
-      review_count: 156,
-      hourly_rate: 55,
-      callout_fee: 0,
-      currency: 'GBP',
-      location: 'Manchester,Didsbury,Chorlton',
-      response_time: 'same day quote',
-      bio: 'Professional painting and decorating services. Interior and exterior specialists. Wallpapering, feature walls, and full house re-decorations. Clean, tidy, and punctual.',
-      specialisms: 'Interior painting,Exterior painting,Wallpapering,Feature walls,Period property restoration',
-      sample_jobs: 'Full interior repaint 3-bed house (£2,400),Exterior masonry painting (£1,100),Hallway and landing wallpaper (£650)',
-    },
-    {
-      id: 'prov-006',
-      name: 'Northwest Roofing Solutions',
-      job_type: 'roofing',
-      rating: 4.5,
-      review_count: 112,
-      hourly_rate: 90,
-      callout_fee: 50,
-      currency: 'GBP',
-      location: 'Manchester,Oldham,Rochdale',
-      response_time: 'under 1 hour',
-      bio: 'Complete roofing services from emergency leak repairs to full re-roofs. Slate, tile, flat roofing, and chimney work. All work guaranteed for 10 years.',
-      specialisms: 'Slate roofing,Flat roofing,Chimney repairs,Guttering,Fascias and soffits',
-      sample_jobs: 'Full re-roof 3-bed semi with scaffolding (£6,500),Emergency leak repair (£180),New EPDM flat roof to garage (£1,800)',
-    },
-    {
-      id: 'prov-007',
-      name: 'SecureHome Locksmiths',
-      job_type: 'locksmith',
-      rating: 4.8,
-      review_count: 298,
-      hourly_rate: 70,
-      callout_fee: 45,
-      currency: 'GBP',
-      location: 'Manchester,Trafford,Salford',
-      response_time: 'under 30 minutes',
-      bio: '24/7 emergency locksmith covering Greater Manchester. Non-destructive entry specialists. Lock upgrades, UPVC mechanism repairs, and safe opening.',
-      specialisms: 'Emergency entry,Lock upgrades,UPVC repairs,Safe opening,Security surveys',
-      sample_jobs: 'Emergency lockout non-destructive entry (£85),Full lock change front and back (£220),UPVC multipoint mechanism replacement (£180)',
-    },
-    {
-      id: 'prov-008',
-      name: 'ClearView Window Cleaning',
-      job_type: 'window cleaning',
-      rating: 4.4,
-      review_count: 203,
-      hourly_rate: 40,
-      callout_fee: 0,
-      currency: 'GBP',
-      location: 'Manchester,Stockport,Trafford',
-      response_time: 'within 24 hours',
-      bio: 'Professional window cleaning using pure water fed pole system. Regular cleans or one-offs. Conservatories, gutters, and solar panels also cleaned. Fully insured.',
-      specialisms: 'Residential windows,Commercial windows,Conservatory cleaning,Gutter clearing,Solar panel cleaning',
-      sample_jobs: 'Full exterior clean 4-bed detached (£45),Conservatory full clean (£80),Gutter clear and flush (£65)',
-    },
-  ];
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS _data_meta (
+      id TEXT PRIMARY KEY,
+      version INTEGER NOT NULL
+    )
+  `);
 
-  const availability = [
-    { provider_id: 'prov-001', day_offset: 0, time_slot: '14:00', available: 1 },
-    { provider_id: 'prov-001', day_offset: 0, time_slot: '16:00', available: 1 },
-    { provider_id: 'prov-001', day_offset: 2, time_slot: '09:00', available: 1 },
-    { provider_id: 'prov-001', day_offset: 2, time_slot: '11:00', available: 1 },
-    { provider_id: 'prov-001', day_offset: 5, time_slot: '10:00', available: 1 },
-    { provider_id: 'prov-002', day_offset: 1, time_slot: '09:00', available: 1 },
-    { provider_id: 'prov-002', day_offset: 1, time_slot: '13:00', available: 1 },
-    { provider_id: 'prov-002', day_offset: 3, time_slot: '10:00', available: 1 },
-    { provider_id: 'prov-002', day_offset: 5, time_slot: '08:00', available: 1 },
-    { provider_id: 'prov-003', day_offset: 0, time_slot: '10:00', available: 1 },
-    { provider_id: 'prov-003', day_offset: 1, time_slot: '08:00', available: 1 },
-    { provider_id: 'prov-003', day_offset: 1, time_slot: '14:00', available: 1 },
-    { provider_id: 'prov-003', day_offset: 4, time_slot: '09:00', available: 1 },
-    { provider_id: 'prov-003', day_offset: 6, time_slot: '10:00', available: 1 },
-    { provider_id: 'prov-004', day_offset: 3, time_slot: '08:00', available: 1 },
-    { provider_id: 'prov-004', day_offset: 4, time_slot: '08:00', available: 1 },
-    { provider_id: 'prov-004', day_offset: 5, time_slot: '08:00', available: 1 },
-    { provider_id: 'prov-005', day_offset: 2, time_slot: '09:00', available: 1 },
-    { provider_id: 'prov-005', day_offset: 2, time_slot: '13:00', available: 1 },
-    { provider_id: 'prov-005', day_offset: 6, time_slot: '09:00', available: 1 },
-    { provider_id: 'prov-006', day_offset: 1, time_slot: '07:30', available: 1 },
-    { provider_id: 'prov-006', day_offset: 3, time_slot: '07:30', available: 1 },
-    { provider_id: 'prov-006', day_offset: 5, time_slot: '07:30', available: 1 },
-    { provider_id: 'prov-007', day_offset: 0, time_slot: '09:00', available: 1 },
-    { provider_id: 'prov-007', day_offset: 0, time_slot: '11:00', available: 1 },
-    { provider_id: 'prov-007', day_offset: 0, time_slot: '15:00', available: 1 },
-    { provider_id: 'prov-007', day_offset: 1, time_slot: '10:00', available: 1 },
-    { provider_id: 'prov-008', day_offset: 2, time_slot: '08:00', available: 1 },
-    { provider_id: 'prov-008', day_offset: 4, time_slot: '08:00', available: 1 },
-    { provider_id: 'prov-008', day_offset: 6, time_slot: '08:00', available: 1 },
-  ];
+  if (isDataCurrent(db)) {
+    return;
+  }
 
-  const bookings = [
-    {
-      booking_ref: 'BK-20045',
-      provider_id: 'prov-001',
-      provider_name: "Dave's Plumbing Services",
-      status: 'confirmed',
-      date: 'Saturday',
-      time: '10:00',
-      job_description: 'Annual boiler service and safety check',
-      estimated_cost: 120,
-      currency: 'GBP',
-      notes: 'Please ensure access to boiler cupboard. Service takes approximately 45 minutes.',
-    },
-    {
-      booking_ref: 'BK-19987',
-      provider_id: 'prov-002',
-      provider_name: 'Manchester Electrics Ltd',
-      status: 'completed',
-      date: 'last Tuesday',
-      time: '09:00',
-      job_description: 'Replace faulty light switch in hallway and check wiring',
-      estimated_cost: 95,
-      currency: 'GBP',
-      notes: 'Job completed successfully. New dimmer switch fitted. All wiring confirmed safe.',
-    },
-  ];
+  dropCatalogueTables(db);
 
-  const quoteEstimates = [
-    { job_type: 'plumbing', location: 'Manchester', min_cost: 65, max_cost: 250, typical_duration: '1-3 hours' },
-    { job_type: 'plumbing', location: 'Salford', min_cost: 65, max_cost: 250, typical_duration: '1-3 hours' },
-    { job_type: 'electrical', location: 'Manchester', min_cost: 75, max_cost: 500, typical_duration: '1-4 hours' },
-    { job_type: 'electrical', location: 'Stretford', min_cost: 75, max_cost: 500, typical_duration: '1-4 hours' },
-    { job_type: 'boiler/heating', location: 'Manchester', min_cost: 85, max_cost: 3000, typical_duration: '1-8 hours' },
-    { job_type: 'boiler/heating', location: 'Stockport', min_cost: 85, max_cost: 3000, typical_duration: '1-8 hours' },
-    { job_type: 'general building', location: 'Manchester', min_cost: 200, max_cost: 50000, typical_duration: '1 day - 12 weeks' },
-    { job_type: 'painting/decorating', location: 'Manchester', min_cost: 150, max_cost: 3000, typical_duration: '1-5 days' },
-    { job_type: 'roofing', location: 'Manchester', min_cost: 150, max_cost: 8000, typical_duration: '1-5 days' },
-    { job_type: 'locksmith', location: 'Manchester', min_cost: 45, max_cost: 300, typical_duration: '30 minutes - 2 hours' },
-    { job_type: 'window cleaning', location: 'Manchester', min_cost: 25, max_cost: 120, typical_duration: '1-2 hours' },
-  ];
-
-  seedTableRaw(db, 'providers', `
+  db.exec(`
     CREATE TABLE IF NOT EXISTS providers (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -210,24 +54,44 @@ export function seedServiceMarketplaceData(db: Database.Database): void {
       callout_fee REAL DEFAULT 0,
       currency TEXT DEFAULT 'GBP',
       location TEXT NOT NULL,
+      coverage_radius_miles INTEGER DEFAULT 10,
       response_time TEXT,
       bio TEXT,
       specialisms TEXT,
-      sample_jobs TEXT
+      sample_jobs TEXT,
+      certifications TEXT,
+      years_in_business INTEGER,
+      insurance TEXT,
+      website TEXT,
+      phone TEXT
     )
-  `, providers);
+  `);
 
-  seedTableRaw(db, 'availability', `
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id INTEGER PRIMARY KEY,
+      provider_id TEXT NOT NULL,
+      reviewer_name TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      job_type TEXT,
+      comment TEXT,
+      FOREIGN KEY (provider_id) REFERENCES providers(id)
+    )
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS availability (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider_id TEXT NOT NULL,
       day_offset INTEGER NOT NULL,
       time_slot TEXT NOT NULL,
-      available INTEGER DEFAULT 1
+      available INTEGER DEFAULT 1,
+      FOREIGN KEY (provider_id) REFERENCES providers(id)
     )
-  `, availability);
+  `);
 
-  seedTableRaw(db, 'bookings', `
+  db.exec(`
     CREATE TABLE IF NOT EXISTS bookings (
       booking_ref TEXT PRIMARY KEY,
       provider_id TEXT NOT NULL,
@@ -239,18 +103,69 @@ export function seedServiceMarketplaceData(db: Database.Database): void {
       estimated_cost REAL,
       currency TEXT DEFAULT 'GBP',
       notes TEXT,
-      session_id TEXT
+      customer_name TEXT,
+      customer_phone TEXT,
+      address TEXT,
+      session_id TEXT,
+      FOREIGN KEY (provider_id) REFERENCES providers(id)
     )
-  `, bookings);
+  `);
 
-  seedTableRaw(db, 'quote_estimates', `
+  db.exec(`
     CREATE TABLE IF NOT EXISTS quote_estimates (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       job_type TEXT NOT NULL,
+      sub_type TEXT,
       location TEXT NOT NULL,
       min_cost REAL NOT NULL,
       max_cost REAL NOT NULL,
-      typical_duration TEXT
+      typical_duration TEXT,
+      includes TEXT
     )
-  `, quoteEstimates);
+  `);
+
+  // Load from JSON
+  const providers = loadJSON<any[]>('providers.json');
+  const reviews = loadJSON<any[]>('reviews.json');
+  const availability = loadJSON<any[]>('availability.json');
+  const bookings = loadJSON<any[]>('bookings.json');
+  const quotes = loadJSON<any[]>('quotes.json');
+
+  const insertProvider = db.prepare(
+    `INSERT INTO providers (id, name, job_type, rating, review_count, hourly_rate, callout_fee, currency, location, coverage_radius_miles, response_time, bio, specialisms, sample_jobs, certifications, years_in_business, insurance, website, phone)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  for (const p of providers) {
+    insertProvider.run(p.id, p.name, p.job_type, p.rating, p.review_count, p.hourly_rate, p.callout_fee, p.currency, p.location, p.coverage_radius_miles, p.response_time, p.bio, p.specialisms, p.sample_jobs, p.certifications, p.years_in_business, p.insurance, p.website, p.phone);
+  }
+
+  const insertReview = db.prepare(
+    'INSERT INTO reviews (id, provider_id, reviewer_name, rating, date, job_type, comment) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  );
+  for (const r of reviews) {
+    insertReview.run(r.id, r.provider_id, r.reviewer_name, r.rating, r.date, r.job_type, r.comment);
+  }
+
+  const insertAvailability = db.prepare(
+    'INSERT INTO availability (provider_id, day_offset, time_slot, available) VALUES (?, ?, ?, ?)'
+  );
+  for (const a of availability) {
+    insertAvailability.run(a.provider_id, a.day_offset, a.time_slot, a.available);
+  }
+
+  const insertBooking = db.prepare(
+    'INSERT INTO bookings (booking_ref, provider_id, provider_name, status, date, time, job_description, estimated_cost, currency, notes, customer_name, customer_phone, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  for (const b of bookings) {
+    insertBooking.run(b.booking_ref, b.provider_id, b.provider_name, b.status, b.date, b.time, b.job_description, b.estimated_cost, b.currency, b.notes, b.customer_name, b.customer_phone, b.address);
+  }
+
+  const insertQuote = db.prepare(
+    'INSERT INTO quote_estimates (job_type, sub_type, location, min_cost, max_cost, typical_duration, includes) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  );
+  for (const q of quotes) {
+    insertQuote.run(q.job_type, q.sub_type, q.location, q.min_cost, q.max_cost, q.typical_duration, q.includes);
+  }
+
+  db.prepare("INSERT OR REPLACE INTO _data_meta (id, version) VALUES ('marketplace_data', ?)").run(DATA_VERSION);
 }
