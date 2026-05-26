@@ -11,6 +11,7 @@ function siteHeader(activePage: string): string {
     <nav class="site-nav">
       <a href="/"${activePage === 'shop' ? ' class="active"' : ''}>Shop</a>
       <a href="/orders"${activePage === 'orders' ? ' class="active"' : ''}>Orders</a>
+      <a href="/support"${activePage === 'support' ? ' class="active"' : ''}>Support</a>
     </nav>
     <a href="/cart" class="header-cart-link" title="Cart">${HEADER_SVG.cart}</a>
     <div class="user-bar" id="user-bar"></div>
@@ -180,6 +181,63 @@ export function renderOrderDetailPage(): string {
 export interface LoginPageOptions {
   hasGoogle: boolean;
   hasGithub: boolean;
+}
+
+export function renderTicketsPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Tickets — Acme Store</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/tickets.css">
+</head>
+<body>
+  ${siteHeader('support')}
+  <div class="page-container" style="max-width:900px">
+    <div class="tickets-page-title">
+      <h1>Support Tickets <span id="tickets-count" style="color:#8e8e93;font-weight:400"></span></h1>
+      <p>Track issues with your orders and get help from our team.</p>
+    </div>
+    <div class="tickets-toolbar">
+      <div></div>
+      <button class="new-ticket-btn" id="new-ticket-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Ticket
+      </button>
+    </div>
+    <div id="tickets-content">
+      <div class="tickets-loading"><div class="spinner"></div>Loading tickets...</div>
+    </div>
+  </div>
+  <script src="/static/app.js"></script>
+  <script src="/static/tickets.js"></script>
+</body>
+</html>`;
+}
+
+export function renderTicketDetailPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Details — Acme Store</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/tickets.css">
+</head>
+<body>
+  ${siteHeader('support')}
+  <div class="page-container" style="max-width:1000px">
+    <div id="tickets-content">
+      <div class="tickets-loading"><div class="spinner"></div>Loading ticket details...</div>
+    </div>
+  </div>
+  <script src="/static/app.js"></script>
+  <script src="/static/tickets.js"></script>
+</body>
+</html>`;
 }
 
 export function renderLoginPage(options: LoginPageOptions): string {

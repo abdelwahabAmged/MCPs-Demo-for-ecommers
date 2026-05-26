@@ -9,6 +9,8 @@ import {
   renderCheckoutPage,
   renderOrdersPage,
   renderOrderDetailPage,
+  renderTicketsPage,
+  renderTicketDetailPage,
 } from "./pages.js";
 import type { Request, Response } from "express";
 import express from "express";
@@ -412,6 +414,102 @@ app.get("/orders/:orderId", async (req: Request, res: Response) => {
   if (!user) { res.redirect("/login"); return; }
   res.setHeader("Content-Type", "text/html");
   res.send(renderOrderDetailPage());
+});
+
+// ── Support Tickets API ──────────────────────────────────────
+interface TicketRow {
+  ticket_id: string;
+  order_id: string;
+  issue_type: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  created_at: string;
+  updated_at: string;
+  resolution: string | null;
+  session_id: string | null;
+  user_id: string | null;
+}
+
+app.get("/api/tickets", async (req: Request, res: Response) => {
+  if (!auth) { res.status(401).json({ error: "Authentication not configured" }); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.status(401).json({ error: "Sign in required", loginUrl: "/login" }); return; }
+
+  const tickets = db
+    .prepare("SELECT * FROM support_tickets WHERE user_id = ? ORDER BY created_at DESC")
+    .all(user.id) as TicketRow[];
+
+  res.json({ tickets });
+});
+
+app.get("/api/tickets/:ticketId", async (req: Request, res: Response) => {
+  if (!auth) { res.status(401).json({ error: "Authentication not configured" }); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.status(401).json({ error: "Sign in required", loginUrl: "/login" }); return; }
+
+  const ticket = db
+    .prepare("SELECT * FROM support_tickets WHERE ticket_id = ? AND user_id = ?")
+    .get(req.params.ticketId, user.id) as TicketRow | undefined;
+
+  if (!ticket) { res.status(404).json({ error: "Ticket not found" }); return; }
+
+  // Fetch the related order
+  const order = db
+    .prepare("SELECT order_id, status, order_date, total, currency FROM orders WHERE order_id = ?")
+    .get(ticket.order_id) as { order_id: string; status: string; order_date: string; total: number; currency: string } | undefined;
+
+  res.json({ ...ticket, order: order || null });
+});
+
+app.post("/api/tickets", async (req: Request, res: Response) => {
+  if (!auth) { res.status(401).json({ error: "Authentication not configured" }); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.status(401).json({ error: "Sign in required", loginUrl: "/login" }); return; }
+
+  const { order_id, issue_type, description } = req.body;
+  if (!order_id || !issue_type || !description) {
+    res.status(400).json({ error: "order_id, issue_type, and description are required" });
+    return;
+  }
+
+  const order = db.prepare("SELECT * FROM orders WHERE order_id = ? AND user_id = ?")
+    .get(order_id, user.id) as OrderRow | undefined;
+  if (!order) { res.status(404).json({ error: "Order not found" }); return; }
+
+  const priority = (issue_type === "damaged" || issue_type === "missing_item") ? "high" : "normal";
+  const ticketId = `TKT-${randomUUID().substring(0, 8).toUpperCase()}`;
+
+  db.prepare(
+    "INSERT INTO support_tickets (ticket_id, order_id, issue_type, description, status, priority, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  ).run(ticketId, order_id, issue_type, description, "open", priority, user.id);
+
+  res.json({
+    ticket_id: ticketId,
+    order_id,
+    issue_type,
+    description,
+    status: "open",
+    priority,
+    url: `/support/${ticketId}`,
+  });
+});
+
+// ── Support pages ────────────────────────────────────────────
+app.get("/support", async (req: Request, res: Response) => {
+  if (!auth) { res.redirect("/login"); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.redirect("/login"); return; }
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderTicketsPage());
+});
+
+app.get("/support/:ticketId", async (req: Request, res: Response) => {
+  if (!auth) { res.redirect("/login"); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.redirect("/login"); return; }
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderTicketDetailPage());
 });
 
 // ── Homepage (Products page) ─────────────────────────────────

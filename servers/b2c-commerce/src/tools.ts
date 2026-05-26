@@ -1338,7 +1338,7 @@ export function registerB2CTools(
     {
       title: "Create Support Ticket",
       description:
-        "Report an issue with an order: damaged, wrong item, missing, late delivery, or other.",
+        "Report an issue with an order: damaged, wrong item, missing, late delivery, or other. Returns a link to the created ticket.",
       inputSchema: {
         order_id: z.string().describe("Order number the issue relates to"),
         issue_type: z
@@ -1360,9 +1360,15 @@ export function registerB2CTools(
         getSessionId(),
         { order_id, issue_type, description },
         () => {
+          const userId = getUser()?.id ?? null;
+
+          const orderQuery = userId
+            ? "SELECT * FROM orders WHERE order_id = ? AND user_id = ?"
+            : "SELECT * FROM orders WHERE order_id = ?";
+          const orderParams = userId ? [order_id, userId] : [order_id];
           const order = db
-            .prepare("SELECT * FROM orders WHERE order_id = ?")
-            .get(order_id) as Order | undefined;
+            .prepare(orderQuery)
+            .get(...orderParams) as Order | undefined;
           if (!order)
             return {
               content: [
@@ -1388,16 +1394,17 @@ export function registerB2CTools(
             "open",
             priority,
             getSessionId() ?? null,
-            getUser()?.id ?? null,
+            userId,
           );
 
+          const ticketUrl = `${BASE_URL}/support/${ticketId}`;
           const resolutionTime =
             priority === "high" ? "24–48 hours" : "3–5 business days";
           return {
             content: [
               {
                 type: "text" as const,
-                text: `✓ Support ticket created!\n\n**Ticket ID:** ${ticketId}\n**Order:** ${order_id}\n**Issue:** ${issue_type.replace(/_/g, " ")}\n**Priority:** ${priority}\n**Status:** Open\n\nOur team will review within ${resolutionTime}. Ask about ticket ${ticketId} anytime for updates.`,
+                text: `✓ Support ticket created!\n\n**Ticket ID:** ${ticketId}\n**Order:** ${order_id}\n**Issue:** ${issue_type.replace(/_/g, " ")}\n**Priority:** ${priority}\n**Status:** Open\n\n**View ticket:** ${ticketUrl}\n\nOur team will review within ${resolutionTime}. Ask about ticket ${ticketId} anytime for updates.`,
               },
             ],
           };
@@ -1426,12 +1433,18 @@ export function registerB2CTools(
         getSessionId(),
         { ticket_id },
         () => {
-          const sessionId = getSessionId();
+          const userId = getUser()?.id ?? null;
 
           if (ticket_id) {
+            const ticketQuery = userId
+              ? "SELECT * FROM support_tickets WHERE ticket_id = ? AND user_id = ?"
+              : "SELECT * FROM support_tickets WHERE ticket_id = ?";
+            const ticketParams = userId
+              ? [ticket_id, userId]
+              : [ticket_id];
             const ticket = db
-              .prepare("SELECT * FROM support_tickets WHERE ticket_id = ?")
-              .get(ticket_id) as SupportTicket | undefined;
+              .prepare(ticketQuery)
+              .get(...ticketParams) as SupportTicket | undefined;
             if (!ticket)
               return {
                 content: [
@@ -1442,23 +1455,23 @@ export function registerB2CTools(
                 ],
               };
 
+            const ticketUrl = `${BASE_URL}/support/${ticket.ticket_id}`;
             return {
               content: [
                 {
                   type: "text" as const,
-                  text: `## Ticket ${ticket.ticket_id}\n\n**Order:** ${ticket.order_id}\n**Issue:** ${ticket.issue_type.replace(/_/g, " ")}\n**Priority:** ${ticket.priority}\n**Status:** ${ticket.status}\n**Created:** ${ticket.created_at}\n**Description:** ${ticket.description}\n${ticket.resolution ? `**Resolution:** ${ticket.resolution}` : ""}`,
+                  text: `## Ticket ${ticket.ticket_id}\n\n**Order:** ${ticket.order_id}\n**Issue:** ${ticket.issue_type.replace(/_/g, " ")}\n**Priority:** ${ticket.priority}\n**Status:** ${ticket.status}\n**Created:** ${ticket.created_at}\n**Description:** ${ticket.description}\n${ticket.resolution ? `**Resolution:** ${ticket.resolution}\n` : ""}**View ticket:** ${ticketUrl}`,
                 },
               ],
             };
           }
 
-          const ownerId = getUser()?.id || sessionId;
-          const tickets = ownerId
+          const tickets = userId
             ? (db
                 .prepare(
-                  "SELECT * FROM support_tickets WHERE session_id = ? OR user_id = ? ORDER BY created_at DESC",
+                  "SELECT * FROM support_tickets WHERE user_id = ? ORDER BY created_at DESC",
                 )
-                .all(ownerId, ownerId) as SupportTicket[])
+                .all(userId) as SupportTicket[])
             : (db
                 .prepare(
                   "SELECT * FROM support_tickets ORDER BY created_at DESC",
@@ -1479,14 +1492,15 @@ export function registerB2CTools(
                 : t.status === "in_progress"
                   ? "🟡"
                   : "🟢";
-            return `${icon} **${t.ticket_id}** — ${t.order_id} — ${t.issue_type.replace(/_/g, " ")} — ${t.priority} priority — ${t.status}`;
+            const ticketUrl = `${BASE_URL}/support/${t.ticket_id}`;
+            return `${icon} **${t.ticket_id}** — ${t.order_id} — ${t.issue_type.replace(/_/g, " ")} — ${t.priority} priority — ${t.status}\n   View: ${ticketUrl}`;
           });
 
           return {
             content: [
               {
                 type: "text" as const,
-                text: `## Support Tickets (${tickets.length})\n\n${lines.join("\n")}`,
+                text: `## Support Tickets (${tickets.length})\n\n${lines.join("\n\n")}`,
               },
             ],
           };
