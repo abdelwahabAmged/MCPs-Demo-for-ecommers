@@ -10,6 +10,7 @@ function siteHeader(activePage: string): string {
     <a href="/" class="site-logo">${HEADER_SVG.logo} Acme Store</a>
     <nav class="site-nav">
       <a href="/"${activePage === 'shop' ? ' class="active"' : ''}>Shop</a>
+      <a href="/orders"${activePage === 'orders' ? ' class="active"' : ''}>Orders</a>
     </nav>
     <a href="/cart" class="header-cart-link" title="Cart">${HEADER_SVG.cart}</a>
     <div class="user-bar" id="user-bar"></div>
@@ -89,6 +90,89 @@ export function renderCartPage(): string {
   <div id="toast" class="toast"></div>
   <script src="/static/app.js"></script>
   <script src="/static/cart.js"></script>
+</body>
+</html>`;
+}
+
+export function renderCheckoutPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Acme Store</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/checkout.css">
+</head>
+<body>
+  ${siteHeader('checkout')}
+  <div class="page-container" style="max-width:1000px">
+    <div class="checkout-page-title">
+      <h1>Checkout</h1>
+      <p>Review your order and complete the purchase.</p>
+    </div>
+    <div class="checkout-layout">
+      <div class="checkout-form-card" id="checkout-form">
+        <div class="checkout-loading"><div class="spinner"></div>Loading checkout...</div>
+      </div>
+      <div id="checkout-sidebar"></div>
+    </div>
+    <div class="demo-badge"><span>Preview Environment</span></div>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="/static/app.js"></script>
+  <script src="/static/checkout.js"></script>
+</body>
+</html>`;
+}
+
+export function renderOrdersPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders — Acme Store</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/orders.css">
+</head>
+<body>
+  ${siteHeader('orders')}
+  <div class="page-container">
+    <div class="orders-page-title">
+      <h1>My Orders <span id="orders-count" style="color:#8e8e93;font-weight:400;font-size:18px"></span></h1>
+    </div>
+    <div id="orders-content">
+      <div class="orders-loading"><div class="spinner"></div>Loading orders...</div>
+    </div>
+    <div class="demo-badge"><span>Preview Environment</span></div>
+  </div>
+  <script src="/static/app.js"></script>
+  <script src="/static/orders.js"></script>
+</body>
+</html>`;
+}
+
+export function renderOrderDetailPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Details — Acme Store</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/orders.css">
+</head>
+<body>
+  ${siteHeader('orders')}
+  <div class="page-container">
+    <div id="orders-content">
+      <div class="orders-loading"><div class="spinner"></div>Loading order...</div>
+    </div>
+    <div class="demo-badge"><span>Preview Environment</span></div>
+  </div>
+  <script src="/static/app.js"></script>
+  <script src="/static/orders.js"></script>
 </body>
 </html>`;
 }

@@ -101,7 +101,7 @@
             '<span class="label">Total</span>' +
             '<span class="value">\u20ac' + (grandTotal + data.totalPrice * 0.21).toFixed(2) + '</span>' +
           '</div>' +
-          '<button class="checkout-btn" onclick="alert(\'This is a demo \u2014 checkout would happen here!\')">' +
+          '<button class="checkout-btn" onclick="window.location.href=\'/checkout\'">' +
             ICONS.lock + ' Checkout' +
           '</button>' +
           '<div class="delivery-badge">' +

@@ -2,11 +2,19 @@ import { createServerApp, getSessionUser } from "@mcp-demos/shared";
 import type { AuthConfig } from "@mcp-demos/shared";
 import { seedB2CData } from "./data/seed.js";
 import { registerB2CTools } from "./tools.js";
-import { renderCartPage, renderLoginPage, renderProductsPage } from "./pages.js";
+import {
+  renderCartPage,
+  renderLoginPage,
+  renderProductsPage,
+  renderCheckoutPage,
+  renderOrdersPage,
+  renderOrderDetailPage,
+} from "./pages.js";
 import type { Request, Response } from "express";
 import express from "express";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { randomUUID } from "node:crypto";
 
 const PORT = parseInt(process.env["PORT"] || "3001", 10);
 
@@ -233,6 +241,177 @@ app.get("/api/products", (_req: Request, res: Response) => {
   const categories = Array.from(categorySet).sort();
 
   res.json({ products, categories });
+});
+
+// ── Checkout API ─────────────────────────────────────────────
+interface OrderRow {
+  order_id: string;
+  status: string;
+  carrier: string | null;
+  tracking_number: string | null;
+  delivery_estimate: string | null;
+  order_date: string;
+  items: string;
+  total: number;
+  currency: string;
+  eligible_for_return: number;
+  return_deadline: string | null;
+  user_id: string | null;
+}
+
+app.post("/api/checkout", async (req: Request, res: Response) => {
+  if (!auth) {
+    res.status(401).json({ error: "Authentication not configured" });
+    return;
+  }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) {
+    res.status(401).json({ error: "Sign in required", loginUrl: "/login" });
+    return;
+  }
+
+  const cartItems = db
+    .prepare("SELECT * FROM cart_items WHERE cart_id = ? ORDER BY added_at DESC")
+    .all(user.id) as CartItem[];
+
+  if (cartItems.length === 0) {
+    res.status(400).json({ error: "Cart is empty" });
+    return;
+  }
+
+  const { shipping_address, city, zip, country, phone, payment_method } = req.body;
+
+  const subtotal = cartItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+  const shipping = subtotal >= 50 ? 0 : 4.99;
+  const tax = +(subtotal * 0.21).toFixed(2);
+  const total = +(subtotal + shipping + tax).toFixed(2);
+
+  const orderId = `ACM-${new Date().getFullYear()}-${randomUUID().substring(0, 5).toUpperCase()}`;
+  const orderItems = cartItems.map((i) => ({
+    sku: i.sku,
+    name: i.name,
+    color: i.color,
+    size: i.size,
+    quantity: i.quantity,
+    price: i.unit_price,
+    image_url: i.image_url,
+  }));
+
+  const deliveryDate = new Date();
+  deliveryDate.setDate(deliveryDate.getDate() + 3);
+
+  // Simulate payment processing delay
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  db.prepare(
+    `INSERT INTO orders (order_id, status, delivery_estimate, order_date, items, total, currency, eligible_for_return, return_deadline, user_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    orderId,
+    "processing",
+    deliveryDate.toISOString().split("T")[0],
+    new Date().toISOString().split("T")[0],
+    JSON.stringify(orderItems),
+    total,
+    "EUR",
+    1,
+    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    user.id,
+  );
+
+  db.prepare("DELETE FROM cart_items WHERE cart_id = ?").run(user.id);
+
+  res.json({
+    order_id: orderId,
+    status: "processing",
+    total,
+    subtotal,
+    shipping,
+    tax,
+    items: orderItems,
+    delivery_estimate: deliveryDate.toISOString().split("T")[0],
+    shipping_address: `${shipping_address}, ${city} ${zip}, ${country}`,
+    payment_method: payment_method || "credit_card",
+    user: { name: user.name, email: user.email },
+  });
+});
+
+// ── Orders API ───────────────────────────────────────────────
+app.get("/api/orders", async (req: Request, res: Response) => {
+  if (!auth) {
+    res.status(401).json({ error: "Authentication not configured" });
+    return;
+  }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) {
+    res.status(401).json({ error: "Sign in required", loginUrl: "/login" });
+    return;
+  }
+
+  const orders = db
+    .prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY order_date DESC")
+    .all(user.id) as OrderRow[];
+
+  const parsed = orders.map((o) => ({
+    ...o,
+    items: JSON.parse(o.items),
+    eligible_for_return: !!o.eligible_for_return,
+  }));
+
+  res.json({ orders: parsed });
+});
+
+app.get("/api/orders/:orderId", async (req: Request, res: Response) => {
+  if (!auth) {
+    res.status(401).json({ error: "Authentication not configured" });
+    return;
+  }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) {
+    res.status(401).json({ error: "Sign in required", loginUrl: "/login" });
+    return;
+  }
+
+  const order = db
+    .prepare("SELECT * FROM orders WHERE order_id = ? AND user_id = ?")
+    .get(req.params.orderId, user.id) as OrderRow | undefined;
+
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  res.json({
+    ...order,
+    items: JSON.parse(order.items),
+    eligible_for_return: !!order.eligible_for_return,
+  });
+});
+
+// ── Checkout page ────────────────────────────────────────────
+app.get("/checkout", async (req: Request, res: Response) => {
+  if (!auth) { res.redirect("/login"); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.redirect("/login"); return; }
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderCheckoutPage());
+});
+
+// ── Orders pages ─────────────────────────────────────────────
+app.get("/orders", async (req: Request, res: Response) => {
+  if (!auth) { res.redirect("/login"); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.redirect("/login"); return; }
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderOrdersPage());
+});
+
+app.get("/orders/:orderId", async (req: Request, res: Response) => {
+  if (!auth) { res.redirect("/login"); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.redirect("/login"); return; }
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderOrderDetailPage());
 });
 
 // ── Homepage (Products page) ─────────────────────────────────

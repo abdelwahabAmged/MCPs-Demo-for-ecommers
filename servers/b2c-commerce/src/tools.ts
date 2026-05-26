@@ -396,9 +396,12 @@ export function registerB2CTools(
         getSessionId(),
         { order_id },
         () => {
-          const order = db
-            .prepare("SELECT * FROM orders WHERE order_id = ?")
-            .get(order_id) as Order | undefined;
+          const user = getUser();
+          const orderSql = user
+            ? "SELECT * FROM orders WHERE order_id = ? AND user_id = ?"
+            : "SELECT * FROM orders WHERE order_id = ?";
+          const orderParams: unknown[] = user ? [order_id, user.id] : [order_id];
+          const order = db.prepare(orderSql).get(...orderParams) as Order | undefined;
           if (!order) {
             return {
               content: [
@@ -895,8 +898,13 @@ export function registerB2CTools(
         getSessionId(),
         { status, date_from, date_to },
         () => {
+          const user = getUser();
           let sql = "SELECT * FROM orders WHERE 1=1";
           const params: unknown[] = [];
+          if (user) {
+            sql += " AND user_id = ?";
+            params.push(user.id);
+          }
           if (status) {
             sql += " AND status = ?";
             params.push(status);
@@ -975,8 +983,13 @@ export function registerB2CTools(
         getSessionId(),
         { status, date_from, date_to, category },
         () => {
+          const user = getUser();
           let sql = "SELECT * FROM orders WHERE 1=1";
           const params: unknown[] = [];
+          if (user) {
+            sql += " AND user_id = ?";
+            params.push(user.id);
+          }
           if (status) {
             sql += " AND status = ?";
             params.push(status);
@@ -1065,8 +1078,13 @@ export function registerB2CTools(
         getSessionId(),
         { date_from, date_to },
         () => {
+          const user = getUser();
           let sql = "SELECT * FROM orders WHERE status NOT IN ('cancelled')";
           const params: unknown[] = [];
+          if (user) {
+            sql += " AND user_id = ?";
+            params.push(user.id);
+          }
           if (date_from) {
             sql += " AND order_date >= ?";
             params.push(date_from);
