@@ -1,13 +1,13 @@
 import { McpServer, logToolCall } from "@mcp-demos/shared";
+import type { AuthUser } from "@mcp-demos/shared";
 import { z } from "zod";
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
 
-const BASE_URL =
-  process.env["RAILWAY_PUBLIC_DOMAIN"]
-    ? `https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`
-    : process.env["BASE_URL"] ||
-      `http://localhost:${process.env["PORT"] || "3001"}`;
+const BASE_URL = process.env["RAILWAY_PUBLIC_DOMAIN"]
+  ? `https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`
+  : process.env["BASE_URL"] ||
+    `http://localhost:${process.env["PORT"] || "3001"}`;
 
 interface Product {
   sku: string;
@@ -102,7 +102,8 @@ function withLog(
 
 function formatStock(p: Product): string {
   if (p.stock_status === "in_stock") return `✓ In stock (${p.stock_qty})`;
-  if (p.stock_status === "low_stock") return `⚠ Low stock (${p.stock_qty} left)`;
+  if (p.stock_status === "low_stock")
+    return `⚠ Low stock (${p.stock_qty} left)`;
   return "✗ Out of stock";
 }
 
@@ -114,6 +115,7 @@ export function registerB2CTools(
   server: McpServer,
   db: Database.Database,
   getSessionId: () => string | undefined,
+  getUser: () => AuthUser | undefined = () => undefined,
 ): void {
   // ── search_products ──
   server.registerTool(
@@ -125,55 +127,92 @@ export function registerB2CTools(
       inputSchema: {
         query: z
           .string()
-          .describe('Natural language search (e.g. "wireless headphones", "yoga mat")'),
-        max_price: z.number().optional().describe("Maximum price filter in EUR"),
-        category: z.string().optional().describe('Filter by category (e.g. "Electronics", "Clothing")'),
-        size: z.string().optional().describe('Size filter (e.g. "42", "M", "XL")'),
+          .describe(
+            'Natural language search (e.g. "wireless headphones", "yoga mat")',
+          ),
+        max_price: z
+          .number()
+          .optional()
+          .describe("Maximum price filter in EUR"),
+        category: z
+          .string()
+          .optional()
+          .describe('Filter by category (e.g. "Electronics", "Clothing")'),
+        size: z
+          .string()
+          .optional()
+          .describe('Size filter (e.g. "42", "M", "XL")'),
       },
     },
     async ({ query, max_price, category, size }) => {
-      return withLog(db, "search_products", getSessionId(), { query, max_price, category, size }, () => {
-        const keywords = query.toLowerCase().split(/[\s,]+/).filter(Boolean);
+      return withLog(
+        db,
+        "search_products",
+        getSessionId(),
+        { query, max_price, category, size },
+        () => {
+          const keywords = query
+            .toLowerCase()
+            .split(/[\s,]+/)
+            .filter(Boolean);
 
-        let sql = "SELECT * FROM products WHERE 1=1";
-        const params: unknown[] = [];
+          let sql = "SELECT * FROM products WHERE 1=1";
+          const params: unknown[] = [];
 
-        if (max_price) { sql += " AND price <= ?"; params.push(max_price); }
-        if (category) { sql += " AND LOWER(category) = LOWER(?)"; params.push(category); }
-        if (size) { sql += " AND (size = ? OR size IS NULL)"; params.push(size); }
+          if (max_price) {
+            sql += " AND price <= ?";
+            params.push(max_price);
+          }
+          if (category) {
+            sql += " AND LOWER(category) = LOWER(?)";
+            params.push(category);
+          }
+          if (size) {
+            sql += " AND (size = ? OR size IS NULL)";
+            params.push(size);
+          }
 
-        const allProducts = db.prepare(sql).all(...params) as Product[];
+          const allProducts = db.prepare(sql).all(...params) as Product[];
 
-        const scored = allProducts
-          .map((p) => {
-            const searchText = `${p.name} ${p.category} ${p.subcategory || ''} ${p.description} ${p.tags} ${p.color} ${p.brand}`.toLowerCase();
-            const score = keywords.reduce((s: number, kw: string) => s + (searchText.includes(kw) ? 1 : 0), 0);
-            return { product: p, score };
-          })
-          .filter((s) => s.score > 0)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 8);
+          const scored = allProducts
+            .map((p) => {
+              const searchText =
+                `${p.name} ${p.category} ${p.subcategory || ""} ${p.description} ${p.tags} ${p.color} ${p.brand}`.toLowerCase();
+              const score = keywords.reduce(
+                (s: number, kw: string) =>
+                  s + (searchText.includes(kw) ? 1 : 0),
+                0,
+              );
+              return { product: p, score };
+            })
+            .filter((s) => s.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 8);
 
-        if (scored.length === 0) {
-          return {
-            content: [{
-              type: "text" as const,
-              text: "No products found matching your search. Try different keywords or browse categories with the browse_categories tool.",
-            }],
-          };
-        }
+          if (scored.length === 0) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "No products found matching your search. Try different keywords or browse categories with the browse_categories tool.",
+                },
+              ],
+            };
+          }
 
-        const results = scored
-          .map(({ product: p }) =>
-            `**${p.name}** by ${p.brand} (${p.color}, ${formatSize(p)})\n` +
-            `SKU: ${p.sku} | €${p.price.toFixed(2)} | ${formatStock(p)}\n` +
-            `★ ${p.rating}/5 (${p.review_count} reviews) | Delivery: ${p.delivery_estimate}\n` +
-            `${p.image_url}`,
-          )
-          .join("\n\n---\n\n");
+          const results = scored
+            .map(
+              ({ product: p }) =>
+                `**${p.name}** by ${p.brand} (${p.color}, ${formatSize(p)})\n` +
+                `SKU: ${p.sku} | €${p.price.toFixed(2)} | ${formatStock(p)}\n` +
+                `★ ${p.rating}/5 (${p.review_count} reviews) | Delivery: ${p.delivery_estimate}\n` +
+                `${p.image_url}`,
+            )
+            .join("\n\n---\n\n");
 
-        return { content: [{ type: "text" as const, text: results }] };
-      }) as { content: Array<{ type: "text"; text: string }> };
+          return { content: [{ type: "text" as const, text: results }] };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 
@@ -185,78 +224,118 @@ export function registerB2CTools(
       description:
         "Return full product detail: description, specs, dimensions, all available variants (sizes/colours), stock per variant, delivery estimates, and frequently bought together items.",
       inputSchema: {
-        product_name: z.string().describe('Product name or partial name (e.g. "UltraBook Pro")'),
+        product_name: z
+          .string()
+          .describe('Product name or partial name (e.g. "UltraBook Pro")'),
       },
     },
     async ({ product_name }) => {
-      return withLog(db, "get_product_detail", getSessionId(), { product_name }, () => {
-        const searchName = product_name.toLowerCase();
-        const variants = db
-          .prepare("SELECT * FROM products WHERE LOWER(name) LIKE ?")
-          .all(`%${searchName}%`) as Product[];
+      return withLog(
+        db,
+        "get_product_detail",
+        getSessionId(),
+        { product_name },
+        () => {
+          const searchName = product_name.toLowerCase();
+          const variants = db
+            .prepare("SELECT * FROM products WHERE LOWER(name) LIKE ?")
+            .all(`%${searchName}%`) as Product[];
 
-        if (variants.length === 0) {
-          return {
-            content: [{ type: "text" as const, text: `No product found matching "${product_name}". Try searching with different keywords.` }],
-          };
-        }
+          if (variants.length === 0) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `No product found matching "${product_name}". Try searching with different keywords.`,
+                },
+              ],
+            };
+          }
 
-        const first = variants[0]!;
-        const variantList = variants
-          .map((v) =>
-            `  • ${v.color}${v.size ? `, ${formatSize(v)}` : ""} — SKU: ${v.sku} — €${v.price.toFixed(2)} — ${formatStock(v)} — ${v.delivery_estimate}`,
-          )
-          .join("\n");
+          const first = variants[0]!;
+          const variantList = variants
+            .map(
+              (v) =>
+                `  • ${v.color}${v.size ? `, ${formatSize(v)}` : ""} — SKU: ${v.sku} — €${v.price.toFixed(2)} — ${formatStock(v)} — ${v.delivery_estimate}`,
+            )
+            .join("\n");
 
-        let specsBlock = "";
-        if (first.specs) {
-          try {
-            const specs = JSON.parse(first.specs) as Record<string, string>;
-            specsBlock = "\n\n## Specifications\n" +
-              Object.entries(specs).map(([k, v]) => `  • **${k}:** ${v}`).join("\n");
-          } catch { /* ignore parse errors */ }
-        }
-
-        let dimsBlock = "";
-        if (first.dimensions) {
-          try {
-            const dims = JSON.parse(first.dimensions) as { length: number; width: number; height: number; unit: string };
-            dimsBlock = `\n**Dimensions:** ${dims.length} × ${dims.width} × ${dims.height} ${dims.unit}`;
-          } catch { /* ignore */ }
-        }
-
-        let fbtBlock = "";
-        if (first.frequently_bought_together) {
-          try {
-            const fbtSkus = JSON.parse(first.frequently_bought_together) as string[];
-            if (fbtSkus.length > 0) {
-              const placeholders = fbtSkus.map(() => "?").join(",");
-              const fbtProducts = db.prepare(`SELECT sku, name, price, color FROM products WHERE sku IN (${placeholders})`).all(...fbtSkus) as Product[];
-              if (fbtProducts.length > 0) {
-                fbtBlock = "\n\n## Frequently Bought Together\n" +
-                  fbtProducts.map((fp) => `  • **${fp.name}** (${fp.color}) — €${fp.price.toFixed(2)} — SKU: ${fp.sku}`).join("\n");
-              }
+          let specsBlock = "";
+          if (first.specs) {
+            try {
+              const specs = JSON.parse(first.specs) as Record<string, string>;
+              specsBlock =
+                "\n\n## Specifications\n" +
+                Object.entries(specs)
+                  .map(([k, v]) => `  • **${k}:** ${v}`)
+                  .join("\n");
+            } catch {
+              /* ignore parse errors */
             }
-          } catch { /* ignore */ }
-        }
+          }
 
-        const text =
-          `# ${first.name}\n\n` +
-          `**Brand:** ${first.brand}\n` +
-          `**Category:** ${first.category}${first.subcategory ? ` › ${first.subcategory}` : ""}\n` +
-          `**Description:** ${first.description}\n` +
-          `**Price:** €${first.price.toFixed(2)}\n` +
-          `**Rating:** ★ ${first.rating}/5 (${first.review_count} reviews)\n` +
-          `**Material:** ${first.material || "N/A"}\n` +
-          `**Weight:** ${first.weight_grams ? `${first.weight_grams}g` : "N/A"}\n` +
-          `**Image:** ${first.image_url}` +
-          dimsBlock +
-          specsBlock +
-          `\n\n## Available Variants\n${variantList}` +
-          fbtBlock;
+          let dimsBlock = "";
+          if (first.dimensions) {
+            try {
+              const dims = JSON.parse(first.dimensions) as {
+                length: number;
+                width: number;
+                height: number;
+                unit: string;
+              };
+              dimsBlock = `\n**Dimensions:** ${dims.length} × ${dims.width} × ${dims.height} ${dims.unit}`;
+            } catch {
+              /* ignore */
+            }
+          }
 
-        return { content: [{ type: "text" as const, text }] };
-      }) as { content: Array<{ type: "text"; text: string }> };
+          let fbtBlock = "";
+          if (first.frequently_bought_together) {
+            try {
+              const fbtSkus = JSON.parse(
+                first.frequently_bought_together,
+              ) as string[];
+              if (fbtSkus.length > 0) {
+                const placeholders = fbtSkus.map(() => "?").join(",");
+                const fbtProducts = db
+                  .prepare(
+                    `SELECT sku, name, price, color FROM products WHERE sku IN (${placeholders})`,
+                  )
+                  .all(...fbtSkus) as Product[];
+                if (fbtProducts.length > 0) {
+                  fbtBlock =
+                    "\n\n## Frequently Bought Together\n" +
+                    fbtProducts
+                      .map(
+                        (fp) =>
+                          `  • **${fp.name}** (${fp.color}) — €${fp.price.toFixed(2)} — SKU: ${fp.sku}`,
+                      )
+                      .join("\n");
+                }
+              }
+            } catch {
+              /* ignore */
+            }
+          }
+
+          const text =
+            `# ${first.name}\n\n` +
+            `**Brand:** ${first.brand}\n` +
+            `**Category:** ${first.category}${first.subcategory ? ` › ${first.subcategory}` : ""}\n` +
+            `**Description:** ${first.description}\n` +
+            `**Price:** €${first.price.toFixed(2)}\n` +
+            `**Rating:** ★ ${first.rating}/5 (${first.review_count} reviews)\n` +
+            `**Material:** ${first.material || "N/A"}\n` +
+            `**Weight:** ${first.weight_grams ? `${first.weight_grams}g` : "N/A"}\n` +
+            `**Image:** ${first.image_url}` +
+            dimsBlock +
+            specsBlock +
+            `\n\n## Available Variants\n${variantList}` +
+            fbtBlock;
+
+          return { content: [{ type: "text" as const, text }] };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 
@@ -265,23 +344,35 @@ export function registerB2CTools(
     "check_stock",
     {
       title: "Check Stock",
-      description: "Check real-time availability of a specific product SKU. Returns stock quantity, status, and delivery estimate.",
+      description:
+        "Check real-time availability of a specific product SKU. Returns stock quantity, status, and delivery estimate.",
       inputSchema: {
         sku: z.string().describe('Product SKU code (e.g. "ELEC-PHN-001-BLK")'),
       },
     },
     async ({ sku }) => {
       return withLog(db, "check_stock", getSessionId(), { sku }, () => {
-        const product = db.prepare("SELECT * FROM products WHERE sku = ?").get(sku) as Product | undefined;
+        const product = db
+          .prepare("SELECT * FROM products WHERE sku = ?")
+          .get(sku) as Product | undefined;
         if (!product) {
-          return { content: [{ type: "text" as const, text: `SKU "${sku}" not found. Please check the SKU and try again.` }] };
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `SKU "${sku}" not found. Please check the SKU and try again.`,
+              },
+            ],
+          };
         }
 
         return {
-          content: [{
-            type: "text" as const,
-            text: `**${product.name}** (${product.color}${product.size ? `, ${formatSize(product)}` : ""})\nSKU: ${product.sku}\nStock: ${formatStock(product)}\nDelivery: ${product.delivery_estimate}`,
-          }],
+          content: [
+            {
+              type: "text" as const,
+              text: `**${product.name}** (${product.color}${product.size ? `, ${formatSize(product)}` : ""})\nSKU: ${product.sku}\nStock: ${formatStock(product)}\nDelivery: ${product.delivery_estimate}`,
+            },
+          ],
         };
       }) as { content: Array<{ type: "text"; text: string }> };
     },
@@ -292,34 +383,62 @@ export function registerB2CTools(
     "get_order_status",
     {
       title: "Get Order Status",
-      description: "Look up the current status of an order by order number. Returns order state, tracking, and delivery estimate.",
+      description:
+        "Look up the current status of an order by order number. Returns order state, tracking, and delivery estimate.",
       inputSchema: {
         order_id: z.string().describe('Order number (e.g. "ACM-2026-00112")'),
       },
     },
     async ({ order_id }) => {
-      return withLog(db, "get_order_status", getSessionId(), { order_id }, () => {
-        const order = db.prepare("SELECT * FROM orders WHERE order_id = ?").get(order_id) as Order | undefined;
-        if (!order) {
-          return { content: [{ type: "text" as const, text: `Order "${order_id}" not found. Order numbers look like ACM-2026-XXXXX.` }] };
-        }
+      return withLog(
+        db,
+        "get_order_status",
+        getSessionId(),
+        { order_id },
+        () => {
+          const order = db
+            .prepare("SELECT * FROM orders WHERE order_id = ?")
+            .get(order_id) as Order | undefined;
+          if (!order) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Order "${order_id}" not found. Order numbers look like ACM-2026-XXXXX.`,
+                },
+              ],
+            };
+          }
 
-        const items = JSON.parse(order.items) as Array<{ name: string; color: string; size?: string; quantity: number; price: number }>;
-        const itemList = items
-          .map((i) => `  • ${i.name} (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${i.price.toFixed(2)}`)
-          .join("\n");
+          const items = JSON.parse(order.items) as Array<{
+            name: string;
+            color: string;
+            size?: string;
+            quantity: number;
+            price: number;
+          }>;
+          const itemList = items
+            .map(
+              (i) =>
+                `  • ${i.name} (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${i.price.toFixed(2)}`,
+            )
+            .join("\n");
 
-        let statusLine = `**Status:** ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`;
-        if (order.carrier) statusLine += ` · ${order.carrier}`;
-        if (order.tracking_number) statusLine += ` · Tracking: ${order.tracking_number}`;
+          let statusLine = `**Status:** ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}`;
+          if (order.carrier) statusLine += ` · ${order.carrier}`;
+          if (order.tracking_number)
+            statusLine += ` · Tracking: ${order.tracking_number}`;
 
-        return {
-          content: [{
-            type: "text" as const,
-            text: `# Order ${order.order_id}\n\n${statusLine}\n**Delivery:** ${order.delivery_estimate}\n**Order Date:** ${order.order_date}\n**Total:** €${order.total.toFixed(2)}\n\n**Items:**\n${itemList}`,
-          }],
-        };
-      }) as { content: Array<{ type: "text"; text: string }> };
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `# Order ${order.order_id}\n\n${statusLine}\n**Delivery:** ${order.delivery_estimate}\n**Order Date:** ${order.order_date}\n**Total:** €${order.total.toFixed(2)}\n\n**Items:**\n${itemList}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 
@@ -328,29 +447,76 @@ export function registerB2CTools(
     "start_return",
     {
       title: "Start Return",
-      description: "Initiate a return for an item from a delivered order. Checks eligibility and the 30-day return window.",
+      description:
+        "Initiate a return for an item from a delivered order. Checks eligibility and the 30-day return window.",
       inputSchema: {
         order_id: z.string().describe("Order number to return from"),
-        item_description: z.string().describe('Description of the item to return (e.g. "the headphones")'),
+        item_description: z
+          .string()
+          .describe(
+            'Description of the item to return (e.g. "the headphones")',
+          ),
       },
     },
     async ({ order_id, item_description }) => {
-      return withLog(db, "start_return", getSessionId(), { order_id, item_description }, () => {
-        const order = db.prepare("SELECT * FROM orders WHERE order_id = ?").get(order_id) as Order | undefined;
-        if (!order) return { content: [{ type: "text" as const, text: `Order "${order_id}" not found.` }] };
-        if (order.status !== "delivered") return { content: [{ type: "text" as const, text: `Order ${order_id} is "${order.status}" — only delivered orders can be returned.` }] };
-        if (!order.eligible_for_return) return { content: [{ type: "text" as const, text: `Order ${order_id} is no longer eligible for return (30-day window closed).` }] };
+      return withLog(
+        db,
+        "start_return",
+        getSessionId(),
+        { order_id, item_description },
+        () => {
+          const order = db
+            .prepare("SELECT * FROM orders WHERE order_id = ?")
+            .get(order_id) as Order | undefined;
+          if (!order)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Order "${order_id}" not found.`,
+                },
+              ],
+            };
+          if (order.status !== "delivered")
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Order ${order_id} is "${order.status}" — only delivered orders can be returned.`,
+                },
+              ],
+            };
+          if (!order.eligible_for_return)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Order ${order_id} is no longer eligible for return (30-day window closed).`,
+                },
+              ],
+            };
 
-        const returnId = `RET-${randomUUID().substring(0, 8).toUpperCase()}`;
-        db.prepare("INSERT INTO returns (return_id, order_id, item_description, session_id) VALUES (?, ?, ?, ?)").run(returnId, order_id, item_description, getSessionId() ?? null);
+          const returnId = `RET-${randomUUID().substring(0, 8).toUpperCase()}`;
+          db.prepare(
+            "INSERT INTO returns (return_id, order_id, item_description, session_id, user_id) VALUES (?, ?, ?, ?, ?)",
+          ).run(
+            returnId,
+            order_id,
+            item_description,
+            getSessionId() ?? null,
+            getUser()?.id ?? null,
+          );
 
-        return {
-          content: [{
-            type: "text" as const,
-            text: `✓ Return request created!\n\n**Return ID:** ${returnId}\n**Order:** ${order_id}\n**Item:** ${item_description}\n**Status:** Pending\n\nReturn shipping label will be emailed within 24 hours. Refund processed 5–7 business days after receipt.`,
-          }],
-        };
-      }) as { content: Array<{ type: "text"; text: string }> };
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `✓ Return request created!\n\n**Return ID:** ${returnId}\n**Order:** ${order_id}\n**Item:** ${item_description}\n**Status:** Pending\n\nReturn shipping label will be emailed within 24 hours. Refund processed 5–7 business days after receipt.`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 
@@ -359,41 +525,77 @@ export function registerB2CTools(
     "get_recommendations",
     {
       title: "Get Recommendations",
-      description: 'Return 3–5 product recommendations based on a described use case or product the user is viewing. Uses keyword matching and "frequently bought together" data.',
+      description:
+        'Return 3–5 product recommendations based on a described use case or product the user is viewing. Uses keyword matching and "frequently bought together" data.',
       inputSchema: {
-        context: z.string().describe('What to base recommendations on (e.g. "home office setup", "birthday gift for a runner")'),
+        context: z
+          .string()
+          .describe(
+            'What to base recommendations on (e.g. "home office setup", "birthday gift for a runner")',
+          ),
       },
     },
     async ({ context }) => {
-      return withLog(db, "get_recommendations", getSessionId(), { context }, () => {
-        const keywords = context.toLowerCase().split(/[\s,]+/).filter(Boolean);
-        const allProducts = db.prepare("SELECT * FROM products").all() as Product[];
+      return withLog(
+        db,
+        "get_recommendations",
+        getSessionId(),
+        { context },
+        () => {
+          const keywords = context
+            .toLowerCase()
+            .split(/[\s,]+/)
+            .filter(Boolean);
+          const allProducts = db
+            .prepare("SELECT * FROM products")
+            .all() as Product[];
 
-        const uniqueProducts = new Map<string, { product: Product; score: number }>();
-        for (const p of allProducts) {
-          const searchText = `${p.name} ${p.category} ${p.subcategory || ''} ${p.description} ${p.tags} ${p.brand}`.toLowerCase();
-          const score = keywords.reduce((s: number, kw: string) => s + (searchText.includes(kw) ? 1 : 0), 0);
-          if (score > 0) {
-            const existing = uniqueProducts.get(p.name);
-            if (!existing || score > existing.score) {
-              uniqueProducts.set(p.name, { product: p, score });
+          const uniqueProducts = new Map<
+            string,
+            { product: Product; score: number }
+          >();
+          for (const p of allProducts) {
+            const searchText =
+              `${p.name} ${p.category} ${p.subcategory || ""} ${p.description} ${p.tags} ${p.brand}`.toLowerCase();
+            const score = keywords.reduce(
+              (s: number, kw: string) => s + (searchText.includes(kw) ? 1 : 0),
+              0,
+            );
+            if (score > 0) {
+              const existing = uniqueProducts.get(p.name);
+              if (!existing || score > existing.score) {
+                uniqueProducts.set(p.name, { product: p, score });
+              }
             }
           }
-        }
 
-        const sorted = Array.from(uniqueProducts.values()).sort((a, b) => b.score - a.score).slice(0, 5);
+          const sorted = Array.from(uniqueProducts.values())
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5);
 
-        if (sorted.length === 0) {
-          return { content: [{ type: "text" as const, text: "No specific recommendations found. Try describing the activity or occasion, and I'll suggest suitable products." }] };
-        }
+          if (sorted.length === 0) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "No specific recommendations found. Try describing the activity or occasion, and I'll suggest suitable products.",
+                },
+              ],
+            };
+          }
 
-        const text = `Here are my recommendations based on "${context}":\n\n` +
-          sorted.map(({ product: p }, i) =>
-            `${i + 1}. **${p.name}** by ${p.brand} — €${p.price.toFixed(2)}\n   ${p.description.substring(0, 120)}…\n   ★ ${p.rating}/5 | ${formatStock(p)} | SKU: ${p.sku}`,
-          ).join("\n\n");
+          const text =
+            `Here are my recommendations based on "${context}":\n\n` +
+            sorted
+              .map(
+                ({ product: p }, i) =>
+                  `${i + 1}. **${p.name}** by ${p.brand} — €${p.price.toFixed(2)}\n   ${p.description.substring(0, 120)}…\n   ★ ${p.rating}/5 | ${formatStock(p)} | SKU: ${p.sku}`,
+              )
+              .join("\n\n");
 
-        return { content: [{ type: "text" as const, text }] };
-      }) as { content: Array<{ type: "text"; text: string }> };
+          return { content: [{ type: "text" as const, text }] };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 
@@ -402,495 +604,1346 @@ export function registerB2CTools(
     "add_to_cart",
     {
       title: "Add to Cart",
-      description: "Add a product to the shopping cart by SKU. Returns a link the customer can open to view their cart.",
+      description:
+        "Add a product to the shopping cart by SKU. Returns a link the customer can open to view their cart.",
       inputSchema: {
         sku: z.string().describe("Product SKU to add"),
-        quantity: z.number().min(1).default(1).describe("Number of items to add"),
+        quantity: z
+          .number()
+          .min(1)
+          .default(1)
+          .describe("Number of items to add"),
       },
     },
     async ({ sku, quantity }) => {
-      return withLog(db, "add_to_cart", getSessionId(), { sku, quantity }, () => {
-        const product = db.prepare("SELECT * FROM products WHERE sku = ?").get(sku) as Product | undefined;
-        if (!product) return { content: [{ type: "text" as const, text: `SKU "${sku}" not found.` }] };
-        if (product.stock_status === "out_of_stock") {
-          return { content: [{ type: "text" as const, text: `Sorry, ${product.name} (${product.sku}) is currently out of stock. ${product.delivery_estimate}.` }] };
-        }
+      return withLog(
+        db,
+        "add_to_cart",
+        getSessionId(),
+        { sku, quantity },
+        () => {
+          const product = db
+            .prepare("SELECT * FROM products WHERE sku = ?")
+            .get(sku) as Product | undefined;
+          if (!product)
+            return {
+              content: [
+                { type: "text" as const, text: `SKU "${sku}" not found.` },
+              ],
+            };
+          if (product.stock_status === "out_of_stock") {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Sorry, ${product.name} (${product.sku}) is currently out of stock. ${product.delivery_estimate}.`,
+                },
+              ],
+            };
+          }
 
-        const sessionId = getSessionId();
-        const cartId = sessionId || randomUUID();
+          const user = getUser();
+          if (!user) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Please sign in to add items to your cart.",
+                },
+              ],
+            };
+          }
+          const cartId = user.id;
 
-        const existing = db.prepare("SELECT * FROM cart_items WHERE cart_id = ? AND sku = ?").get(cartId, sku) as { id: string; quantity: number } | undefined;
-        if (existing) {
-          db.prepare("UPDATE cart_items SET quantity = quantity + ? WHERE id = ?").run(quantity, existing.id);
-        } else {
-          db.prepare("INSERT INTO cart_items (id, cart_id, sku, name, color, size, quantity, unit_price, currency, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
-            randomUUID(), cartId, product.sku, product.name, product.color, product.size, quantity, product.price, product.currency, product.image_url,
+          const existing = db
+            .prepare("SELECT * FROM cart_items WHERE cart_id = ? AND sku = ?")
+            .get(cartId, sku) as { id: string; quantity: number } | undefined;
+          if (existing) {
+            db.prepare(
+              "UPDATE cart_items SET quantity = quantity + ? WHERE id = ?",
+            ).run(quantity, existing.id);
+          } else {
+            db.prepare(
+              "INSERT INTO cart_items (id, cart_id, sku, name, color, size, quantity, unit_price, currency, image_url, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ).run(
+              randomUUID(),
+              cartId,
+              product.sku,
+              product.name,
+              product.color,
+              product.size,
+              quantity,
+              product.price,
+              product.currency,
+              product.image_url,
+              user.id,
+            );
+          }
+
+          const cartItems = db
+            .prepare("SELECT * FROM cart_items WHERE cart_id = ?")
+            .all(cartId) as Array<{
+            name: string;
+            sku: string;
+            quantity: number;
+            unit_price: number;
+          }>;
+          const totalItems = cartItems.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
           );
+          const totalPrice = cartItems.reduce(
+            (sum, item) => sum + item.unit_price * item.quantity,
+            0,
+          );
+          const cartUrl = `${BASE_URL}/cart`;
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `✓ Added to cart!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""})\nQuantity: ${quantity} | Unit Price: €${product.price.toFixed(2)} | Subtotal: €${(product.price * quantity).toFixed(2)}\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\nView your cart: ${cartUrl}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── remove_from_cart ──
+  server.registerTool(
+    "remove_from_cart",
+    {
+      title: "Remove from Cart",
+      description:
+        "Remove a product from the shopping cart by SKU, or clear the entire cart.",
+      inputSchema: {
+        sku: z
+          .string()
+          .optional()
+          .describe("Product SKU to remove. Omit to clear entire cart."),
+      },
+    },
+    async ({ sku }) => {
+      return withLog(db, "remove_from_cart", getSessionId(), { sku }, () => {
+        const user = getUser();
+        if (!user)
+          return {
+            content: [
+              { type: "text" as const, text: "Please sign in to manage your cart." },
+            ],
+          };
+        const cartId = user.id;
+
+        if (sku) {
+          const item = db
+            .prepare("SELECT * FROM cart_items WHERE cart_id = ? AND sku = ?")
+            .get(cartId, sku) as { id: string; name: string } | undefined;
+          if (!item)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `SKU "${sku}" is not in your cart.`,
+                },
+              ],
+            };
+          db.prepare("DELETE FROM cart_items WHERE id = ?").run(item.id);
+        } else {
+          db.prepare("DELETE FROM cart_items WHERE cart_id = ?").run(cartId);
         }
 
-        const cartItems = db.prepare("SELECT * FROM cart_items WHERE cart_id = ?").all(cartId) as Array<{ name: string; sku: string; quantity: number; unit_price: number }>;
-        const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-        const totalPrice = cartItems.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-        const cartUrl = `${BASE_URL}/cart/${cartId}`;
+        const cartItems = db
+          .prepare("SELECT * FROM cart_items WHERE cart_id = ?")
+          .all(cartId) as Array<{
+          name: string;
+          sku: string;
+          quantity: number;
+          unit_price: number;
+        }>;
+        const totalItems = cartItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0,
+        );
+        const totalPrice = cartItems.reduce(
+          (sum, item) => sum + item.unit_price * item.quantity,
+          0,
+        );
+        const cartUrl = `${BASE_URL}/cart`;
 
+        if (totalItems === 0) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: sku
+                  ? "✓ Removed from cart.\n\nYour cart is now empty."
+                  : "✓ Cart cleared.\n\nYour cart is now empty.",
+              },
+            ],
+          };
+        }
+
+        const itemList = cartItems
+          .map(
+            (i) =>
+              `  • ${i.name} × ${i.quantity} — €${(i.unit_price * i.quantity).toFixed(2)}`,
+          )
+          .join("\n");
         return {
-          content: [{
-            type: "text" as const,
-            text: `✓ Added to cart!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""})\nQuantity: ${quantity} | Unit Price: €${product.price.toFixed(2)} | Subtotal: €${(product.price * quantity).toFixed(2)}\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\nView your cart: ${cartUrl}`,
-          }],
+          content: [
+            {
+              type: "text" as const,
+              text: `✓ ${sku ? "Item removed" : "Cart cleared"}!\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\n${itemList}\n\nView your cart: ${cartUrl}`,
+            },
+          ],
         };
       }) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 
-  // ── remove_from_cart ──
-  server.registerTool("remove_from_cart", {
-    title: "Remove from Cart",
-    description: "Remove a product from the shopping cart by SKU, or clear the entire cart.",
-    inputSchema: {
-      sku: z.string().optional().describe("Product SKU to remove. Omit to clear entire cart."),
-    },
-  }, async ({ sku }) => {
-    return withLog(db, "remove_from_cart", getSessionId(), { sku }, () => {
-      const sessionId = getSessionId();
-      if (!sessionId) return { content: [{ type: "text" as const, text: "No active cart session found." }] };
-      const cartId = sessionId;
-
-      if (sku) {
-        const item = db.prepare("SELECT * FROM cart_items WHERE cart_id = ? AND sku = ?").get(cartId, sku) as { id: string; name: string } | undefined;
-        if (!item) return { content: [{ type: "text" as const, text: `SKU "${sku}" is not in your cart.` }] };
-        db.prepare("DELETE FROM cart_items WHERE id = ?").run(item.id);
-      } else {
-        db.prepare("DELETE FROM cart_items WHERE cart_id = ?").run(cartId);
-      }
-
-      const cartItems = db.prepare("SELECT * FROM cart_items WHERE cart_id = ?").all(cartId) as Array<{ name: string; sku: string; quantity: number; unit_price: number }>;
-      const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-      const totalPrice = cartItems.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-      const cartUrl = `${BASE_URL}/cart/${cartId}`;
-
-      if (totalItems === 0) {
-        return { content: [{ type: "text" as const, text: sku ? "✓ Removed from cart.\n\nYour cart is now empty." : "✓ Cart cleared.\n\nYour cart is now empty." }] };
-      }
-
-      const itemList = cartItems.map(i => `  • ${i.name} × ${i.quantity} — €${(i.unit_price * i.quantity).toFixed(2)}`).join("\n");
-      return {
-        content: [{ type: "text" as const, text: `✓ ${sku ? "Item removed" : "Cart cleared"}!\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\n${itemList}\n\nView your cart: ${cartUrl}` }],
-      };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
-
   // ── view_cart ──
-  server.registerTool("view_cart", {
-    title: "View Cart",
-    description: "Show the current shopping cart contents with a browser link.",
-    inputSchema: {},
-  }, async () => {
-    return withLog(db, "view_cart", getSessionId(), {}, () => {
-      const sessionId = getSessionId();
-      if (!sessionId) return { content: [{ type: "text" as const, text: "No active cart session found." }] };
-      const cartId = sessionId;
-      const cartItems = db.prepare("SELECT * FROM cart_items WHERE cart_id = ?").all(cartId) as Array<{ name: string; sku: string; quantity: number; unit_price: number; color: string; size: string | null }>;
+  server.registerTool(
+    "view_cart",
+    {
+      title: "View Cart",
+      description:
+        "Show the current shopping cart contents with a browser link.",
+      inputSchema: {},
+    },
+    async () => {
+      return withLog(db, "view_cart", getSessionId(), {}, () => {
+        const user = getUser();
+        if (!user)
+          return {
+            content: [
+              { type: "text" as const, text: "Please sign in to view your cart." },
+            ],
+          };
+        const cartId = user.id;
+        const cartItems = db
+          .prepare("SELECT * FROM cart_items WHERE cart_id = ?")
+          .all(cartId) as Array<{
+          name: string;
+          sku: string;
+          quantity: number;
+          unit_price: number;
+          color: string;
+          size: string | null;
+        }>;
 
-      if (cartItems.length === 0) return { content: [{ type: "text" as const, text: "Your cart is empty. Search for products and add them!" }] };
+        if (cartItems.length === 0)
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "Your cart is empty. Search for products and add them!",
+              },
+            ],
+          };
 
-      const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-      const totalPrice = cartItems.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-      const cartUrl = `${BASE_URL}/cart/${cartId}`;
+        const totalItems = cartItems.reduce(
+          (sum, item) => sum + item.quantity,
+          0,
+        );
+        const totalPrice = cartItems.reduce(
+          (sum, item) => sum + item.unit_price * item.quantity,
+          0,
+        );
+        const cartUrl = `${BASE_URL}/cart`;
 
-      const itemList = cartItems.map(i =>
-        `  • **${i.name}** (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${(i.unit_price * i.quantity).toFixed(2)}`,
-      ).join("\n");
+        const itemList = cartItems
+          .map(
+            (i) =>
+              `  • **${i.name}** (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${(i.unit_price * i.quantity).toFixed(2)}`,
+          )
+          .join("\n");
 
-      return {
-        content: [{ type: "text" as const, text: `🛒 **Your Cart** — ${totalItems} item${totalItems !== 1 ? "s" : ""}\n\n${itemList}\n\n**Total: €${totalPrice.toFixed(2)}**\n\nView your cart: ${cartUrl}` }],
-      };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `🛒 **Your Cart** — ${totalItems} item${totalItems !== 1 ? "s" : ""}\n\n${itemList}\n\n**Total: €${totalPrice.toFixed(2)}**\n\nView your cart: ${cartUrl}`,
+            },
+          ],
+        };
+      }) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── list_orders ──
-  server.registerTool("list_orders", {
-    title: "List Orders",
-    description: 'List all orders with optional status/date filters. Use for "show my orders", "cancelled orders", or "orders from March".',
-    inputSchema: {
-      status: z.enum(["delivered", "shipped", "processing", "cancelled", "returned"]).optional().describe("Filter by order status"),
-      date_from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
-      date_to: z.string().optional().describe("End date (YYYY-MM-DD)"),
+  server.registerTool(
+    "list_orders",
+    {
+      title: "List Orders",
+      description:
+        'List all orders with optional status/date filters. Use for "show my orders", "cancelled orders", or "orders from March".',
+      inputSchema: {
+        status: z
+          .enum(["delivered", "shipped", "processing", "cancelled", "returned"])
+          .optional()
+          .describe("Filter by order status"),
+        date_from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
+        date_to: z.string().optional().describe("End date (YYYY-MM-DD)"),
+      },
     },
-  }, async ({ status, date_from, date_to }) => {
-    return withLog(db, "list_orders", getSessionId(), { status, date_from, date_to }, () => {
-      let sql = "SELECT * FROM orders WHERE 1=1";
-      const params: unknown[] = [];
-      if (status) { sql += " AND status = ?"; params.push(status); }
-      if (date_from) { sql += " AND order_date >= ?"; params.push(date_from); }
-      if (date_to) { sql += " AND order_date <= ?"; params.push(date_to); }
-      sql += " ORDER BY order_date DESC";
+    async ({ status, date_from, date_to }) => {
+      return withLog(
+        db,
+        "list_orders",
+        getSessionId(),
+        { status, date_from, date_to },
+        () => {
+          let sql = "SELECT * FROM orders WHERE 1=1";
+          const params: unknown[] = [];
+          if (status) {
+            sql += " AND status = ?";
+            params.push(status);
+          }
+          if (date_from) {
+            sql += " AND order_date >= ?";
+            params.push(date_from);
+          }
+          if (date_to) {
+            sql += " AND order_date <= ?";
+            params.push(date_to);
+          }
+          sql += " ORDER BY order_date DESC";
 
-      const orders = db.prepare(sql).all(...params) as Order[];
-      if (orders.length === 0) return { content: [{ type: "text" as const, text: "No orders found matching your filters." }] };
+          const orders = db.prepare(sql).all(...params) as Order[];
+          if (orders.length === 0)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "No orders found matching your filters.",
+                },
+              ],
+            };
 
-      const lines = orders.map(o => {
-        const items = JSON.parse(o.items) as Array<{ name: string }>;
-        const itemNames = items.map(i => i.name).join(", ");
-        const icon = o.status === "delivered" ? "✓" : o.status === "shipped" ? "🚚" : o.status === "processing" ? "⏳" : o.status === "cancelled" ? "✗" : "↩";
-        return `${icon} **${o.order_id}** — ${o.order_date} — €${o.total.toFixed(2)} — ${o.status}\n   ${itemNames}`;
-      });
+          const lines = orders.map((o) => {
+            const items = JSON.parse(o.items) as Array<{ name: string }>;
+            const itemNames = items.map((i) => i.name).join(", ");
+            const icon =
+              o.status === "delivered"
+                ? "✓"
+                : o.status === "shipped"
+                  ? "🚚"
+                  : o.status === "processing"
+                    ? "⏳"
+                    : o.status === "cancelled"
+                      ? "✗"
+                      : "↩";
+            return `${icon} **${o.order_id}** — ${o.order_date} — €${o.total.toFixed(2)} — ${o.status}\n   ${itemNames}`;
+          });
 
-      return { content: [{ type: "text" as const, text: `**Your Orders** (${orders.length})\n\n${lines.join("\n\n")}` }] };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `**Your Orders** (${orders.length})\n\n${lines.join("\n\n")}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── get_order_items ──
-  server.registerTool("get_order_items", {
-    title: "Get Order Items",
-    description: "Return a flat list of every item from every order with full detail (order_id, date, status, SKU, name, category, quantity, price, line total). Raw data for computing analytics.",
-    inputSchema: {
-      status: z.enum(["delivered", "shipped", "processing", "cancelled", "returned"]).optional().describe("Filter by order status"),
-      date_from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
-      date_to: z.string().optional().describe("End date (YYYY-MM-DD)"),
-      category: z.string().optional().describe("Filter by product category"),
+  server.registerTool(
+    "get_order_items",
+    {
+      title: "Get Order Items",
+      description:
+        "Return a flat list of every item from every order with full detail (order_id, date, status, SKU, name, category, quantity, price, line total). Raw data for computing analytics.",
+      inputSchema: {
+        status: z
+          .enum(["delivered", "shipped", "processing", "cancelled", "returned"])
+          .optional()
+          .describe("Filter by order status"),
+        date_from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
+        date_to: z.string().optional().describe("End date (YYYY-MM-DD)"),
+        category: z.string().optional().describe("Filter by product category"),
+      },
     },
-  }, async ({ status, date_from, date_to, category }) => {
-    return withLog(db, "get_order_items", getSessionId(), { status, date_from, date_to, category }, () => {
-      let sql = "SELECT * FROM orders WHERE 1=1";
-      const params: unknown[] = [];
-      if (status) { sql += " AND status = ?"; params.push(status); }
-      if (date_from) { sql += " AND order_date >= ?"; params.push(date_from); }
-      if (date_to) { sql += " AND order_date <= ?"; params.push(date_to); }
-      sql += " ORDER BY order_date DESC";
+    async ({ status, date_from, date_to, category }) => {
+      return withLog(
+        db,
+        "get_order_items",
+        getSessionId(),
+        { status, date_from, date_to, category },
+        () => {
+          let sql = "SELECT * FROM orders WHERE 1=1";
+          const params: unknown[] = [];
+          if (status) {
+            sql += " AND status = ?";
+            params.push(status);
+          }
+          if (date_from) {
+            sql += " AND order_date >= ?";
+            params.push(date_from);
+          }
+          if (date_to) {
+            sql += " AND order_date <= ?";
+            params.push(date_to);
+          }
+          sql += " ORDER BY order_date DESC";
 
-      const orders = db.prepare(sql).all(...params) as Order[];
-      const rows: Array<Record<string, unknown>> = [];
+          const orders = db.prepare(sql).all(...params) as Order[];
+          const rows: Array<Record<string, unknown>> = [];
 
-      for (const o of orders) {
-        const items = JSON.parse(o.items) as Array<{ sku: string; name: string; category?: string; quantity: number; price: number; color?: string; size?: string }>;
-        for (const item of items) {
-          if (category && item.category && item.category.toLowerCase() !== category.toLowerCase()) continue;
-          rows.push({
-            order_id: o.order_id, order_date: o.order_date, status: o.status,
-            sku: item.sku, name: item.name, category: item.category || "Unknown",
-            color: item.color || null, size: item.size || null,
-            quantity: item.quantity, unit_price: item.price, line_total: item.price * item.quantity,
-          });
-        }
-      }
+          for (const o of orders) {
+            const items = JSON.parse(o.items) as Array<{
+              sku: string;
+              name: string;
+              category?: string;
+              quantity: number;
+              price: number;
+              color?: string;
+              size?: string;
+            }>;
+            for (const item of items) {
+              if (
+                category &&
+                item.category &&
+                item.category.toLowerCase() !== category.toLowerCase()
+              )
+                continue;
+              rows.push({
+                order_id: o.order_id,
+                order_date: o.order_date,
+                status: o.status,
+                sku: item.sku,
+                name: item.name,
+                category: item.category || "Unknown",
+                color: item.color || null,
+                size: item.size || null,
+                quantity: item.quantity,
+                unit_price: item.price,
+                line_total: item.price * item.quantity,
+              });
+            }
+          }
 
-      if (rows.length === 0) return { content: [{ type: "text" as const, text: "No order items found matching your filters." }] };
-      return { content: [{ type: "text" as const, text: JSON.stringify(rows, null, 2) }] };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+          if (rows.length === 0)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "No order items found matching your filters.",
+                },
+              ],
+            };
+          return {
+            content: [
+              { type: "text" as const, text: JSON.stringify(rows, null, 2) },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── order_analytics ──
-  server.registerTool("order_analytics", {
-    title: "Order Analytics",
-    description: 'Pre-computed analytics: total spent, order count, average order value, spending by month and category. Use for "how much did I spend?" or "order summary".',
-    inputSchema: {
-      date_from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
-      date_to: z.string().optional().describe("End date (YYYY-MM-DD)"),
+  server.registerTool(
+    "order_analytics",
+    {
+      title: "Order Analytics",
+      description:
+        'Pre-computed analytics: total spent, order count, average order value, spending by month and category. Use for "how much did I spend?" or "order summary".',
+      inputSchema: {
+        date_from: z.string().optional().describe("Start date (YYYY-MM-DD)"),
+        date_to: z.string().optional().describe("End date (YYYY-MM-DD)"),
+      },
     },
-  }, async ({ date_from, date_to }) => {
-    return withLog(db, "order_analytics", getSessionId(), { date_from, date_to }, () => {
-      let sql = "SELECT * FROM orders WHERE status NOT IN ('cancelled')";
-      const params: unknown[] = [];
-      if (date_from) { sql += " AND order_date >= ?"; params.push(date_from); }
-      if (date_to) { sql += " AND order_date <= ?"; params.push(date_to); }
+    async ({ date_from, date_to }) => {
+      return withLog(
+        db,
+        "order_analytics",
+        getSessionId(),
+        { date_from, date_to },
+        () => {
+          let sql = "SELECT * FROM orders WHERE status NOT IN ('cancelled')";
+          const params: unknown[] = [];
+          if (date_from) {
+            sql += " AND order_date >= ?";
+            params.push(date_from);
+          }
+          if (date_to) {
+            sql += " AND order_date <= ?";
+            params.push(date_to);
+          }
 
-      const orders = db.prepare(sql).all(...params) as Order[];
-      if (orders.length === 0) return { content: [{ type: "text" as const, text: "No orders found in the specified period." }] };
+          const orders = db.prepare(sql).all(...params) as Order[];
+          if (orders.length === 0)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "No orders found in the specified period.",
+                },
+              ],
+            };
 
-      const totalSpent = orders.reduce((s, o) => s + o.total, 0);
-      const avgOrderValue = totalSpent / orders.length;
+          const totalSpent = orders.reduce((s, o) => s + o.total, 0);
+          const avgOrderValue = totalSpent / orders.length;
 
-      const monthlySpend: Record<string, number> = {};
-      const categorySpend: Record<string, number> = {};
-      const productCount: Record<string, number> = {};
+          const monthlySpend: Record<string, number> = {};
+          const categorySpend: Record<string, number> = {};
+          const productCount: Record<string, number> = {};
 
-      for (const o of orders) {
-        const month = o.order_date.substring(0, 7);
-        monthlySpend[month] = (monthlySpend[month] || 0) + o.total;
-        const items = JSON.parse(o.items) as Array<{ name: string; category?: string; quantity: number; price: number }>;
-        for (const item of items) {
-          const cat = item.category || "Unknown";
-          categorySpend[cat] = (categorySpend[cat] || 0) + item.price * item.quantity;
-          productCount[item.name] = (productCount[item.name] || 0) + item.quantity;
-        }
-      }
+          for (const o of orders) {
+            const month = o.order_date.substring(0, 7);
+            monthlySpend[month] = (monthlySpend[month] || 0) + o.total;
+            const items = JSON.parse(o.items) as Array<{
+              name: string;
+              category?: string;
+              quantity: number;
+              price: number;
+            }>;
+            for (const item of items) {
+              const cat = item.category || "Unknown";
+              categorySpend[cat] =
+                (categorySpend[cat] || 0) + item.price * item.quantity;
+              productCount[item.name] =
+                (productCount[item.name] || 0) + item.quantity;
+            }
+          }
 
-      const monthlyLines = Object.entries(monthlySpend).sort(([a], [b]) => a.localeCompare(b)).map(([m, v]) => `  ${m}: €${v.toFixed(2)}`).join("\n");
-      const categoryLines = Object.entries(categorySpend).sort(([, a], [, b]) => b - a).map(([c, v]) => `  ${c}: €${v.toFixed(2)}`).join("\n");
-      const topProducts = Object.entries(productCount).sort(([, a], [, b]) => b - a).slice(0, 5).map(([name, qty]) => `  ${name}: ${qty} units`).join("\n");
+          const monthlyLines = Object.entries(monthlySpend)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([m, v]) => `  ${m}: €${v.toFixed(2)}`)
+            .join("\n");
+          const categoryLines = Object.entries(categorySpend)
+            .sort(([, a], [, b]) => b - a)
+            .map(([c, v]) => `  ${c}: €${v.toFixed(2)}`)
+            .join("\n");
+          const topProducts = Object.entries(productCount)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .map(([name, qty]) => `  ${name}: ${qty} units`)
+            .join("\n");
 
-      return {
-        content: [{
-          type: "text" as const,
-          text: `## Order Analytics\n\n**Total Orders:** ${orders.length}\n**Total Spent:** €${totalSpent.toFixed(2)}\n**Average Order Value:** €${avgOrderValue.toFixed(2)}\n\n### Monthly Spending\n${monthlyLines}\n\n### Spending by Category\n${categoryLines}\n\n### Most Purchased Products\n${topProducts}`,
-        }],
-      };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `## Order Analytics\n\n**Total Orders:** ${orders.length}\n**Total Spent:** €${totalSpent.toFixed(2)}\n**Average Order Value:** €${avgOrderValue.toFixed(2)}\n\n### Monthly Spending\n${monthlyLines}\n\n### Spending by Category\n${categoryLines}\n\n### Most Purchased Products\n${topProducts}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── get_product_reviews ──
-  server.registerTool("get_product_reviews", {
-    title: "Get Product Reviews",
-    description: "Fetch customer reviews for a product by name or SKU. Returns average rating and individual reviews.",
-    inputSchema: {
-      product: z.string().describe("Product name or SKU"),
+  server.registerTool(
+    "get_product_reviews",
+    {
+      title: "Get Product Reviews",
+      description:
+        "Fetch customer reviews for a product by name or SKU. Returns average rating and individual reviews.",
+      inputSchema: {
+        product: z.string().describe("Product name or SKU"),
+      },
     },
-  }, async ({ product }) => {
-    return withLog(db, "get_product_reviews", getSessionId(), { product }, () => {
-      let reviews: Review[];
+    async ({ product }) => {
+      return withLog(
+        db,
+        "get_product_reviews",
+        getSessionId(),
+        { product },
+        () => {
+          let reviews: Review[];
 
-      const directReviews = db.prepare("SELECT * FROM reviews WHERE sku = ? ORDER BY created_at DESC").all(product) as Review[];
-      if (directReviews.length > 0) {
-        reviews = directReviews;
-      } else {
-        const matchingProducts = db.prepare("SELECT sku FROM products WHERE LOWER(name) LIKE ?").all(`%${product.toLowerCase()}%`) as Array<{ sku: string }>;
-        if (matchingProducts.length === 0) return { content: [{ type: "text" as const, text: `No product found matching "${product}".` }] };
-        const skus = matchingProducts.map(p => p.sku);
-        const placeholders = skus.map(() => "?").join(",");
-        reviews = db.prepare(`SELECT * FROM reviews WHERE sku IN (${placeholders}) ORDER BY created_at DESC`).all(...skus) as Review[];
-      }
+          const directReviews = db
+            .prepare(
+              "SELECT * FROM reviews WHERE sku = ? ORDER BY created_at DESC",
+            )
+            .all(product) as Review[];
+          if (directReviews.length > 0) {
+            reviews = directReviews;
+          } else {
+            const matchingProducts = db
+              .prepare("SELECT sku FROM products WHERE LOWER(name) LIKE ?")
+              .all(`%${product.toLowerCase()}%`) as Array<{ sku: string }>;
+            if (matchingProducts.length === 0)
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `No product found matching "${product}".`,
+                  },
+                ],
+              };
+            const skus = matchingProducts.map((p) => p.sku);
+            const placeholders = skus.map(() => "?").join(",");
+            reviews = db
+              .prepare(
+                `SELECT * FROM reviews WHERE sku IN (${placeholders}) ORDER BY created_at DESC`,
+              )
+              .all(...skus) as Review[];
+          }
 
-      if (reviews.length === 0) return { content: [{ type: "text" as const, text: `No reviews found for "${product}".` }] };
+          if (reviews.length === 0)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `No reviews found for "${product}".`,
+                },
+              ],
+            };
 
-      const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-      const reviewLines = reviews.map(r =>
-        `**${r.title}** — ${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)} (${r.rating}/5)\nBy ${r.author}${r.verified_purchase ? " ✓ Verified" : ""} — ${r.created_at}\n${r.body}`,
-      ).join("\n\n---\n\n");
+          const avgRating =
+            reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+          const reviewLines = reviews
+            .map(
+              (r) =>
+                `**${r.title}** — ${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)} (${r.rating}/5)\nBy ${r.author}${r.verified_purchase ? " ✓ Verified" : ""} — ${r.created_at}\n${r.body}`,
+            )
+            .join("\n\n---\n\n");
 
-      return { content: [{ type: "text" as const, text: `## Reviews (${reviews.length}) — Average: ${avgRating.toFixed(1)}/5\n\n${reviewLines}` }] };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `## Reviews (${reviews.length}) — Average: ${avgRating.toFixed(1)}/5\n\n${reviewLines}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── browse_categories ──
-  server.registerTool("browse_categories", {
-    title: "Browse Categories",
-    description: "List all product categories with counts and price ranges, or browse products within a specific category. Shows subcategories when available.",
-    inputSchema: {
-      category: z.string().optional().describe('Category name to browse. Omit to list all categories.'),
+  server.registerTool(
+    "browse_categories",
+    {
+      title: "Browse Categories",
+      description:
+        "List all product categories with counts and price ranges, or browse products within a specific category. Shows subcategories when available.",
+      inputSchema: {
+        category: z
+          .string()
+          .optional()
+          .describe("Category name to browse. Omit to list all categories."),
+      },
     },
-  }, async ({ category }) => {
-    return withLog(db, "browse_categories", getSessionId(), { category }, () => {
-      if (category) {
-        const products = db.prepare("SELECT * FROM products WHERE LOWER(category) = ? ORDER BY price ASC").all(category.toLowerCase()) as Product[];
-        if (products.length === 0) return { content: [{ type: "text" as const, text: `No products found in category "${category}".` }] };
+    async ({ category }) => {
+      return withLog(
+        db,
+        "browse_categories",
+        getSessionId(),
+        { category },
+        () => {
+          if (category) {
+            const products = db
+              .prepare(
+                "SELECT * FROM products WHERE LOWER(category) = ? ORDER BY price ASC",
+              )
+              .all(category.toLowerCase()) as Product[];
+            if (products.length === 0)
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `No products found in category "${category}".`,
+                  },
+                ],
+              };
 
-        const uniqueProducts = new Map<string, Product>();
-        for (const p of products) {
-          if (!uniqueProducts.has(p.name)) uniqueProducts.set(p.name, p);
-        }
+            const uniqueProducts = new Map<string, Product>();
+            for (const p of products) {
+              if (!uniqueProducts.has(p.name)) uniqueProducts.set(p.name, p);
+            }
 
-        const subcategories = new Map<string, Product[]>();
-        for (const p of Array.from(uniqueProducts.values())) {
-          const sub = p.subcategory || "Other";
-          if (!subcategories.has(sub)) subcategories.set(sub, []);
-          subcategories.get(sub)!.push(p);
-        }
+            const subcategories = new Map<string, Product[]>();
+            for (const p of Array.from(uniqueProducts.values())) {
+              const sub = p.subcategory || "Other";
+              if (!subcategories.has(sub)) subcategories.set(sub, []);
+              subcategories.get(sub)!.push(p);
+            }
 
-        let text = `## ${products[0]!.category} (${uniqueProducts.size} products)\n`;
-        for (const [sub, prods] of subcategories) {
-          text += `\n### ${sub}\n`;
-          text += prods.map(p =>
-            `• **${p.name}** by ${p.brand} — €${p.price.toFixed(2)} — ★ ${p.rating}/5 (${p.review_count} reviews)\n  ${p.description.substring(0, 80)}…`,
-          ).join("\n\n");
-          text += "\n";
-        }
+            let text = `## ${products[0]!.category} (${uniqueProducts.size} products)\n`;
+            for (const [sub, prods] of subcategories) {
+              text += `\n### ${sub}\n`;
+              text += prods
+                .map(
+                  (p) =>
+                    `• **${p.name}** by ${p.brand} — €${p.price.toFixed(2)} — ★ ${p.rating}/5 (${p.review_count} reviews)\n  ${p.description.substring(0, 80)}…`,
+                )
+                .join("\n\n");
+              text += "\n";
+            }
 
-        return { content: [{ type: "text" as const, text }] };
-      }
+            return { content: [{ type: "text" as const, text }] };
+          }
 
-      const categories = db.prepare(
-        "SELECT category, COUNT(DISTINCT name) as product_count, MIN(price) as min_price, MAX(price) as max_price, COUNT(*) as sku_count FROM products GROUP BY category ORDER BY category",
-      ).all() as Array<{ category: string; product_count: number; min_price: number; max_price: number; sku_count: number }>;
+          const categories = db
+            .prepare(
+              "SELECT category, COUNT(DISTINCT name) as product_count, MIN(price) as min_price, MAX(price) as max_price, COUNT(*) as sku_count FROM products GROUP BY category ORDER BY category",
+            )
+            .all() as Array<{
+            category: string;
+            product_count: number;
+            min_price: number;
+            max_price: number;
+            sku_count: number;
+          }>;
 
-      const lines = categories.map(c =>
-        `• **${c.category}** — ${c.product_count} products (${c.sku_count} SKUs) — €${c.min_price.toFixed(2)} – €${c.max_price.toFixed(2)}`,
-      );
+          const lines = categories.map(
+            (c) =>
+              `• **${c.category}** — ${c.product_count} products (${c.sku_count} SKUs) — €${c.min_price.toFixed(2)} – €${c.max_price.toFixed(2)}`,
+          );
 
-      return { content: [{ type: "text" as const, text: `## Product Categories\n\n${lines.join("\n")}` }] };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `## Product Categories\n\n${lines.join("\n")}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── create_support_ticket ──
-  server.registerTool("create_support_ticket", {
-    title: "Create Support Ticket",
-    description: "Report an issue with an order: damaged, wrong item, missing, late delivery, or other.",
-    inputSchema: {
-      order_id: z.string().describe("Order number the issue relates to"),
-      issue_type: z.enum(["damaged", "wrong_item", "missing_item", "late_delivery", "other"]).describe("Type of issue"),
-      description: z.string().describe("Detailed description of the issue"),
+  server.registerTool(
+    "create_support_ticket",
+    {
+      title: "Create Support Ticket",
+      description:
+        "Report an issue with an order: damaged, wrong item, missing, late delivery, or other.",
+      inputSchema: {
+        order_id: z.string().describe("Order number the issue relates to"),
+        issue_type: z
+          .enum([
+            "damaged",
+            "wrong_item",
+            "missing_item",
+            "late_delivery",
+            "other",
+          ])
+          .describe("Type of issue"),
+        description: z.string().describe("Detailed description of the issue"),
+      },
     },
-  }, async ({ order_id, issue_type, description }) => {
-    return withLog(db, "create_support_ticket", getSessionId(), { order_id, issue_type, description }, () => {
-      const order = db.prepare("SELECT * FROM orders WHERE order_id = ?").get(order_id) as Order | undefined;
-      if (!order) return { content: [{ type: "text" as const, text: `Order "${order_id}" not found.` }] };
+    async ({ order_id, issue_type, description }) => {
+      return withLog(
+        db,
+        "create_support_ticket",
+        getSessionId(),
+        { order_id, issue_type, description },
+        () => {
+          const order = db
+            .prepare("SELECT * FROM orders WHERE order_id = ?")
+            .get(order_id) as Order | undefined;
+          if (!order)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Order "${order_id}" not found.`,
+                },
+              ],
+            };
 
-      const priority = issue_type === "damaged" || issue_type === "missing_item" ? "high" : "normal";
-      const ticketId = `TKT-${randomUUID().substring(0, 8).toUpperCase()}`;
-      db.prepare("INSERT INTO support_tickets (ticket_id, order_id, issue_type, description, status, priority, session_id) VALUES (?, ?, ?, ?, ?, ?, ?)").run(ticketId, order_id, issue_type, description, "open", priority, getSessionId() ?? null);
+          const priority =
+            issue_type === "damaged" || issue_type === "missing_item"
+              ? "high"
+              : "normal";
+          const ticketId = `TKT-${randomUUID().substring(0, 8).toUpperCase()}`;
+          db.prepare(
+            "INSERT INTO support_tickets (ticket_id, order_id, issue_type, description, status, priority, session_id, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          ).run(
+            ticketId,
+            order_id,
+            issue_type,
+            description,
+            "open",
+            priority,
+            getSessionId() ?? null,
+            getUser()?.id ?? null,
+          );
 
-      const resolutionTime = priority === "high" ? "24–48 hours" : "3–5 business days";
-      return {
-        content: [{
-          type: "text" as const,
-          text: `✓ Support ticket created!\n\n**Ticket ID:** ${ticketId}\n**Order:** ${order_id}\n**Issue:** ${issue_type.replace(/_/g, " ")}\n**Priority:** ${priority}\n**Status:** Open\n\nOur team will review within ${resolutionTime}. Ask about ticket ${ticketId} anytime for updates.`,
-        }],
-      };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+          const resolutionTime =
+            priority === "high" ? "24–48 hours" : "3–5 business days";
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `✓ Support ticket created!\n\n**Ticket ID:** ${ticketId}\n**Order:** ${order_id}\n**Issue:** ${issue_type.replace(/_/g, " ")}\n**Priority:** ${priority}\n**Status:** Open\n\nOur team will review within ${resolutionTime}. Ask about ticket ${ticketId} anytime for updates.`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── get_support_tickets ──
-  server.registerTool("get_support_tickets", {
-    title: "Get Support Tickets",
-    description: "List all support tickets or look up a specific one by ID.",
-    inputSchema: {
-      ticket_id: z.string().optional().describe("Specific ticket ID to look up. Omit to list all."),
+  server.registerTool(
+    "get_support_tickets",
+    {
+      title: "Get Support Tickets",
+      description: "List all support tickets or look up a specific one by ID.",
+      inputSchema: {
+        ticket_id: z
+          .string()
+          .optional()
+          .describe("Specific ticket ID to look up. Omit to list all."),
+      },
     },
-  }, async ({ ticket_id }) => {
-    return withLog(db, "get_support_tickets", getSessionId(), { ticket_id }, () => {
-      const sessionId = getSessionId();
+    async ({ ticket_id }) => {
+      return withLog(
+        db,
+        "get_support_tickets",
+        getSessionId(),
+        { ticket_id },
+        () => {
+          const sessionId = getSessionId();
 
-      if (ticket_id) {
-        const ticket = db.prepare("SELECT * FROM support_tickets WHERE ticket_id = ?").get(ticket_id) as SupportTicket | undefined;
-        if (!ticket) return { content: [{ type: "text" as const, text: `Ticket "${ticket_id}" not found.` }] };
+          if (ticket_id) {
+            const ticket = db
+              .prepare("SELECT * FROM support_tickets WHERE ticket_id = ?")
+              .get(ticket_id) as SupportTicket | undefined;
+            if (!ticket)
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `Ticket "${ticket_id}" not found.`,
+                  },
+                ],
+              };
 
-        return {
-          content: [{
-            type: "text" as const,
-            text: `## Ticket ${ticket.ticket_id}\n\n**Order:** ${ticket.order_id}\n**Issue:** ${ticket.issue_type.replace(/_/g, " ")}\n**Priority:** ${ticket.priority}\n**Status:** ${ticket.status}\n**Created:** ${ticket.created_at}\n**Description:** ${ticket.description}\n${ticket.resolution ? `**Resolution:** ${ticket.resolution}` : ""}`,
-          }],
-        };
-      }
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `## Ticket ${ticket.ticket_id}\n\n**Order:** ${ticket.order_id}\n**Issue:** ${ticket.issue_type.replace(/_/g, " ")}\n**Priority:** ${ticket.priority}\n**Status:** ${ticket.status}\n**Created:** ${ticket.created_at}\n**Description:** ${ticket.description}\n${ticket.resolution ? `**Resolution:** ${ticket.resolution}` : ""}`,
+                },
+              ],
+            };
+          }
 
-      const tickets = sessionId
-        ? db.prepare("SELECT * FROM support_tickets WHERE session_id = ? ORDER BY created_at DESC").all(sessionId) as SupportTicket[]
-        : db.prepare("SELECT * FROM support_tickets ORDER BY created_at DESC").all() as SupportTicket[];
+          const ownerId = getUser()?.id || sessionId;
+          const tickets = ownerId
+            ? (db
+                .prepare(
+                  "SELECT * FROM support_tickets WHERE session_id = ? OR user_id = ? ORDER BY created_at DESC",
+                )
+                .all(ownerId, ownerId) as SupportTicket[])
+            : (db
+                .prepare(
+                  "SELECT * FROM support_tickets ORDER BY created_at DESC",
+                )
+                .all() as SupportTicket[]);
 
-      if (tickets.length === 0) return { content: [{ type: "text" as const, text: "No support tickets found." }] };
+          if (tickets.length === 0)
+            return {
+              content: [
+                { type: "text" as const, text: "No support tickets found." },
+              ],
+            };
 
-      const lines = tickets.map(t => {
-        const icon = t.status === "open" ? "🔴" : t.status === "in_progress" ? "🟡" : "🟢";
-        return `${icon} **${t.ticket_id}** — ${t.order_id} — ${t.issue_type.replace(/_/g, " ")} — ${t.priority} priority — ${t.status}`;
-      });
+          const lines = tickets.map((t) => {
+            const icon =
+              t.status === "open"
+                ? "🔴"
+                : t.status === "in_progress"
+                  ? "🟡"
+                  : "🟢";
+            return `${icon} **${t.ticket_id}** — ${t.order_id} — ${t.issue_type.replace(/_/g, " ")} — ${t.priority} priority — ${t.status}`;
+          });
 
-      return { content: [{ type: "text" as const, text: `## Support Tickets (${tickets.length})\n\n${lines.join("\n")}` }] };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `## Support Tickets (${tickets.length})\n\n${lines.join("\n")}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 
   // ── add_to_wishlist ──
-  server.registerTool("add_to_wishlist", {
-    title: "Add to Wishlist",
-    description: "Save a product to your wishlist by SKU.",
-    inputSchema: { sku: z.string().describe("Product SKU to save") },
-  }, async ({ sku }) => {
-    return withLog(db, "add_to_wishlist", getSessionId(), { sku }, () => {
-      const sessionId = getSessionId();
-      if (!sessionId) return { content: [{ type: "text" as const, text: "No active session. Please reconnect." }] };
-
-      const product = db.prepare("SELECT * FROM products WHERE sku = ?").get(sku) as Product | undefined;
-      if (!product) return { content: [{ type: "text" as const, text: `SKU "${sku}" not found.` }] };
-
-      const existing = db.prepare("SELECT * FROM wishlist WHERE session_id = ? AND sku = ?").get(sessionId, sku) as WishlistItem | undefined;
-      if (existing) return { content: [{ type: "text" as const, text: `**${product.name}** is already on your wishlist.` }] };
-
-      db.prepare("INSERT INTO wishlist (id, session_id, sku) VALUES (?, ?, ?)").run(randomUUID(), sessionId, sku);
-      const count = (db.prepare("SELECT COUNT(*) as count FROM wishlist WHERE session_id = ?").get(sessionId) as { count: number }).count;
-
-      return {
-        content: [{ type: "text" as const, text: `♡ Saved to wishlist!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""}) — €${product.price.toFixed(2)}\n\nYou have ${count} item${count !== 1 ? "s" : ""} on your wishlist.` }],
-      };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
-
-  // ── view_wishlist ──
-  server.registerTool("view_wishlist", {
-    title: "View Wishlist",
-    description: "Show all saved wishlist items with current prices and stock status.",
-    inputSchema: {},
-  }, async () => {
-    return withLog(db, "view_wishlist", getSessionId(), {}, () => {
-      const sessionId = getSessionId();
-      if (!sessionId) return { content: [{ type: "text" as const, text: "No active session." }] };
-
-      const items = db.prepare(
-        `SELECT w.*, p.name, p.color, p.size, p.price, p.stock_status, p.stock_qty, p.delivery_estimate, p.rating
-         FROM wishlist w JOIN products p ON w.sku = p.sku WHERE w.session_id = ? ORDER BY w.added_at DESC`,
-      ).all(sessionId) as Array<WishlistItem & { name: string; color: string; size: string | null; price: number; stock_status: string; stock_qty: number; delivery_estimate: string; rating: number }>;
-
-      if (items.length === 0) return { content: [{ type: "text" as const, text: "Your wishlist is empty. Browse products and save items!" }] };
-
-      const lines = items.map(i => {
-        const stockIcon = i.stock_status === "in_stock" ? "✓ In stock" : i.stock_status === "low_stock" ? `⚠ Low stock (${i.stock_qty} left)` : "✗ Out of stock";
-        return `• **${i.name}** (${i.color}${i.size ? `, Size ${i.size}` : ""}) — €${i.price.toFixed(2)}\n  SKU: ${i.sku} — ${stockIcon} — ★ ${i.rating}/5\n  Saved: ${i.added_at}`;
-      });
-
-      return { content: [{ type: "text" as const, text: `♡ **Your Wishlist** (${items.length} items)\n\n${lines.join("\n\n")}` }] };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
-
-  // ── remove_from_wishlist ──
-  server.registerTool("remove_from_wishlist", {
-    title: "Remove from Wishlist",
-    description: "Remove a product from your wishlist by SKU, or clear the entire wishlist.",
-    inputSchema: { sku: z.string().optional().describe("Product SKU to remove. Omit to clear all.") },
-  }, async ({ sku }) => {
-    return withLog(db, "remove_from_wishlist", getSessionId(), { sku }, () => {
-      const sessionId = getSessionId();
-      if (!sessionId) return { content: [{ type: "text" as const, text: "No active session." }] };
-
-      if (sku) {
-        const item = db.prepare("SELECT * FROM wishlist WHERE session_id = ? AND sku = ?").get(sessionId, sku) as WishlistItem | undefined;
-        if (!item) return { content: [{ type: "text" as const, text: `SKU "${sku}" is not on your wishlist.` }] };
-        db.prepare("DELETE FROM wishlist WHERE id = ?").run(item.id);
-      } else {
-        db.prepare("DELETE FROM wishlist WHERE session_id = ?").run(sessionId);
-      }
-
-      const count = (db.prepare("SELECT COUNT(*) as count FROM wishlist WHERE session_id = ?").get(sessionId) as { count: number }).count;
-      if (count === 0) return { content: [{ type: "text" as const, text: sku ? "✓ Removed from wishlist.\n\nYour wishlist is now empty." : "✓ Wishlist cleared." }] };
-      return { content: [{ type: "text" as const, text: `✓ ${sku ? "Removed from wishlist" : "Wishlist cleared"}. You have ${count} item${count !== 1 ? "s" : ""} remaining.` }] };
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
-
-  // ── get_frequently_bought_together ──
-  server.registerTool("get_frequently_bought_together", {
-    title: "Frequently Bought Together",
-    description: "Show products frequently purchased alongside a given product SKU. Useful for cross-selling and bundle suggestions.",
-    inputSchema: {
-      sku: z.string().describe("Product SKU to find complementary products for"),
+  server.registerTool(
+    "add_to_wishlist",
+    {
+      title: "Add to Wishlist",
+      description: "Save a product to your wishlist by SKU.",
+      inputSchema: { sku: z.string().describe("Product SKU to save") },
     },
-  }, async ({ sku }) => {
-    return withLog(db, "get_frequently_bought_together", getSessionId(), { sku }, () => {
-      const product = db.prepare("SELECT * FROM products WHERE sku = ?").get(sku) as Product | undefined;
-      if (!product) return { content: [{ type: "text" as const, text: `SKU "${sku}" not found.` }] };
+    async ({ sku }) => {
+      return withLog(db, "add_to_wishlist", getSessionId(), { sku }, () => {
+        const userId = getUser()?.id;
+        const sessionId = getSessionId();
+        const ownerId = userId || sessionId;
+        if (!ownerId)
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "No active session. Please reconnect.",
+              },
+            ],
+          };
 
-      if (!product.frequently_bought_together) {
-        return { content: [{ type: "text" as const, text: `No "frequently bought together" data for **${product.name}**.` }] };
-      }
+        const product = db
+          .prepare("SELECT * FROM products WHERE sku = ?")
+          .get(sku) as Product | undefined;
+        if (!product)
+          return {
+            content: [
+              { type: "text" as const, text: `SKU "${sku}" not found.` },
+            ],
+          };
 
-      try {
-        const fbtSkus = JSON.parse(product.frequently_bought_together) as string[];
-        if (fbtSkus.length === 0) return { content: [{ type: "text" as const, text: `No companion products found for **${product.name}**.` }] };
+        const existing = db
+          .prepare("SELECT * FROM wishlist WHERE session_id = ? AND sku = ?")
+          .get(ownerId, sku) as WishlistItem | undefined;
+        if (existing)
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `**${product.name}** is already on your wishlist.`,
+              },
+            ],
+          };
 
-        const placeholders = fbtSkus.map(() => "?").join(",");
-        const companions = db.prepare(`SELECT * FROM products WHERE sku IN (${placeholders})`).all(...fbtSkus) as Product[];
-
-        if (companions.length === 0) return { content: [{ type: "text" as const, text: `No companion products found for **${product.name}**.` }] };
-
-        const bundleTotal = product.price + companions.reduce((s, c) => s + c.price, 0);
-        const lines = companions.map(c =>
-          `• **${c.name}** (${c.color}) — €${c.price.toFixed(2)} — ${formatStock(c)}\n  ${c.description.substring(0, 80)}…\n  SKU: ${c.sku}`,
-        ).join("\n\n");
+        db.prepare(
+          "INSERT INTO wishlist (id, session_id, sku, user_id) VALUES (?, ?, ?, ?)",
+        ).run(randomUUID(), ownerId, sku, userId ?? null);
+        const count = (
+          db
+            .prepare(
+              "SELECT COUNT(*) as count FROM wishlist WHERE session_id = ?",
+            )
+            .get(ownerId) as { count: number }
+        ).count;
 
         return {
-          content: [{
-            type: "text" as const,
-            text: `## Frequently Bought With: ${product.name}\n\n${lines}\n\n**Bundle total (${1 + companions.length} items): €${bundleTotal.toFixed(2)}**`,
-          }],
+          content: [
+            {
+              type: "text" as const,
+              text: `♡ Saved to wishlist!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""}) — €${product.price.toFixed(2)}\n\nYou have ${count} item${count !== 1 ? "s" : ""} on your wishlist.`,
+            },
+          ],
         };
-      } catch {
-        return { content: [{ type: "text" as const, text: `Could not load companion products for **${product.name}**.` }] };
-      }
-    }) as { content: Array<{ type: "text"; text: string }> };
-  });
+      }) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── view_wishlist ──
+  server.registerTool(
+    "view_wishlist",
+    {
+      title: "View Wishlist",
+      description:
+        "Show all saved wishlist items with current prices and stock status.",
+      inputSchema: {},
+    },
+    async () => {
+      return withLog(db, "view_wishlist", getSessionId(), {}, () => {
+        const ownerId = getUser()?.id || getSessionId();
+        if (!ownerId)
+          return {
+            content: [{ type: "text" as const, text: "No active session." }],
+          };
+
+        const items = db
+          .prepare(
+            `SELECT w.*, p.name, p.color, p.size, p.price, p.stock_status, p.stock_qty, p.delivery_estimate, p.rating
+         FROM wishlist w JOIN products p ON w.sku = p.sku WHERE w.session_id = ? ORDER BY w.added_at DESC`,
+          )
+          .all(ownerId) as Array<
+          WishlistItem & {
+            name: string;
+            color: string;
+            size: string | null;
+            price: number;
+            stock_status: string;
+            stock_qty: number;
+            delivery_estimate: string;
+            rating: number;
+          }
+        >;
+
+        if (items.length === 0)
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "Your wishlist is empty. Browse products and save items!",
+              },
+            ],
+          };
+
+        const lines = items.map((i) => {
+          const stockIcon =
+            i.stock_status === "in_stock"
+              ? "✓ In stock"
+              : i.stock_status === "low_stock"
+                ? `⚠ Low stock (${i.stock_qty} left)`
+                : "✗ Out of stock";
+          return `• **${i.name}** (${i.color}${i.size ? `, Size ${i.size}` : ""}) — €${i.price.toFixed(2)}\n  SKU: ${i.sku} — ${stockIcon} — ★ ${i.rating}/5\n  Saved: ${i.added_at}`;
+        });
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `♡ **Your Wishlist** (${items.length} items)\n\n${lines.join("\n\n")}`,
+            },
+          ],
+        };
+      }) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── remove_from_wishlist ──
+  server.registerTool(
+    "remove_from_wishlist",
+    {
+      title: "Remove from Wishlist",
+      description:
+        "Remove a product from your wishlist by SKU, or clear the entire wishlist.",
+      inputSchema: {
+        sku: z
+          .string()
+          .optional()
+          .describe("Product SKU to remove. Omit to clear all."),
+      },
+    },
+    async ({ sku }) => {
+      return withLog(
+        db,
+        "remove_from_wishlist",
+        getSessionId(),
+        { sku },
+        () => {
+          const ownerId = getUser()?.id || getSessionId();
+          if (!ownerId)
+            return {
+              content: [{ type: "text" as const, text: "No active session." }],
+            };
+
+          if (sku) {
+            const item = db
+              .prepare(
+                "SELECT * FROM wishlist WHERE session_id = ? AND sku = ?",
+              )
+              .get(ownerId, sku) as WishlistItem | undefined;
+            if (!item)
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `SKU "${sku}" is not on your wishlist.`,
+                  },
+                ],
+              };
+            db.prepare("DELETE FROM wishlist WHERE id = ?").run(item.id);
+          } else {
+            db.prepare("DELETE FROM wishlist WHERE session_id = ?").run(
+              ownerId,
+            );
+          }
+
+          const count = (
+            db
+              .prepare(
+                "SELECT COUNT(*) as count FROM wishlist WHERE session_id = ?",
+              )
+              .get(ownerId) as { count: number }
+          ).count;
+          if (count === 0)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: sku
+                    ? "✓ Removed from wishlist.\n\nYour wishlist is now empty."
+                    : "✓ Wishlist cleared.",
+                },
+              ],
+            };
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `✓ ${sku ? "Removed from wishlist" : "Wishlist cleared"}. You have ${count} item${count !== 1 ? "s" : ""} remaining.`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── get_frequently_bought_together ──
+  server.registerTool(
+    "get_frequently_bought_together",
+    {
+      title: "Frequently Bought Together",
+      description:
+        "Show products frequently purchased alongside a given product SKU. Useful for cross-selling and bundle suggestions.",
+      inputSchema: {
+        sku: z
+          .string()
+          .describe("Product SKU to find complementary products for"),
+      },
+    },
+    async ({ sku }) => {
+      return withLog(
+        db,
+        "get_frequently_bought_together",
+        getSessionId(),
+        { sku },
+        () => {
+          const product = db
+            .prepare("SELECT * FROM products WHERE sku = ?")
+            .get(sku) as Product | undefined;
+          if (!product)
+            return {
+              content: [
+                { type: "text" as const, text: `SKU "${sku}" not found.` },
+              ],
+            };
+
+          if (!product.frequently_bought_together) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `No "frequently bought together" data for **${product.name}**.`,
+                },
+              ],
+            };
+          }
+
+          try {
+            const fbtSkus = JSON.parse(
+              product.frequently_bought_together,
+            ) as string[];
+            if (fbtSkus.length === 0)
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `No companion products found for **${product.name}**.`,
+                  },
+                ],
+              };
+
+            const placeholders = fbtSkus.map(() => "?").join(",");
+            const companions = db
+              .prepare(`SELECT * FROM products WHERE sku IN (${placeholders})`)
+              .all(...fbtSkus) as Product[];
+
+            if (companions.length === 0)
+              return {
+                content: [
+                  {
+                    type: "text" as const,
+                    text: `No companion products found for **${product.name}**.`,
+                  },
+                ],
+              };
+
+            const bundleTotal =
+              product.price + companions.reduce((s, c) => s + c.price, 0);
+            const lines = companions
+              .map(
+                (c) =>
+                  `• **${c.name}** (${c.color}) — €${c.price.toFixed(2)} — ${formatStock(c)}\n  ${c.description.substring(0, 80)}…\n  SKU: ${c.sku}`,
+              )
+              .join("\n\n");
+
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `## Frequently Bought With: ${product.name}\n\n${lines}\n\n**Bundle total (${1 + companions.length} items): €${bundleTotal.toFixed(2)}**`,
+                },
+              ],
+            };
+          } catch {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Could not load companion products for **${product.name}**.`,
+                },
+              ],
+            };
+          }
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── get_current_user ──
+  server.registerTool(
+    "get_current_user",
+    {
+      title: "Get Current User",
+      description:
+        "Return the currently authenticated user's profile (name, email, avatar). Returns null fields if the user is not signed in yet. Use this before checkout or to personalize the experience.",
+      inputSchema: {},
+    },
+    async () => {
+      return withLog(db, "get_current_user", getSessionId(), {}, () => {
+        const user = getUser();
+        if (!user) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "No user is currently signed in. The customer can sign in at the store's login page to link their account, or you can proceed with a guest session.",
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `## Signed In\n\n**Name:** ${user.name}\n**Email:** ${user.email}${user.image ? `\n**Avatar:** ${user.image}` : ""}`,
+            },
+          ],
+        };
+      }) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── checkout ──
+  server.registerTool(
+    "checkout",
+    {
+      title: "Checkout",
+      description:
+        "Place an order from the current cart. Requires an authenticated user. Creates an order record and clears the cart. Returns the new order ID and summary.",
+      inputSchema: {
+        shipping_address: z.string().describe("Full shipping address"),
+        payment_method: z
+          .enum(["credit_card", "paypal", "bank_transfer"])
+          .default("credit_card")
+          .describe("Payment method"),
+      },
+    },
+    async ({ shipping_address, payment_method }) => {
+      return withLog(
+        db,
+        "checkout",
+        getSessionId(),
+        { shipping_address, payment_method },
+        () => {
+          const user = getUser();
+          if (!user) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Please sign in before checking out. The customer needs to authenticate to place an order.",
+                },
+              ],
+            };
+          }
+
+          const cartId = user.id;
+          const cartItems = db
+            .prepare("SELECT * FROM cart_items WHERE cart_id = ?")
+            .all(cartId) as Array<{
+            sku: string;
+            name: string;
+            color: string;
+            size: string | null;
+            quantity: number;
+            unit_price: number;
+            category?: string;
+          }>;
+
+          if (cartItems.length === 0) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: "Your cart is empty. Add items before checking out.",
+                },
+              ],
+            };
+          }
+
+          const total = cartItems.reduce(
+            (s, i) => s + i.unit_price * i.quantity,
+            0,
+          );
+          const orderId = `ACM-${new Date().getFullYear()}-${randomUUID().substring(0, 5).toUpperCase()}`;
+          const orderItems = cartItems.map((i) => ({
+            sku: i.sku,
+            name: i.name,
+            color: i.color,
+            size: i.size,
+            quantity: i.quantity,
+            price: i.unit_price,
+          }));
+
+          const deliveryDate = new Date();
+          deliveryDate.setDate(deliveryDate.getDate() + 3);
+
+          db.prepare(
+            `
+        INSERT INTO orders (order_id, status, delivery_estimate, order_date, items, total, currency, eligible_for_return, return_deadline, user_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+          ).run(
+            orderId,
+            "processing",
+            deliveryDate.toISOString().split("T")[0],
+            new Date().toISOString().split("T")[0],
+            JSON.stringify(orderItems),
+            total,
+            "EUR",
+            1,
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split("T")[0],
+            user.id,
+          );
+
+          db.prepare("DELETE FROM cart_items WHERE cart_id = ?").run(cartId);
+
+          const itemList = orderItems
+            .map(
+              (i) =>
+                `  • ${i.name} (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${(i.price * i.quantity).toFixed(2)}`,
+            )
+            .join("\n");
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `## Order Placed!\n\n**Order ID:** ${orderId}\n**Status:** Processing\n**Payment:** ${payment_method.replace(/_/g, " ")}\n**Shipping to:** ${shipping_address}\n**Estimated Delivery:** ${deliveryDate.toISOString().split("T")[0]}\n\n**Items:**\n${itemList}\n\n**Total: €${total.toFixed(2)}**\n\nThank you, ${user.name}! You'll receive a confirmation email at ${user.email}.`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
 }

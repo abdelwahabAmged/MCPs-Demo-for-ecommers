@@ -6,5 +6,7 @@ export { initLoggerTable, logToolCall, getRecentLogs, getLogCount, createLogApiH
 export { createHealthHandler } from './health.js';
 export { seedTable, seedTableRaw } from './seed.js';
 export type { ServerConfig, ToolLogEntry, SessionInfo, TableSchema, ColumnDef, ToolResult, DatabaseInstance } from './types.js';
+export { createBetterAuth, createAuthHandler, createMcpTokenVerifier, getSessionUser, runAuthMigrations } from './auth.js';
+export type { AuthConfig, AuthUser, BetterAuthInstance, McpSession } from './auth.js';
 
 export { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';

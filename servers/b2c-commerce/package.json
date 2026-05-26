@@ -6,14 +6,14 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc && cp src/data/*.json dist/data/ && cp -r src/public dist/public",
-    "dev": "tsx --watch src/index.ts",
+    "dev": "tsx --env-file=.env --watch src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@mcp-demos/shared": "workspace:*",
-    "better-sqlite3": "^11.9.0",
+    "better-sqlite3": "^12.10.0",
     "express": "^5.1.0",
     "zod": "^3.25.0"
   },

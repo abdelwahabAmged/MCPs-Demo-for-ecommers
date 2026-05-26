@@ -10,6 +10,18 @@ import { createHealthHandler } from "./health.js";
 import { initLoggerTable, createLogApiHandler } from "./logger.js";
 import { createDatabase } from "./db.js";
 import { createWellKnownRouter, createOAuthRouter } from "./oauth/index.js";
+import {
+  createBetterAuth,
+  createAuthHandler,
+  createMcpTokenVerifier,
+  runAuthMigrations,
+} from "./auth.js";
+import type {
+  AuthConfig,
+  AuthUser,
+  BetterAuthInstance,
+  McpSession,
+} from "./auth.js";
 import type Database from "better-sqlite3";
 import { join } from "node:path";
 
@@ -19,12 +31,14 @@ export interface CreateServerAppOptions {
   serverVersion?: string;
   dbPath?: string;
   getSessionCount?: () => number;
+  auth?: AuthConfig;
 }
 
 export interface ServerApp {
   app: express.Express;
   db: Database.Database;
   start: () => void;
+  auth?: BetterAuthInstance;
 }
 
 export function createServerApp(
@@ -32,6 +46,7 @@ export function createServerApp(
     server: McpServer,
     db: Database.Database,
     getSessionId: () => string | undefined,
+    getUser: () => AuthUser | undefined,
   ) => void,
   options: CreateServerAppOptions,
 ): ServerApp {
@@ -46,6 +61,7 @@ export function createServerApp(
   const db = createDatabase(dbPath);
   initLoggerTable(db);
   const app = express();
+
   app.use(
     cors({
       exposedHeaders: [
@@ -55,18 +71,39 @@ export function createServerApp(
         "Mcp-Protocol-Version",
       ],
       origin: "*",
+      credentials: true,
     }),
   );
+
+  let auth: BetterAuthInstance | undefined;
+  let mcpVerifier: ReturnType<typeof createMcpTokenVerifier> | undefined;
+
+  if (options.auth) {
+    const baseURL = options.auth.baseURL || `http://localhost:${port}`;
+
+    auth = createBetterAuth(db, { ...options.auth, baseURL });
+
+    // Better Auth handler must be mounted BEFORE express.json()
+    app.all("/api/auth/{*splat}", createAuthHandler(auth));
+
+    mcpVerifier = createMcpTokenVerifier(baseURL);
+  }
+
   app.use(express.json());
   app.use((_req: Request, res: Response, next) => {
     res.setHeader("ngrok-skip-browser-warning", "true");
     next();
   });
 
-  const mcpWellKnownRouter = createWellKnownRouter();
-  const mcpOAuthRouter = createOAuthRouter();
+  const mcpWellKnownRouter = createWellKnownRouter({
+    authEnabled: !!options.auth,
+  });
   app.use("/.well-known", mcpWellKnownRouter);
-  app.use("/api/mcp/oauth", mcpOAuthRouter);
+
+  if (!options.auth) {
+    const mcpOAuthRouter = createOAuthRouter();
+    app.use("/api/mcp/oauth", mcpOAuthRouter);
+  }
 
   app.get(
     "/health",
@@ -75,6 +112,7 @@ export function createServerApp(
   app.get("/api/logs", createLogApiHandler(db));
 
   const transports: Record<string, StreamableHTTPServerTransport> = {};
+  const sessionUsers = new Map<string, AuthUser>();
 
   const createMcpServer = (
     transport: StreamableHTTPServerTransport,
@@ -84,9 +122,33 @@ export function createServerApp(
       version: options.serverVersion || "1.0.0",
     });
 
-    registerTools(server, db, () => transport.sessionId);
+    registerTools(
+      server,
+      db,
+      () => transport.sessionId,
+      () => {
+        const sid = transport.sessionId;
+        return sid ? sessionUsers.get(sid) : undefined;
+      },
+    );
 
     return server;
+  };
+
+  const resolveUserFromSession = (
+    req: Request,
+    sessionId: string,
+  ) => {
+    if (sessionUsers.has(sessionId)) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mcpSession = (req as any).mcpSession as McpSession | undefined;
+    if (mcpSession?.userId) {
+      const user = resolveUserFromDb(db, mcpSession.userId);
+      if (user) {
+        sessionUsers.set(sessionId, user);
+        console.log(`[MCP] Authenticated user: ${user.name} (${user.email})`);
+      }
+    }
   };
 
   const handleMcpPost = async (req: Request, res: Response) => {
@@ -98,12 +160,12 @@ export function createServerApp(
       if (sessionId && transports[sessionId]) {
         transport = transports[sessionId]!;
       } else if (isInitializeRequest(req.body)) {
-        // New session — accept with or without a stale session ID
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           enableJsonResponse: true,
           onsessioninitialized: (newSessionId: string) => {
             transports[newSessionId] = transport;
+            resolveUserFromSession(req, newSessionId);
           },
         });
 
@@ -111,6 +173,7 @@ export function createServerApp(
           const sid = transport.sessionId;
           if (sid && transports[sid]) {
             delete transports[sid];
+            sessionUsers.delete(sid);
           }
         };
 
@@ -119,7 +182,6 @@ export function createServerApp(
         await transport.handleRequest(req, res, req.body);
         return;
       } else if (sessionId && !transports[sessionId]) {
-        // Per MCP spec: expired/unknown session → 404 tells client to re-initialize
         res.status(404).json({
           jsonrpc: "2.0",
           error: {
@@ -142,6 +204,11 @@ export function createServerApp(
         return;
       }
 
+      // Resolve user from verified MCP session (set by middleware)
+      if (transport.sessionId) {
+        resolveUserFromSession(req, transport.sessionId);
+      }
+
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error("Error handling MCP POST:", error);
@@ -155,10 +222,14 @@ export function createServerApp(
     }
   };
 
-  const handleMcpGet = async (req: Request, res: Response) => {
+  const handleMcpGet = async (
+    req: Request,
+    res: Response,
+    next: () => void,
+  ) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     if (!sessionId || !transports[sessionId]) {
-      res.status(400).send("Invalid or missing session ID");
+      next();
       return;
     }
     await transports[sessionId]!.handleRequest(req, res);
@@ -183,23 +254,56 @@ export function createServerApp(
   const rateLimiter = createRateLimiter();
 
   // Mount MCP handlers on both /mcp and / (ChatGPT sends to root path)
-  app.post("/mcp", rateLimiter, handleMcpPost);
-  app.get("/mcp", handleMcpGet);
-  app.delete("/mcp", handleMcpDelete);
+  if (mcpVerifier) {
+    // When auth is enabled, enforce OAuth Bearer token on MCP routes.
+    // The middleware returns 401 + WWW-Authenticate for unauthenticated
+    // requests, triggering the MCP OAuth flow in the client.
+    const mcpAuthMiddleware = mcpVerifier.middleware();
 
-  app.post("/", rateLimiter, handleMcpPost);
-  app.get("/", handleMcpGet);
-  app.delete("/", handleMcpDelete);
+    app.post("/mcp", rateLimiter, mcpAuthMiddleware, handleMcpPost);
+    app.get("/mcp", mcpAuthMiddleware, handleMcpGet);
+    app.delete("/mcp", mcpAuthMiddleware, handleMcpDelete);
+
+    app.post("/", rateLimiter, mcpAuthMiddleware, handleMcpPost);
+    app.get("/", handleMcpGet);
+    app.delete("/", mcpAuthMiddleware, handleMcpDelete);
+  } else {
+    app.post("/mcp", rateLimiter, handleMcpPost);
+    app.get("/mcp", handleMcpGet);
+    app.delete("/mcp", handleMcpDelete);
+
+    app.post("/", rateLimiter, handleMcpPost);
+    app.get("/", handleMcpGet);
+    app.delete("/", handleMcpDelete);
+  }
 
   const start = () => {
-    app.listen(port, () => {
-      console.log(
-        `[${options.serverName}] MCP server listening on port ${port}`,
-      );
-      console.log(`  MCP endpoint: http://localhost:${port}/mcp`);
-      console.log(`  Health:       http://localhost:${port}/health`);
-      console.log(`  Logs API:     http://localhost:${port}/api/logs`);
-    });
+    const listen = () => {
+      app.listen(port, () => {
+        console.log(
+          `[${options.serverName}] MCP server listening on port ${port}`,
+        );
+        console.log(`  MCP endpoint: http://localhost:${port}/mcp`);
+        console.log(`  Health:       http://localhost:${port}/health`);
+        console.log(`  Logs API:     http://localhost:${port}/api/logs`);
+        if (auth) {
+          console.log(`  Auth:         http://localhost:${port}/api/auth`);
+          console.log(`  Login:        http://localhost:${port}/login`);
+        }
+      });
+    };
+
+    if (options.auth) {
+      const baseURL = options.auth.baseURL || `http://localhost:${port}`;
+      runAuthMigrations({ ...options.auth, baseURL, db })
+        .then(listen)
+        .catch((err) => {
+          console.error("[Auth] Migration failed:", err);
+          listen();
+        });
+    } else {
+      listen();
+    }
 
     process.on("SIGINT", async () => {
       console.log(`\n[${options.serverName}] Shutting down...`);
@@ -216,5 +320,22 @@ export function createServerApp(
     });
   };
 
-  return { app, db, start };
+  return { app, db, start, auth };
+}
+
+function resolveUserFromDb(
+  db: Database.Database,
+  userId: string,
+): AuthUser | null {
+  try {
+    const row = db
+      .prepare("SELECT id, name, email, image FROM user WHERE id = ?")
+      .get(userId) as
+      | { id: string; name: string; email: string; image: string | null }
+      | undefined;
+    if (!row) return null;
+    return { id: row.id, name: row.name, email: row.email, image: row.image };
+  } catch {
+    return null;
+  }
 }

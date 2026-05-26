@@ -1,8 +1,8 @@
-import type Database from 'better-sqlite3';
-import { seedTableRaw } from '@mcp-demos/shared';
-import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import type Database from "better-sqlite3";
+import { seedTableRaw } from "@mcp-demos/shared";
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -10,12 +10,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * Bump this number whenever products.json, orders.json or reviews.json change.
  * On next start the server will drop stale catalogue tables and re-seed.
  */
-const DATA_VERSION = 2;
+const DATA_VERSION = 3;
 
 function isDataCurrent(db: Database.Database): boolean {
   try {
-    db.exec(`CREATE TABLE IF NOT EXISTS _data_meta (key TEXT PRIMARY KEY, value TEXT)`);
-    const row = db.prepare(`SELECT value FROM _data_meta WHERE key = 'data_version'`).get() as { value: string } | undefined;
+    db.exec(
+      `CREATE TABLE IF NOT EXISTS _data_meta (key TEXT PRIMARY KEY, value TEXT)`,
+    );
+    const row = db
+      .prepare(`SELECT value FROM _data_meta WHERE key = 'data_version'`)
+      .get() as { value: string } | undefined;
     return row ? parseInt(row.value, 10) >= DATA_VERSION : false;
   } catch {
     return false;
@@ -29,21 +33,33 @@ function dropCatalogueTables(db: Database.Database): void {
 }
 
 function stampVersion(db: Database.Database): void {
-  db.prepare(`INSERT OR REPLACE INTO _data_meta (key, value) VALUES ('data_version', ?)`).run(String(DATA_VERSION));
+  db.prepare(
+    `INSERT OR REPLACE INTO _data_meta (key, value) VALUES ('data_version', ?)`,
+  ).run(String(DATA_VERSION));
 }
 
 export function seedB2CData(db: Database.Database): void {
   if (isDataCurrent(db)) {
+    ensureRuntimeTables(db);
     return;
   }
 
   dropCatalogueTables(db);
 
-  const products = JSON.parse(readFileSync(join(__dirname, 'products.json'), 'utf-8'));
-  const orders = JSON.parse(readFileSync(join(__dirname, 'orders.json'), 'utf-8'));
-  const reviews = JSON.parse(readFileSync(join(__dirname, 'reviews.json'), 'utf-8'));
+  const products = JSON.parse(
+    readFileSync(join(__dirname, "products.json"), "utf-8"),
+  );
+  const orders = JSON.parse(
+    readFileSync(join(__dirname, "orders.json"), "utf-8"),
+  );
+  const reviews = JSON.parse(
+    readFileSync(join(__dirname, "reviews.json"), "utf-8"),
+  );
 
-  seedTableRaw(db, 'products', `
+  seedTableRaw(
+    db,
+    "products",
+    `
     CREATE TABLE IF NOT EXISTS products (
       sku TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -69,9 +85,14 @@ export function seedB2CData(db: Database.Database): void {
       dimensions TEXT,
       frequently_bought_together TEXT
     )
-  `, products);
+  `,
+    products,
+  );
 
-  seedTableRaw(db, 'orders', `
+  seedTableRaw(
+    db,
+    "orders",
+    `
     CREATE TABLE IF NOT EXISTS orders (
       order_id TEXT PRIMARY KEY,
       status TEXT NOT NULL,
@@ -83,15 +104,21 @@ export function seedB2CData(db: Database.Database): void {
       total REAL NOT NULL,
       currency TEXT DEFAULT 'EUR',
       eligible_for_return INTEGER DEFAULT 0,
-      return_deadline TEXT
+      return_deadline TEXT,
+      user_id TEXT
     )
-  `, orders.map((o: Record<string, unknown>) => ({
-    ...o,
-    items: JSON.stringify(o.items),
-    eligible_for_return: o.eligible_for_return ? 1 : 0,
-  })));
+  `,
+    orders.map((o: Record<string, unknown>) => ({
+      ...o,
+      items: JSON.stringify(o.items),
+      eligible_for_return: o.eligible_for_return ? 1 : 0,
+    })),
+  );
 
-  seedTableRaw(db, 'reviews', `
+  seedTableRaw(
+    db,
+    "reviews",
+    `
     CREATE TABLE IF NOT EXISTS reviews (
       review_id TEXT PRIMARY KEY,
       sku TEXT NOT NULL,
@@ -102,11 +129,18 @@ export function seedB2CData(db: Database.Database): void {
       created_at TEXT,
       verified_purchase INTEGER DEFAULT 1
     )
-  `, reviews.map((r: Record<string, unknown>) => ({
-    ...r,
-    verified_purchase: r.verified_purchase ? 1 : 0,
-  })));
+  `,
+    reviews.map((r: Record<string, unknown>) => ({
+      ...r,
+      verified_purchase: r.verified_purchase ? 1 : 0,
+    })),
+  );
 
+  ensureRuntimeTables(db);
+  stampVersion(db);
+}
+
+function ensureRuntimeTables(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS returns (
       return_id TEXT PRIMARY KEY,
@@ -114,7 +148,8 @@ export function seedB2CData(db: Database.Database): void {
       item_description TEXT,
       status TEXT DEFAULT 'pending',
       created_at TEXT DEFAULT (datetime('now')),
-      session_id TEXT
+      session_id TEXT,
+      user_id TEXT
     )
   `);
 
@@ -130,7 +165,8 @@ export function seedB2CData(db: Database.Database): void {
       unit_price REAL NOT NULL,
       currency TEXT DEFAULT 'EUR',
       image_url TEXT,
-      added_at TEXT DEFAULT (datetime('now'))
+      added_at TEXT DEFAULT (datetime('now')),
+      user_id TEXT
     )
   `);
 
@@ -140,6 +176,7 @@ export function seedB2CData(db: Database.Database): void {
       session_id TEXT NOT NULL,
       sku TEXT NOT NULL,
       added_at TEXT DEFAULT (datetime('now')),
+      user_id TEXT,
       UNIQUE(session_id, sku)
     )
   `);
@@ -155,9 +192,29 @@ export function seedB2CData(db: Database.Database): void {
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
       resolution TEXT,
-      session_id TEXT
+      session_id TEXT,
+      user_id TEXT
     )
   `);
 
-  stampVersion(db);
+  // Add user_id columns to existing tables if missing (upgrade path)
+  const tablesToPatch = [
+    "cart_items",
+    "wishlist",
+    "returns",
+    "support_tickets",
+    "orders",
+  ];
+  for (const table of tablesToPatch) {
+    try {
+      const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+        name: string;
+      }>;
+      if (!cols.some((c) => c.name === "user_id")) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN user_id TEXT`);
+      }
+    } catch {
+      /* table may not exist yet */
+    }
+  }
 }
