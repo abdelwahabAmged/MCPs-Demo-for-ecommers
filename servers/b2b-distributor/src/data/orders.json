@@ -203,62 +203,67 @@
     "order_id": "ORD-42887",
     "account_id": "ACME-ACC-00441",
     "status": "delivered",
-    "order_date": "2026-01-15",
-    "delivery_date": "2026-01-18",
-    "total": 2194.00,
+    "order_date": "2026-02-10",
+    "delivery_date": "2026-02-13",
+    "total": 971.26,
     "currency": "GBP",
-    "po_number": "PO-HEL-2026-0115",
+    "po_number": "PO-HEL-2026-0210",
     "carrier": "DHL Freight",
     "tracking_number": "DHL-UK-7756810",
     "delivery_address_id": "ADDR-002",
     "items": [
-      { "sku": "BRG-22212-E1", "name": "Spherical Roller Bearing 22212", "qty": 20, "unit_price": 77.28 },
-      { "sku": "FILT-HYD-10M", "name": "Hydraulic Return Filter 10 µm", "qty": 12, "unit_price": 38.50 },
-      { "sku": "LUB-HYD-ISO46-5L", "name": "Hydraulic Oil ISO 46 — 5 L", "qty": 6, "unit_price": 22.40 }
+      { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 30, "unit_price": 7.73 },
+      { "sku": "BRG-6304-2RS", "name": "Deep Groove Ball Bearing 6304-2RS", "qty": 25, "unit_price": 7.18 },
+      { "sku": "BRG-6308-ZZ", "name": "Deep Groove Ball Bearing 6308-ZZ", "qty": 15, "unit_price": 13.34 },
+      { "sku": "BRG-7206-BEP", "name": "Angular Contact Ball Bearing 7206", "qty": 10, "unit_price": 20.52 },
+      { "sku": "BRG-22212-E1", "name": "Spherical Roller Bearing 22212", "qty": 2, "unit_price": 77.28 }
     ],
     "tracking_milestones": [
-      { "status": "order_placed", "timestamp": "2026-01-15T09:00:00Z", "note": "Order confirmed" },
-      { "status": "picked", "timestamp": "2026-01-15T14:30:00Z", "note": "Picked at Manchester warehouse" },
-      { "status": "dispatched", "timestamp": "2026-01-16T07:30:00Z", "note": "Dispatched via DHL Freight" },
-      { "status": "in_transit", "timestamp": "2026-01-17T10:00:00Z", "note": "In transit — Sheffield depot" },
-      { "status": "delivered", "timestamp": "2026-01-18T11:15:00Z", "note": "Delivered — signed by K. Priestley" }
+      { "status": "order_placed", "timestamp": "2026-02-10T09:00:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-02-10T14:30:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-02-11T07:30:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-02-12T10:00:00Z", "note": "In transit — Sheffield depot" },
+      { "status": "delivered", "timestamp": "2026-02-13T11:15:00Z", "note": "Delivered — signed by K. Priestley" }
     ]
   },
   {
     "order_id": "ORD-43021",
     "account_id": "ACME-ACC-00441",
     "status": "delivered",
-    "order_date": "2026-02-10",
-    "delivery_date": "2026-02-13",
-    "total": 826.40,
+    "order_date": "2026-03-05",
+    "delivery_date": "2026-03-08",
+    "total": 3083.20,
     "currency": "GBP",
-    "po_number": "PO-HEL-2026-0210",
-    "carrier": "Parcelforce",
-    "tracking_number": "PF-98245510",
+    "po_number": "PO-HEL-2026-0305",
+    "carrier": "DHL Freight",
+    "tracking_number": "DHL-UK-7758003",
     "delivery_address_id": "ADDR-001",
     "items": [
-      { "sku": "BRG-6304-2RS", "name": "Deep Groove Ball Bearing 6304-2RS", "qty": 50, "unit_price": 7.18 },
-      { "sku": "FAST-M10x30-A2", "name": "Hex Bolt M10×30 A2 Stainless (50pk)", "qty": 10, "unit_price": 14.20 },
-      { "sku": "BELT-A-1250", "name": "Classical V-Belt A1250", "qty": 20, "unit_price": 12.22 }
+      { "sku": "BRG-6304-2RS", "name": "Deep Groove Ball Bearing 6304-2RS", "qty": 200, "unit_price": 7.18 },
+      { "sku": "BELT-A-1250", "name": "Classical V-Belt A1250", "qty": 40, "unit_price": 12.22 },
+      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 80, "unit_price": 2.28 },
+      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 60, "unit_price": 6.80 },
+      { "sku": "FAST-M10x30-A2", "name": "Hex Bolt M10×30 A2 Stainless (50pk)", "qty": 40, "unit_price": 14.20 }
     ],
     "tracking_milestones": [
-      { "status": "order_placed", "timestamp": "2026-02-10T10:45:00Z", "note": "Order confirmed" },
-      { "status": "picked", "timestamp": "2026-02-10T15:15:00Z", "note": "Picked at Manchester warehouse" },
-      { "status": "dispatched", "timestamp": "2026-02-11T07:30:00Z", "note": "Dispatched via Parcelforce" },
-      { "status": "delivered", "timestamp": "2026-02-13T08:45:00Z", "note": "Delivered — signed by D. Marshall" }
+      { "status": "order_placed", "timestamp": "2026-03-05T10:45:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-03-05T15:15:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-03-06T07:30:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-03-07T09:00:00Z", "note": "In transit — M1 corridor" },
+      { "status": "delivered", "timestamp": "2026-03-08T08:45:00Z", "note": "Delivered — signed by D. Marshall" }
     ]
   },
   {
     "order_id": "ORD-43400",
     "account_id": "ACME-ACC-00441",
     "status": "delivered",
-    "order_date": "2026-03-05",
-    "delivery_date": "2026-03-08",
+    "order_date": "2026-03-20",
+    "delivery_date": "2026-03-23",
     "total": 1482.00,
     "currency": "GBP",
-    "po_number": "PO-HEL-2026-0305",
+    "po_number": "PO-HEL-2026-0320",
     "carrier": "DHL Freight",
-    "tracking_number": "DHL-UK-7758003",
+    "tracking_number": "DHL-UK-7758210",
     "delivery_address_id": "ADDR-001",
     "items": [
       { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 100, "unit_price": 7.73 },
@@ -266,11 +271,11 @@
       { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 12, "unit_price": 6.80 }
     ],
     "tracking_milestones": [
-      { "status": "order_placed", "timestamp": "2026-03-05T09:00:00Z", "note": "Order confirmed" },
-      { "status": "picked", "timestamp": "2026-03-05T14:00:00Z", "note": "Picked at Manchester warehouse" },
-      { "status": "dispatched", "timestamp": "2026-03-06T07:30:00Z", "note": "Dispatched via DHL Freight" },
-      { "status": "in_transit", "timestamp": "2026-03-07T08:00:00Z", "note": "In transit — M1 corridor" },
-      { "status": "delivered", "timestamp": "2026-03-08T10:00:00Z", "note": "Delivered — signed by D. Marshall" }
+      { "status": "order_placed", "timestamp": "2026-03-20T09:00:00Z", "note": "Order confirmed" },
+      { "status": "picked", "timestamp": "2026-03-20T14:00:00Z", "note": "Picked at Manchester warehouse" },
+      { "status": "dispatched", "timestamp": "2026-03-21T07:30:00Z", "note": "Dispatched via DHL Freight" },
+      { "status": "in_transit", "timestamp": "2026-03-22T08:00:00Z", "note": "In transit — M1 corridor" },
+      { "status": "delivered", "timestamp": "2026-03-23T10:00:00Z", "note": "Delivered — signed by D. Marshall" }
     ]
   },
   {
@@ -279,7 +284,7 @@
     "status": "delivered",
     "order_date": "2026-04-11",
     "delivery_date": "2026-04-14",
-    "total": 1284.60,
+    "total": 1838.00,
     "currency": "GBP",
     "po_number": "PO-HEL-2026-0411",
     "carrier": "DHL Freight",
@@ -287,8 +292,9 @@
     "delivery_address_id": "ADDR-001",
     "items": [
       { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 100, "unit_price": 7.73 },
-      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 200, "unit_price": 2.28 },
-      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 10, "unit_price": 6.80 }
+      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 50, "unit_price": 2.28 },
+      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 50, "unit_price": 6.80 },
+      { "sku": "BELT-A-1250", "name": "Classical V-Belt A1250", "qty": 50, "unit_price": 12.22 }
     ],
     "tracking_milestones": [
       { "status": "order_placed", "timestamp": "2026-04-11T08:30:00Z", "note": "Order confirmed" },
@@ -378,19 +384,19 @@
     "status": "processing",
     "order_date": "2026-05-22",
     "delivery_date": null,
-    "total": 543.80,
+    "total": 754.80,
     "currency": "GBP",
     "po_number": "PO-HEL-2026-0522",
     "carrier": null,
     "tracking_number": null,
     "delivery_address_id": "ADDR-001",
     "items": [
-      { "sku": "BRG-NU210-ECJ", "name": "Cylindrical Roller Bearing NU210", "qty": 10, "unit_price": 31.83 },
-      { "sku": "SEAL-TC-40x62", "name": "TC Oil Seal 40×62×8 mm", "qty": 50, "unit_price": 3.99 },
-      { "sku": "FAST-M8x25-A2", "name": "Hex Bolt M8×25 A2 Stainless (100pk)", "qty": 2, "unit_price": 18.50 }
+      { "sku": "BRG-6205-ZZ", "name": "Deep Groove Ball Bearing 6205-ZZ", "qty": 80, "unit_price": 7.73 },
+      { "sku": "SEAL-V-25x42", "name": "V-Ring Seal 25×42 mm", "qty": 30, "unit_price": 2.28 },
+      { "sku": "LUB-EP2-400G", "name": "EP2 Lithium Grease Cartridge 400 g", "qty": 10, "unit_price": 6.80 }
     ],
     "tracking_milestones": [
-      { "status": "order_placed", "timestamp": "2026-05-22T09:00:00Z", "note": "Order confirmed" }
+      { "status": "order_placed", "timestamp": "2026-05-22T09:00:00Z", "note": "Order confirmed — dispatching tomorrow" }
     ]
   },
   {

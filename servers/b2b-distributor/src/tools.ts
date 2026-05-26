@@ -162,40 +162,104 @@ export function registerB2BTools(
   // ── 3. reorder_from_history ───────────────────────────────────
   server.registerTool('reorder_from_history', {
     title: 'Reorder from History',
-    description: 'Build a draft reorder from a previous order. Checks current contract pricing and warehouse stock for each line item, and returns a ready-to-confirm reorder summary.',
+    description: 'Build a draft reorder from a previous order. Checks current contract pricing and per-warehouse stock levels for each line item. Flags low-stock items and suggests split fulfillment across warehouses. Automatically generates a draft quote with a link to the quote document.',
     inputSchema: {
       order_id: z.string().describe('Previous order ID to reorder from (e.g., "ORD-44109")'),
+      delivery_address_id: z.string().optional().describe('Delivery address ID (e.g., "ADDR-001"). Defaults to the original order address.'),
     },
-  }, async ({ order_id }) => {
-    return withLog(db, 'reorder_from_history', getSessionId(), { order_id }, () => {
+  }, async ({ order_id, delivery_address_id }) => {
+    return withLog(db, 'reorder_from_history', getSessionId(), { order_id, delivery_address_id }, () => {
       const order = db.prepare('SELECT * FROM orders WHERE order_id = ? AND account_id = ?').get(order_id, ACCOUNT_ID) as Order | undefined;
       if (!order) return text(`Order "${order_id}" not found for this account.`);
 
       const items = JSON.parse(order.items) as Array<{ sku: string; name: string; qty: number; unit_price: number }>;
       let reorderTotal = 0;
+      const stockWarnings: string[] = [];
+      const quoteItems: Array<{ sku: string; name: string; qty: number; list_price: number; contract_price: number; discount_pct: number; line_total: number; unit: string }> = [];
 
       const lines = items.map(item => {
         const product = db.prepare('SELECT * FROM products WHERE sku = ?').get(item.sku) as Product | undefined;
         if (!product) return `- ${item.sku} — **DISCONTINUED**`;
 
         const { contractPrice, discount } = getContractPrice(db, product);
-        const totalStock = getTotalStock(db, item.sku);
-        const lineTotal = contractPrice * item.qty;
+        const warehouseRows = db.prepare('SELECT * FROM warehouse_stock WHERE sku = ? ORDER BY warehouse').all(item.sku) as WarehouseRow[];
+        const totalStock = warehouseRows.reduce((s, r) => s + r.qty, 0);
+        const lineTotal = Math.round(contractPrice * item.qty * 100) / 100;
         reorderTotal += lineTotal;
 
-        const stockStatus = totalStock >= item.qty
-          ? `${totalStock} in stock`
-          : totalStock > 0 ? `Only ${totalStock} available (need ${item.qty})` : 'Out of stock';
+        quoteItems.push({
+          sku: item.sku, name: product.name, qty: item.qty,
+          list_price: product.list_price, contract_price: contractPrice,
+          discount_pct: discount, line_total: lineTotal, unit: product.unit,
+        });
 
-        return `- ${item.qty}× **${product.name}** (${item.sku})\n` +
-          `  Contract price: £${contractPrice.toFixed(2)}${discount > 0 ? ` (${discount}% off £${product.list_price.toFixed(2)})` : ''}\n` +
-          `  Line total: £${lineTotal.toFixed(2)} · Stock: ${stockStatus}`;
+        const warehouseDetail = warehouseRows
+          .map(r => `${r.warehouse}: ${r.qty > 0 ? `${r.qty} units` : '—'}`)
+          .join(' · ');
+
+        let stockSection = `  Stock: ${warehouseDetail} (total: ${totalStock})`;
+
+        if (totalStock < item.qty) {
+          const shortfall = item.qty - totalStock;
+          if (totalStock === 0) {
+            stockSection += `\n  **OUT OF STOCK** — ${item.qty} needed, 0 available`;
+            const subs = db.prepare('SELECT * FROM substitutes WHERE sku = ?').all(item.sku) as SubstituteRow[];
+            if (subs.length > 0) {
+              const subSku = subs[0].substitute_sku;
+              const subStock = getTotalStock(db, subSku);
+              stockSection += ` — consider substitute **${subSku}** (${subStock} in stock): ${subs[0].notes}`;
+            }
+            stockWarnings.push(`${item.sku}: out of stock (need ${item.qty})`);
+          } else {
+            stockSection += `\n  **LOW STOCK** — Only ${totalStock} available, need ${item.qty} (short by ${shortfall})`;
+            const canFulfill = warehouseRows.filter(r => r.qty > 0);
+            if (canFulfill.length > 1) {
+              const plan = canFulfill.map(r => `${r.warehouse}: ${Math.min(r.qty, item.qty)} units`).join(', ');
+              stockSection += `\n  **Split fulfillment suggested:** ${plan}`;
+            }
+            stockWarnings.push(`${item.sku}: only ${totalStock} in stock (need ${item.qty}, short by ${shortfall})`);
+          }
+        }
+
+        return `### ${item.qty}× ${product.name} (${item.sku})\n` +
+          `  Contract price: £${contractPrice.toFixed(2)}${discount > 0 ? ` (${discount}% off £${product.list_price.toFixed(2)})` : ''} per ${product.unit}\n` +
+          `  Line total: **£${lineTotal.toFixed(2)}**\n` +
+          stockSection;
       });
 
+      const quoteId = `QTE-${randomUUID().substring(0, 8).toUpperCase()}`;
+      const vat = Math.round(reorderTotal * 0.2 * 100) / 100;
+      const addrId = delivery_address_id ?? order.delivery_address_id;
+
+      db.prepare(
+        'INSERT INTO quotes (quote_id, account_id, total, items, delivery_address_id, notes, session_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      ).run(quoteId, ACCOUNT_ID, reorderTotal, JSON.stringify(quoteItems), addrId ?? null, `Reorder from ${order_id}`, getSessionId() ?? null);
+
+      let addressLine = '';
+      if (addrId) {
+        const addr = db.prepare('SELECT * FROM delivery_addresses WHERE address_id = ?').get(addrId) as Address | undefined;
+        if (addr) addressLine = `**Deliver to:** ${addr.label} — ${addr.line1}, ${addr.city} ${addr.postcode}\n`;
+      }
+
+      let warningBlock = '';
+      if (stockWarnings.length > 0) {
+        warningBlock = `\n## Stock Alerts\n\n${stockWarnings.map(w => `- ${w}`).join('\n')}\n`;
+      }
+
       return text(
-        `# Draft Reorder from ${order_id}\n\nOriginal order date: ${order.order_date}\n\n` +
-        `${lines.join('\n\n')}\n\n---\n**Reorder Total: £${reorderTotal.toFixed(2)}**\n\n` +
-        `To confirm this reorder, use the **create_quote** tool with the SKUs and quantities above.`
+        `# Draft Reorder from ${order_id}\n\n` +
+        `**Original order date:** ${order.order_date}\n` +
+        `${addressLine}\n` +
+        `${lines.join('\n\n')}\n` +
+        `${warningBlock}\n` +
+        `---\n` +
+        `| | |\n|---|---|\n` +
+        `| **Subtotal** | £${reorderTotal.toFixed(2)} |\n` +
+        `| **VAT (20%)** | £${vat.toFixed(2)} |\n` +
+        `| **Total** | **£${(reorderTotal + vat).toFixed(2)}** |\n\n` +
+        `**Quote ${quoteId}** has been generated automatically. Valid for 30 days.\n` +
+        `Contact your rep James Whitfield to confirm.\n\n` +
+        `[View Quote Document](${getBaseUrl()}/quote/${quoteId})`
       );
     }) as ToolResult;
   });

@@ -71,10 +71,10 @@ export function seedB2BData(db: Database.Database): void {
     payment_terms: 'Net 30',
     currency: 'GBP',
     rep_name: 'James Whitfield',
-    rep_email: 'j.whitfield@acmeindustrial.co.uk',
+    rep_email: 'j.whitfield@acmeindustrial.com',
     open_orders: 5,
     tier: 'Tier 2',
-    ytd_spend: 15834.90,
+    ytd_spend: 10880.76,
     last_order_date: '2026-05-23',
   }]);
 
@@ -130,6 +130,10 @@ export function seedB2BData(db: Database.Database): void {
     stockRows.push({ sku: p.sku, warehouse: 'Birmingham', qty: Math.floor(base * 0.4) });
     stockRows.push({ sku: p.sku, warehouse: 'Glasgow',    qty: Math.floor(base * 0.15) });
   }
+
+  // BRG-6205-ZZ: low in Manchester (60), plentiful in Birmingham (120) for split-fulfillment demo
+  setStock(stockRows, 'BRG-6205-ZZ', 'Manchester', 60);
+  setStock(stockRows, 'BRG-6205-ZZ', 'Birmingham', 120);
 
   // Deliberately set some SKUs low/zero for demo flows
   setStock(stockRows, 'FILT-DUST-CART', 'Manchester', 2);

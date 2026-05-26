@@ -5,7 +5,9 @@ import {
   renderQuotePage,
   renderTrackingPage,
   renderDashboardPage,
+  renderOrdersPage,
   renderCatalogPage,
+  renderInvoicesPage,
   renderInvoicePage,
 } from './pages.js';
 
@@ -26,21 +28,40 @@ seedB2BData(db);
 
 // ── UI Routes ──────────────────────────────────────────────────
 
+app.get('/', (_req, res) => { res.redirect('/dashboard'); });
+
 app.get('/dashboard', (_req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.send(renderDashboardPage(db));
 });
 
-app.get('/quote/:quoteId', (req, res) => {
-  const html = renderQuotePage(db, req.params.quoteId);
-  if (!html) { res.status(404).send('Quote not found'); return; }
+app.get('/orders', (_req, res) => {
   res.setHeader('Content-Type', 'text/html');
-  res.send(html);
+  res.send(renderOrdersPage(db));
 });
 
 app.get('/track/:orderId', (req, res) => {
   const html = renderTrackingPage(db, req.params.orderId);
   if (!html) { res.status(404).send('Order not found'); return; }
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
+});
+
+app.get('/invoices', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(renderInvoicesPage(db));
+});
+
+app.get('/invoice/:invoiceId', (req, res) => {
+  const html = renderInvoicePage(db, req.params.invoiceId);
+  if (!html) { res.status(404).send('Invoice not found'); return; }
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
+});
+
+app.get('/quote/:quoteId', (req, res) => {
+  const html = renderQuotePage(db, req.params.quoteId);
+  if (!html) { res.status(404).send('Quote not found'); return; }
   res.setHeader('Content-Type', 'text/html');
   res.send(html);
 });
@@ -53,13 +74,6 @@ app.get('/catalog', (_req, res) => {
 app.get('/catalog/:category', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.send(renderCatalogPage(db, req.params.category));
-});
-
-app.get('/invoice/:invoiceId', (req, res) => {
-  const html = renderInvoicePage(db, req.params.invoiceId);
-  if (!html) { res.status(404).send('Invoice not found'); return; }
-  res.setHeader('Content-Type', 'text/html');
-  res.send(html);
 });
 
 start();
