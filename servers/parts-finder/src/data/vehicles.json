@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1,
+    "make": "Volkswagen",
+    "model": "Golf",
+    "year": 2019,
+    "variant": "Mk7.5 1.6 TDI",
+    "engine_code": "DGDB",
+    "fuel_type": "Diesel",
+    "power_hp": 115,
+    "transmission": "Manual 6-speed",
+    "body_type": "Hatchback",
+    "front_disc_mm": 288,
+    "rear_disc_mm": 272,
+    "front_brake_type": "Ventilated disc",
+    "rear_brake_type": "Solid disc",
+    "image_url": null
+  },
+  {
+    "id": 2,
+    "make": "Ford",
+    "model": "Focus",
+    "year": 2021,
+    "variant": "2.0 EcoBlue",
+    "engine_code": "XWDA",
+    "fuel_type": "Diesel",
+    "power_hp": 150,
+    "transmission": "Manual 6-speed",
+    "body_type": "Hatchback",
+    "front_disc_mm": 300,
+    "rear_disc_mm": 271,
+    "front_brake_type": "Ventilated disc",
+    "rear_brake_type": "Solid disc",
+    "image_url": null
+  },
+  {
+    "id": 3,
+    "make": "BMW",
+    "model": "3 Series",
+    "year": 2018,
+    "variant": "320d F30",
+    "engine_code": "B47D20A",
+    "fuel_type": "Diesel",
+    "power_hp": 190,
+    "transmission": "Automatic 8-speed",
+    "body_type": "Saloon",
+    "front_disc_mm": 330,
+    "rear_disc_mm": 300,
+    "front_brake_type": "Ventilated disc",
+    "rear_brake_type": "Ventilated disc",
+    "image_url": null
+  }
+]

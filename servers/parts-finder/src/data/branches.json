@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Manchester",
+    "address": "Unit 4, Trafford Park Industrial Estate, Manchester M17 1HH",
+    "phone": "0161 234 5678",
+    "email": "manchester@acmeparts.co.uk",
+    "opening_hours": "Mon-Fri 07:30-18:00, Sat 08:00-16:00, Sun Closed",
+    "click_collect_hours": "Mon-Fri 07:30-19:00, Sat 08:00-17:00",
+    "lat": 53.4631,
+    "lng": -2.2914
+  },
+  {
+    "name": "Birmingham",
+    "address": "12 Aston Road North, Birmingham B6 4DA",
+    "phone": "0121 345 6789",
+    "email": "birmingham@acmeparts.co.uk",
+    "opening_hours": "Mon-Fri 07:30-18:00, Sat 08:00-16:00, Sun Closed",
+    "click_collect_hours": "Mon-Fri 07:30-19:00, Sat 08:00-17:00",
+    "lat": 52.4966,
+    "lng": -1.8883
+  },
+  {
+    "name": "Leeds",
+    "address": "Kirkstall Road Trade Park, Leeds LS4 2DG",
+    "phone": "0113 456 7890",
+    "email": "leeds@acmeparts.co.uk",
+    "opening_hours": "Mon-Fri 08:00-17:30, Sat 08:30-15:00, Sun Closed",
+    "click_collect_hours": "Mon-Fri 08:00-18:00, Sat 08:30-16:00",
+    "lat": 53.8008,
+    "lng": -1.5491
+  },
+  {
+    "name": "London",
+    "address": "27 Old Kent Road, London SE1 5UB",
+    "phone": "020 7890 1234",
+    "email": "london@acmeparts.co.uk",
+    "opening_hours": "Mon-Fri 07:00-19:00, Sat 08:00-17:00, Sun 10:00-15:00",
+    "click_collect_hours": "Mon-Fri 07:00-20:00, Sat 08:00-18:00, Sun 10:00-15:00",
+    "lat": 51.4890,
+    "lng": -0.0759
+  }
+]
