@@ -3,6 +3,18 @@ import type { AuthUser } from "@mcp-demos/shared";
 import { z } from "zod";
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
+import { fetchImageAsBase64, fetchMultipleImages } from "./images.js";
+import {
+  buildProductGridHtml,
+  buildProductDetailHtml,
+  buildCartHtml,
+  wrapAsUiResource,
+} from "./ui-templates.js";
+
+type ContentBlock =
+  | { type: "text"; text: string }
+  | { type: "image"; data: string; mimeType: string }
+  | { type: "resource"; resource: { uri: string; mimeType: string; text: string } };
 
 const BASE_URL = process.env["RAILWAY_PUBLIC_DOMAIN"]
   ? `https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`
@@ -100,6 +112,26 @@ function withLog(
   }
 }
 
+async function withLogAsync<T>(
+  db: Database.Database,
+  toolName: string,
+  sessionId: string | undefined,
+  input: unknown,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const start = performance.now();
+  try {
+    const result = await fn();
+    const latency = performance.now() - start;
+    logToolCall(db, toolName, input, "success", latency, sessionId);
+    return result;
+  } catch (err) {
+    const latency = performance.now() - start;
+    logToolCall(db, toolName, input, `error: ${err}`, latency, sessionId);
+    throw err;
+  }
+}
+
 interface Reservation {
   id: string;
   sku: string;
@@ -181,12 +213,12 @@ export function registerB2CTools(
       },
     },
     async ({ query, max_price, category, size }) => {
-      return withLog(
+      return withLogAsync(
         db,
         "search_products",
         getSessionId(),
         { query, max_price, category, size },
-        () => {
+        async () => {
           const keywords = query
             .toLowerCase()
             .split(/[\s,]+/)
@@ -263,11 +295,49 @@ export function registerB2CTools(
               ". Proactively offer to reserve these for the customer using reserve_product.";
           }
 
-          return {
-            content: [{ type: "text" as const, text: results + urgencyBlock }],
-          };
+          const content: ContentBlock[] = [
+            { type: "text" as const, text: results + urgencyBlock },
+          ];
+
+          // Tier 1: Fetch product images as base64 for Claude's vision
+          const products = scored.map((s) => s.product);
+          const images = await fetchMultipleImages(
+            products.map((p) => ({ imageUrl: p.image_url, width: 300 })),
+          );
+          for (let i = 0; i < products.length; i++) {
+            const img = images[i];
+            if (img) {
+              content.push({
+                type: "image" as const,
+                data: img.data,
+                mimeType: img.mimeType,
+              });
+            }
+          }
+
+          // Tier 2: MCP Apps UI — rich product grid rendered inline
+          const gridHtml = buildProductGridHtml(
+            products.map((p) => ({
+              sku: p.sku,
+              name: p.name,
+              brand: p.brand,
+              price: p.price,
+              currency: p.currency,
+              color: p.color,
+              size: p.size,
+              image_url: p.image_url,
+              rating: p.rating,
+              review_count: p.review_count,
+              stock_status: p.stock_status,
+              delivery_estimate: p.delivery_estimate,
+            })),
+            `Search results for "${query}"`,
+          );
+          content.push(wrapAsUiResource(gridHtml, `search/${Date.now()}`));
+
+          return { content };
         },
-      ) as { content: Array<{ type: "text"; text: string }> };
+      );
     },
   );
 
@@ -285,12 +355,12 @@ export function registerB2CTools(
       },
     },
     async ({ product_name }) => {
-      return withLog(
+      return withLogAsync(
         db,
         "get_product_detail",
         getSessionId(),
         { product_name },
-        () => {
+        async () => {
           const searchName = product_name.toLowerCase();
           const variants = db
             .prepare("SELECT * FROM products WHERE LOWER(name) LIKE ?")
@@ -317,12 +387,13 @@ export function registerB2CTools(
             .join("\n");
 
           let specsBlock = "";
+          let parsedSpecs: Record<string, string> | undefined;
           if (first.specs) {
             try {
-              const specs = JSON.parse(first.specs) as Record<string, string>;
+              parsedSpecs = JSON.parse(first.specs) as Record<string, string>;
               specsBlock =
                 "\n\n## Specifications\n" +
-                Object.entries(specs)
+                Object.entries(parsedSpecs)
                   .map(([k, v]) => `  • **${k}:** ${v}`)
                   .join("\n");
             } catch {
@@ -416,9 +487,44 @@ export function registerB2CTools(
             fbtBlock +
             urgencyBlock;
 
-          return { content: [{ type: "text" as const, text }] };
+          const content: ContentBlock[] = [
+            { type: "text" as const, text },
+          ];
+
+          // Tier 1: Fetch product image as base64 for Claude's vision
+          const img = await fetchImageAsBase64(first.image_url, 600);
+          if (img) {
+            content.push({
+              type: "image" as const,
+              data: img.data,
+              mimeType: img.mimeType,
+            });
+          }
+
+          // Tier 2: MCP Apps UI — rich product detail card rendered inline
+          const detailHtml = buildProductDetailHtml({
+            sku: first.sku,
+            name: first.name,
+            brand: first.brand,
+            price: first.price,
+            currency: first.currency,
+            color: first.color,
+            size: first.size,
+            image_url: first.image_url,
+            rating: first.rating,
+            review_count: first.review_count,
+            stock_status: first.stock_status,
+            delivery_estimate: first.delivery_estimate,
+            description: first.description,
+            material: first.material ?? undefined,
+            weight_grams: first.weight_grams ?? undefined,
+            specs: parsedSpecs,
+          });
+          content.push(wrapAsUiResource(detailHtml, `product/${first.sku}`));
+
+          return { content };
         },
-      ) as { content: Array<{ type: "text"; text: string }> };
+      );
     },
   );
 
@@ -729,12 +835,12 @@ export function registerB2CTools(
       },
     },
     async ({ context }) => {
-      return withLog(
+      return withLogAsync(
         db,
         "get_recommendations",
         getSessionId(),
         { context },
-        () => {
+        async () => {
           const keywords = context
             .toLowerCase()
             .split(/[\s,]+/)
@@ -786,9 +892,34 @@ export function registerB2CTools(
               )
               .join("\n\n");
 
-          return { content: [{ type: "text" as const, text }] };
+          const content: ContentBlock[] = [
+            { type: "text" as const, text },
+          ];
+
+          const products = sorted.map((s) => s.product);
+          const images = await fetchMultipleImages(
+            products.map((p) => ({ imageUrl: p.image_url, width: 300 })),
+          );
+          for (const img of images) {
+            if (img) {
+              content.push({ type: "image" as const, data: img.data, mimeType: img.mimeType });
+            }
+          }
+
+          const gridHtml = buildProductGridHtml(
+            products.map((p) => ({
+              sku: p.sku, name: p.name, brand: p.brand, price: p.price,
+              currency: p.currency, color: p.color, size: p.size,
+              image_url: p.image_url, rating: p.rating, review_count: p.review_count,
+              stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
+            })),
+            `Recommendations for "${context}"`,
+          );
+          content.push(wrapAsUiResource(gridHtml, `recommendations/${Date.now()}`));
+
+          return { content };
         },
-      ) as { content: Array<{ type: "text"; text: string }> };
+      );
     },
   );
 
@@ -1063,7 +1194,7 @@ export function registerB2CTools(
       inputSchema: {},
     },
     async () => {
-      return withLog(db, "view_cart", getSessionId(), {}, () => {
+      return withLogAsync(db, "view_cart", getSessionId(), {}, async () => {
         const user = getUser();
         if (!user)
           return {
@@ -1084,6 +1215,7 @@ export function registerB2CTools(
           unit_price: number;
           color: string;
           size: string | null;
+          image_url: string | null;
         }>;
 
         if (cartItems.length === 0)
@@ -1113,7 +1245,6 @@ export function registerB2CTools(
           )
           .join("\n");
 
-        // Suggest complementary products for items in cart
         let crossSellBlock = "";
         const cartSkus = cartItems.map((i) => i.sku);
         const suggestedSkus = new Set<string>();
@@ -1147,15 +1278,30 @@ export function registerB2CTools(
           }
         }
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `🛒 **Your Cart** — ${totalItems} item${totalItems !== 1 ? "s" : ""}\n\n${itemList}\n\n**Total: €${totalPrice.toFixed(2)}**\n\nView your cart: ${cartUrl}` + crossSellBlock,
-            },
-          ],
-        };
-      }) as { content: Array<{ type: "text"; text: string }> };
+        const content: ContentBlock[] = [
+          {
+            type: "text" as const,
+            text: `🛒 **Your Cart** — ${totalItems} item${totalItems !== 1 ? "s" : ""}\n\n${itemList}\n\n**Total: €${totalPrice.toFixed(2)}**\n\nView your cart: ${cartUrl}` + crossSellBlock,
+          },
+        ];
+
+        // Tier 2: MCP Apps UI — visual cart with product images
+        const cartHtml = buildCartHtml(
+          cartItems.map((i) => ({
+            name: i.name,
+            sku: i.sku,
+            color: i.color,
+            size: i.size,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            image_url: i.image_url ?? undefined,
+          })),
+          totalPrice,
+        );
+        content.push(wrapAsUiResource(cartHtml, `cart/${Date.now()}`));
+
+        return { content };
+      });
     },
   );
 
@@ -1870,7 +2016,7 @@ export function registerB2CTools(
       inputSchema: {},
     },
     async () => {
-      return withLog(db, "view_wishlist", getSessionId(), {}, () => {
+      return withLogAsync(db, "view_wishlist", getSessionId(), {}, async () => {
         const ownerId = getUser()?.id || getSessionId();
         if (!ownerId)
           return {
@@ -1879,7 +2025,7 @@ export function registerB2CTools(
 
         const items = db
           .prepare(
-            `SELECT w.*, p.name, p.color, p.size, p.price, p.stock_status, p.stock_qty, p.delivery_estimate, p.rating
+            `SELECT w.*, p.name, p.color, p.size, p.price, p.stock_status, p.stock_qty, p.delivery_estimate, p.rating, p.brand, p.image_url, p.review_count, p.currency
          FROM wishlist w JOIN products p ON w.sku = p.sku WHERE w.session_id = ? ORDER BY w.added_at DESC`,
           )
           .all(ownerId) as Array<
@@ -1892,6 +2038,10 @@ export function registerB2CTools(
             stock_qty: number;
             delivery_estimate: string;
             rating: number;
+            brand: string;
+            image_url: string;
+            review_count: number;
+            currency: string;
           }
         >;
 
@@ -1915,15 +2065,26 @@ export function registerB2CTools(
           return `• **${i.name}** (${i.color}${i.size ? `, Size ${i.size}` : ""}) — €${i.price.toFixed(2)}\n  SKU: ${i.sku} — ${stockIcon} — ★ ${i.rating}/5\n  Saved: ${i.added_at}`;
         });
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `♡ **Your Wishlist** (${items.length} items)\n\n${lines.join("\n\n")}`,
-            },
-          ],
-        };
-      }) as { content: Array<{ type: "text"; text: string }> };
+        const content: ContentBlock[] = [
+          {
+            type: "text" as const,
+            text: `♡ **Your Wishlist** (${items.length} items)\n\n${lines.join("\n\n")}`,
+          },
+        ];
+
+        const gridHtml = buildProductGridHtml(
+          items.map((i) => ({
+            sku: i.sku, name: i.name, brand: i.brand, price: i.price,
+            currency: i.currency, color: i.color, size: i.size,
+            image_url: i.image_url, rating: i.rating, review_count: i.review_count,
+            stock_status: i.stock_status, delivery_estimate: i.delivery_estimate,
+          })),
+          `Your Wishlist (${items.length} items)`,
+        );
+        content.push(wrapAsUiResource(gridHtml, `wishlist/${Date.now()}`));
+
+        return { content };
+      });
     },
   );
 
@@ -2021,12 +2182,12 @@ export function registerB2CTools(
       },
     },
     async ({ sku }) => {
-      return withLog(
+      return withLogAsync(
         db,
         "get_frequently_bought_together",
         getSessionId(),
         { sku },
-        () => {
+        async () => {
           const product = db
             .prepare("SELECT * FROM products WHERE sku = ?")
             .get(sku) as Product | undefined;
@@ -2086,14 +2247,34 @@ export function registerB2CTools(
               )
               .join("\n\n");
 
-            return {
-              content: [
-                {
-                  type: "text" as const,
-                  text: `## Frequently Bought With: ${product.name}\n\n${lines}\n\n**Bundle total (${1 + companions.length} items): €${bundleTotal.toFixed(2)}**`,
-                },
-              ],
-            };
+            const content: ContentBlock[] = [
+              {
+                type: "text" as const,
+                text: `## Frequently Bought With: ${product.name}\n\n${lines}\n\n**Bundle total (${1 + companions.length} items): €${bundleTotal.toFixed(2)}**`,
+              },
+            ];
+
+            const images = await fetchMultipleImages(
+              companions.map((c) => ({ imageUrl: c.image_url, width: 300 })),
+            );
+            for (const img of images) {
+              if (img) {
+                content.push({ type: "image" as const, data: img.data, mimeType: img.mimeType });
+              }
+            }
+
+            const gridHtml = buildProductGridHtml(
+              companions.map((c) => ({
+                sku: c.sku, name: c.name, brand: c.brand, price: c.price,
+                currency: c.currency, color: c.color, size: c.size,
+                image_url: c.image_url, rating: c.rating, review_count: c.review_count,
+                stock_status: c.stock_status, delivery_estimate: c.delivery_estimate,
+              })),
+              `Frequently Bought With: ${product.name}`,
+            );
+            content.push(wrapAsUiResource(gridHtml, `fbt/${sku}/${Date.now()}`));
+
+            return { content };
           } catch {
             return {
               content: [
@@ -2105,7 +2286,7 @@ export function registerB2CTools(
             };
           }
         },
-      ) as { content: Array<{ type: "text"; text: string }> };
+      );
     },
   );
 
@@ -2119,12 +2300,12 @@ export function registerB2CTools(
       inputSchema: {},
     },
     async () => {
-      return withLog(
+      return withLogAsync(
         db,
         "get_personalized_recommendations",
         getSessionId(),
         {},
-        () => {
+        async () => {
           const user = getUser();
           if (!user) {
             return {
@@ -2262,9 +2443,34 @@ export function registerB2CTools(
             lines.join("\n\n") +
             `\n\n---\n**ASSISTANT INSTRUCTION:** Present these naturally to the customer, referencing their specific past purchases. For example: "Since you got the [product] last month, you might like [recommendation] — it pairs really well with it." If any item is low stock, mention the urgency.`;
 
-          return { content: [{ type: "text" as const, text }] };
+          const content: ContentBlock[] = [
+            { type: "text" as const, text },
+          ];
+
+          const recProducts = recommendations.map((r) => r.product);
+          const images = await fetchMultipleImages(
+            recProducts.map((p) => ({ imageUrl: p.image_url, width: 300 })),
+          );
+          for (const img of images) {
+            if (img) {
+              content.push({ type: "image" as const, data: img.data, mimeType: img.mimeType });
+            }
+          }
+
+          const gridHtml = buildProductGridHtml(
+            recProducts.map((p) => ({
+              sku: p.sku, name: p.name, brand: p.brand, price: p.price,
+              currency: p.currency, color: p.color, size: p.size,
+              image_url: p.image_url, rating: p.rating, review_count: p.review_count,
+              stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
+            })),
+            "Recommended For You",
+          );
+          content.push(wrapAsUiResource(gridHtml, `personalized/${Date.now()}`));
+
+          return { content };
         },
-      ) as { content: Array<{ type: "text"; text: string }> };
+      );
     },
   );
 
