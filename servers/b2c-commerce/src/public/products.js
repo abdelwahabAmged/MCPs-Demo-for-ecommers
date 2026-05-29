@@ -26,20 +26,6 @@
     }
   }
 
-  function getEmoji(category) {
-    var map = {
-      'Electronics': '\uD83D\uDD0C',
-      'Clothing & Apparel': '\uD83D\uDC55',
-      'Home & Kitchen': '\uD83C\uDFE0',
-      'Sports & Fitness': '\u26BD',
-      'Beauty & Personal Care': '\u2728',
-      'Books & Media': '\uD83D\uDCDA',
-      'Garden & Outdoor': '\uD83C\uDF3F',
-      'Toys & Games': '\uD83C\uDFAE'
-    };
-    return map[category] || '\uD83D\uDCE6';
-  }
-
   function filterProducts() {
     var items = state.products;
     if (state.activeCategory) {
@@ -69,7 +55,7 @@
       var count = state.products.filter(function (p) { return p.category === cat; }).length;
       var isActive = state.activeCategory === cat;
       html += '<li><a href="#" data-category="' + cat + '" class="' + (isActive ? 'active' : '') + '">' +
-        getEmoji(cat) + ' ' + cat + ' <span class="cat-count">' + count + '</span></a></li>';
+        cat + ' <span class="cat-count">' + count + '</span></a></li>';
     });
 
     list.innerHTML = html;
@@ -109,7 +95,7 @@
     grid.innerHTML = items.map(function (p) {
       var img = p.image_url
         ? '<img class="product-card-img" src="' + p.image_url + '" alt="' + p.name.replace(/"/g, '&quot;') + '" loading="lazy">'
-        : '<div class="product-card-img-placeholder">' + getEmoji(p.category) + '</div>';
+        : '<div class="product-card-img-placeholder"></div>';
 
       return '<div class="product-card">' +
         img +

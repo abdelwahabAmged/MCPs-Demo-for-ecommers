@@ -1,27 +1,31 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f7;
-  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  background: #f8f9fa;
+  color: #111827;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ── Slim Header ───────────────────────────────────────── */
 
 .site-header {
-  background: #fff;
-  border-bottom: 1px solid #e5e5e7;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
   position: sticky;
   top: 0;
   z-index: 50;
-  height: 52px;
+  height: 56px;
 }
 
 .site-header-inner {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 28px;
   display: flex;
   align-items: center;
   height: 100%;
@@ -31,8 +35,8 @@ body {
 .site-logo {
   font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.4px;
-  color: #1d1d1f;
+  letter-spacing: -0.5px;
+  color: #111827;
   text-decoration: none;
   flex-shrink: 0;
   display: flex;
@@ -46,7 +50,7 @@ body {
 }
 
 .site-logo:hover {
-  color: #0071e3;
+  color: #4f46e5;
 }
 
 /* ── Navigation ────────────────────────────────────────── */
@@ -59,23 +63,24 @@ body {
 }
 
 .site-nav a {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: #6e6e73;
+  color: #6b7280;
   text-decoration: none;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 8px;
   transition: all 0.15s;
 }
 
 .site-nav a:hover {
-  background: #f5f5f7;
-  color: #1d1d1f;
+  background: #f3f4f6;
+  color: #111827;
 }
 
 .site-nav a.active {
-  background: #f0f0f2;
-  color: #1d1d1f;
+  background: #f3f4f6;
+  color: #111827;
+  font-weight: 600;
 }
 
 /* ── User Bar (right side of header) ───────────────────── */
@@ -93,14 +98,14 @@ body {
   gap: 8px;
   padding: 4px 12px 4px 4px;
   border-radius: 20px;
-  background: #f5f5f7;
+  background: #f3f4f6;
   text-decoration: none;
-  color: #1d1d1f;
+  color: #111827;
   transition: background 0.15s;
 }
 
 .user-bar .user-pill:hover {
-  background: #e8e8ed;
+  background: #e5e7eb;
 }
 
 .user-bar .user-pill img {
@@ -108,14 +113,14 @@ body {
   height: 28px;
   border-radius: 50%;
   object-fit: cover;
-  background: #d1d1d6;
+  background: #d1d5db;
 }
 
 .user-bar .user-pill .user-initials {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #0071e3;
+  background: #111827;
   color: #fff;
   display: flex;
   align-items: center;
@@ -134,17 +139,17 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  font-weight: 500;
-  color: #0071e3;
+  font-weight: 600;
+  color: #111827;
   text-decoration: none;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 20px;
-  border: 1px solid #0071e3;
+  border: 1.5px solid #111827;
   transition: all 0.15s;
 }
 
 .user-bar .sign-in-btn:hover {
-  background: #0071e3;
+  background: #111827;
   color: #fff;
 }
 
@@ -159,17 +164,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  color: #6e6e73;
+  color: #6b7280;
   transition: all 0.15s;
   position: relative;
 }
 
 .header-cart-link:hover {
-  background: #f5f5f7;
-  color: #1d1d1f;
+  background: #f3f4f6;
+  color: #111827;
 }
 
 .header-cart-link svg {
@@ -180,9 +185,9 @@ body {
 /* ── Page container ────────────────────────────────────── */
 
 .page-container {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 32px 28px;
 }
 
 /* ── Footer badge ──────────────────────────────────────── */
@@ -190,18 +195,18 @@ body {
 .demo-badge {
   text-align: center;
   padding: 10px;
-  margin-top: 32px;
+  margin-top: 40px;
   font-size: 11px;
-  color: #999;
+  color: #9ca3af;
   letter-spacing: 0.3px;
 }
 
 .demo-badge span {
-  background: #f0f0f2;
-  padding: 4px 12px;
+  background: #f3f4f6;
+  padding: 5px 14px;
   border-radius: 20px;
   font-weight: 500;
-  color: #888;
+  color: #9ca3af;
 }
 
 /* ── Toast ─────────────────────────────────────────────── */
@@ -210,17 +215,23 @@ body {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #1d1d1f;
+  background: #111827;
   color: white;
-  padding: 12px 20px;
-  border-radius: 10px;
+  padding: 14px 22px;
+  border-radius: 12px;
   font-size: 14px;
+  font-weight: 500;
   opacity: 0;
-  transition: opacity 0.3s;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
   z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
-.toast.show { opacity: 1; }
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* ── Responsive ────────────────────────────────────────── */
 
@@ -232,7 +243,7 @@ body {
 
   .site-nav a {
     padding: 6px 10px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .user-bar .pill-name {
@@ -245,6 +256,6 @@ body {
   }
 
   .page-container {
-    padding: 16px;
+    padding: 20px 16px;
   }
 }
