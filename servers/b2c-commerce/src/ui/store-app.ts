@@ -149,7 +149,7 @@ function renderProductGrid(title: string, products: ProductData[]) {
         <span class="action-count">${count} selected</span>
         <div class="action-buttons">
           <button class="btn btn-compare" ${count < 2 ? "disabled" : ""} id="compare-btn">Compare</button>
-          <button class="btn btn-checkout" id="checkout-btn">Checkout</button>
+          <button class="btn btn-cart" id="cart-btn">Add to Cart</button>
         </div>
       </div>`
     : "";
@@ -164,6 +164,46 @@ function renderProductGrid(title: string, products: ProductData[]) {
   });
 
   document.getElementById("compare-btn")?.addEventListener("click", showCompare);
+  document.getElementById("cart-btn")?.addEventListener("click", addSelectedToCart);
+}
+
+async function addSelectedToCart() {
+  const btn = document.getElementById("cart-btn") as HTMLButtonElement | null;
+  if (!btn || btn.disabled) return;
+
+  const skus = [...selectedSkus];
+  btn.disabled = true;
+  btn.textContent = "Adding...";
+
+  let success = 0;
+  let failed = 0;
+
+  for (const sku of skus) {
+    try {
+      const result = await app.callServerTool({ name: "add_to_cart", arguments: { sku, quantity: 1 } });
+      const text = result.content?.find((c: { type: string }) => c.type === "text") as { text?: string } | undefined;
+      if (text?.text?.includes("not found") || text?.text?.includes("out of stock")) {
+        failed++;
+      } else {
+        success++;
+      }
+    } catch {
+      failed++;
+    }
+  }
+
+  btn.classList.add("btn-cart-done");
+  if (failed === 0) {
+    btn.textContent = `✓ ${success} added to cart`;
+  } else {
+    btn.textContent = `✓ ${success} added, ${failed} failed`;
+  }
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.classList.remove("btn-cart-done");
+    btn.textContent = "Add to Cart";
+  }, 2500);
 }
 
 function renderCompareView(products: ProductData[]) {
@@ -319,8 +359,10 @@ style.textContent = `
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-compare { background: #4f46e5; color: #fff; }
   .btn-compare:hover:not(:disabled) { background: #4338ca; }
-  .btn-checkout { background: #16a34a; color: #fff; }
-  .btn-checkout:hover:not(:disabled) { background: #15803d; }
+  .btn-cart { background: #16a34a; color: #fff; min-width: 130px; transition: background 0.2s, transform 0.1s; }
+  .btn-cart:hover:not(:disabled) { background: #15803d; }
+  .btn-cart:disabled { opacity: 0.7; }
+  .btn-cart-done { background: #059669 !important; opacity: 1 !important; }
   .btn-back { background: #f3f4f6; color: #374151; margin-bottom: 8px; }
   .btn-back:hover { background: #e5e7eb; }
 
