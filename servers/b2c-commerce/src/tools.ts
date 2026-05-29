@@ -3,18 +3,20 @@ import type { AuthUser } from "@mcp-demos/shared";
 import { z } from "zod";
 import type Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { fetchImageAsBase64, fetchMultipleImages } from "./images.js";
 import {
-  buildProductGridHtml,
-  buildProductDetailHtml,
-  buildCartHtml,
-  wrapAsUiResource,
-} from "./ui-templates.js";
+  registerAppTool,
+  registerAppResource,
+  RESOURCE_MIME_TYPE,
+} from "@modelcontextprotocol/ext-apps/server";
 
 type ContentBlock =
   | { type: "text"; text: string }
-  | { type: "image"; data: string; mimeType: string }
-  | { type: "resource"; resource: { uri: string; mimeType: string; text: string } };
+  | { type: "image"; data: string; mimeType: string };
+
+const STORE_APP_RESOURCE_URI = "ui://b2c-commerce/store-app";
 
 const BASE_URL = process.env["RAILWAY_PUBLIC_DOMAIN"]
   ? `https://${process.env["RAILWAY_PUBLIC_DOMAIN"]}`
@@ -185,13 +187,34 @@ export function registerB2CTools(
   getSessionId: () => string | undefined,
   getUser: () => AuthUser | undefined = () => undefined,
 ): void {
+  // ── Register app resource for store UI ──
+  registerAppResource(
+    server,
+    STORE_APP_RESOURCE_URI,
+    STORE_APP_RESOURCE_URI,
+    { mimeType: RESOURCE_MIME_TYPE },
+    async () => {
+      const html = await fs.readFile(
+        path.join(import.meta.dirname, "ui", "store-app.html"),
+        "utf-8",
+      );
+      return {
+        contents: [
+          { uri: STORE_APP_RESOURCE_URI, mimeType: RESOURCE_MIME_TYPE, text: html },
+        ],
+      };
+    },
+  );
+
   // ── search_products ──
-  server.registerTool(
+  registerAppTool(
+    server,
     "search_products",
     {
       title: "Search Products",
       description:
         'Search the product catalog by natural language query. Returns matching products with name, price, stock, image, and delivery info. Supports filters for price, category, and size. Use for queries like "wireless headphones under €100" or "running shoes size 42".',
+      _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {
         query: z
           .string()
@@ -315,39 +338,33 @@ export function registerB2CTools(
             }
           }
 
-          // Tier 2: MCP Apps UI — rich product grid rendered inline
-          const gridHtml = buildProductGridHtml(
-            products.map((p) => ({
-              sku: p.sku,
-              name: p.name,
-              brand: p.brand,
-              price: p.price,
-              currency: p.currency,
-              color: p.color,
-              size: p.size,
-              image_url: p.image_url,
-              rating: p.rating,
-              review_count: p.review_count,
-              stock_status: p.stock_status,
-              delivery_estimate: p.delivery_estimate,
-            })),
-            `Search results for "${query}"`,
-          );
-          content.push(wrapAsUiResource(gridHtml, `search/${Date.now()}`));
-
-          return { content };
+          return {
+            content,
+            structuredContent: {
+              viewType: "product-grid",
+              title: `Search results for "${query}"`,
+              products: products.map((p) => ({
+                sku: p.sku, name: p.name, brand: p.brand, price: p.price,
+                color: p.color, size: p.size, image_url: p.image_url,
+                rating: p.rating, review_count: p.review_count,
+                stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
+              })),
+            },
+          };
         },
       );
     },
   );
 
   // ── get_product_detail ──
-  server.registerTool(
+  registerAppTool(
+    server,
     "get_product_detail",
     {
       title: "Get Product Detail",
       description:
         "Return full product detail: description, specs, dimensions, all available variants (sizes/colours), stock per variant, delivery estimates, and frequently bought together items. When results include 'Frequently Bought Together' items, proactively mention them to the customer as complementary suggestions.",
+      _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {
         product_name: z
           .string()
@@ -501,28 +518,24 @@ export function registerB2CTools(
             });
           }
 
-          // Tier 2: MCP Apps UI — rich product detail card rendered inline
-          const detailHtml = buildProductDetailHtml({
-            sku: first.sku,
-            name: first.name,
-            brand: first.brand,
-            price: first.price,
-            currency: first.currency,
-            color: first.color,
-            size: first.size,
-            image_url: first.image_url,
-            rating: first.rating,
-            review_count: first.review_count,
-            stock_status: first.stock_status,
-            delivery_estimate: first.delivery_estimate,
-            description: first.description,
-            material: first.material ?? undefined,
-            weight_grams: first.weight_grams ?? undefined,
-            specs: parsedSpecs,
-          });
-          content.push(wrapAsUiResource(detailHtml, `product/${first.sku}`));
-
-          return { content };
+          return {
+            content,
+            structuredContent: {
+              viewType: "product-detail",
+              title: first.name,
+              product: {
+                sku: first.sku, name: first.name, brand: first.brand,
+                price: first.price, color: first.color, size: first.size,
+                image_url: first.image_url, rating: first.rating,
+                review_count: first.review_count, stock_status: first.stock_status,
+                delivery_estimate: first.delivery_estimate,
+                description: first.description,
+                material: first.material ?? undefined,
+                weight_grams: first.weight_grams ?? undefined,
+                specs: parsedSpecs,
+              },
+            },
+          };
         },
       );
     },
@@ -820,12 +833,14 @@ export function registerB2CTools(
   );
 
   // ── get_recommendations ──
-  server.registerTool(
+  registerAppTool(
+    server,
     "get_recommendations",
     {
       title: "Get Recommendations",
       description:
         'Return 3–5 product recommendations based on a described use case or product the user is viewing. Uses keyword matching and "frequently bought together" data. Use proactively when the customer seems undecided or is browsing — offer tailored suggestions based on what they\'ve looked at.',
+      _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {
         context: z
           .string()
@@ -906,18 +921,19 @@ export function registerB2CTools(
             }
           }
 
-          const gridHtml = buildProductGridHtml(
-            products.map((p) => ({
-              sku: p.sku, name: p.name, brand: p.brand, price: p.price,
-              currency: p.currency, color: p.color, size: p.size,
-              image_url: p.image_url, rating: p.rating, review_count: p.review_count,
-              stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
-            })),
-            `Recommendations for "${context}"`,
-          );
-          content.push(wrapAsUiResource(gridHtml, `recommendations/${Date.now()}`));
-
-          return { content };
+          return {
+            content,
+            structuredContent: {
+              viewType: "product-grid",
+              title: `Recommendations for "${context}"`,
+              products: products.map((p) => ({
+                sku: p.sku, name: p.name, brand: p.brand, price: p.price,
+                color: p.color, size: p.size, image_url: p.image_url,
+                rating: p.rating, review_count: p.review_count,
+                stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
+              })),
+            },
+          };
         },
       );
     },
@@ -1185,12 +1201,14 @@ export function registerB2CTools(
   );
 
   // ── view_cart ──
-  server.registerTool(
+  registerAppTool(
+    server,
     "view_cart",
     {
       title: "View Cart",
       description:
         "Show the current shopping cart contents with a browser link.",
+      _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {},
     },
     async () => {
@@ -1285,22 +1303,19 @@ export function registerB2CTools(
           },
         ];
 
-        // Tier 2: MCP Apps UI — visual cart with product images
-        const cartHtml = buildCartHtml(
-          cartItems.map((i) => ({
-            name: i.name,
-            sku: i.sku,
-            color: i.color,
-            size: i.size,
-            quantity: i.quantity,
-            unit_price: i.unit_price,
-            image_url: i.image_url ?? undefined,
-          })),
-          totalPrice,
-        );
-        content.push(wrapAsUiResource(cartHtml, `cart/${Date.now()}`));
-
-        return { content };
+        return {
+          content,
+          structuredContent: {
+            viewType: "cart",
+            title: "Your Cart",
+            cartItems: cartItems.map((i) => ({
+              name: i.name, sku: i.sku, color: i.color, size: i.size,
+              quantity: i.quantity, unit_price: i.unit_price,
+              image_url: i.image_url ?? undefined,
+            })),
+            cartTotal: totalPrice,
+          },
+        };
       });
     },
   );
@@ -2007,12 +2022,14 @@ export function registerB2CTools(
   );
 
   // ── view_wishlist ──
-  server.registerTool(
+  registerAppTool(
+    server,
     "view_wishlist",
     {
       title: "View Wishlist",
       description:
         "Show all saved wishlist items with current prices and stock status.",
+      _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {},
     },
     async () => {
@@ -2072,18 +2089,19 @@ export function registerB2CTools(
           },
         ];
 
-        const gridHtml = buildProductGridHtml(
-          items.map((i) => ({
-            sku: i.sku, name: i.name, brand: i.brand, price: i.price,
-            currency: i.currency, color: i.color, size: i.size,
-            image_url: i.image_url, rating: i.rating, review_count: i.review_count,
-            stock_status: i.stock_status, delivery_estimate: i.delivery_estimate,
-          })),
-          `Your Wishlist (${items.length} items)`,
-        );
-        content.push(wrapAsUiResource(gridHtml, `wishlist/${Date.now()}`));
-
-        return { content };
+        return {
+          content,
+          structuredContent: {
+            viewType: "product-grid",
+            title: `Your Wishlist (${items.length} items)`,
+            products: items.map((i) => ({
+              sku: i.sku, name: i.name, brand: i.brand, price: i.price,
+              color: i.color, size: i.size, image_url: i.image_url,
+              rating: i.rating, review_count: i.review_count,
+              stock_status: i.stock_status, delivery_estimate: i.delivery_estimate,
+            })),
+          },
+        };
       });
     },
   );
@@ -2169,12 +2187,14 @@ export function registerB2CTools(
   );
 
   // ── get_frequently_bought_together ──
-  server.registerTool(
+  registerAppTool(
+    server,
     "get_frequently_bought_together",
     {
       title: "Frequently Bought Together",
       description:
         "Show products frequently purchased alongside a given product SKU. Useful for cross-selling and bundle suggestions.",
+      _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {
         sku: z
           .string()
@@ -2263,18 +2283,19 @@ export function registerB2CTools(
               }
             }
 
-            const gridHtml = buildProductGridHtml(
-              companions.map((c) => ({
-                sku: c.sku, name: c.name, brand: c.brand, price: c.price,
-                currency: c.currency, color: c.color, size: c.size,
-                image_url: c.image_url, rating: c.rating, review_count: c.review_count,
-                stock_status: c.stock_status, delivery_estimate: c.delivery_estimate,
-              })),
-              `Frequently Bought With: ${product.name}`,
-            );
-            content.push(wrapAsUiResource(gridHtml, `fbt/${sku}/${Date.now()}`));
-
-            return { content };
+            return {
+              content,
+              structuredContent: {
+                viewType: "product-grid",
+                title: `Frequently Bought With: ${product.name}`,
+                products: companions.map((c) => ({
+                  sku: c.sku, name: c.name, brand: c.brand, price: c.price,
+                  color: c.color, size: c.size, image_url: c.image_url,
+                  rating: c.rating, review_count: c.review_count,
+                  stock_status: c.stock_status, delivery_estimate: c.delivery_estimate,
+                })),
+              },
+            };
           } catch {
             return {
               content: [
@@ -2291,12 +2312,14 @@ export function registerB2CTools(
   );
 
   // ── get_personalized_recommendations ──
-  server.registerTool(
+  registerAppTool(
+    server,
     "get_personalized_recommendations",
     {
       title: "Personalized Recommendations",
       description:
         "Recommend products based on the customer's purchase history. Finds accessories and complementary items for things they've already bought but haven't purchased yet. PROACTIVE USE: Call this when greeting a returning customer or when they seem to be browsing without a clear goal — say something like \"Based on your GPS watch purchase last month, here are some compatible accessories you might like.\"",
+      _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {},
     },
     async () => {
@@ -2457,18 +2480,19 @@ export function registerB2CTools(
             }
           }
 
-          const gridHtml = buildProductGridHtml(
-            recProducts.map((p) => ({
-              sku: p.sku, name: p.name, brand: p.brand, price: p.price,
-              currency: p.currency, color: p.color, size: p.size,
-              image_url: p.image_url, rating: p.rating, review_count: p.review_count,
-              stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
-            })),
-            "Recommended For You",
-          );
-          content.push(wrapAsUiResource(gridHtml, `personalized/${Date.now()}`));
-
-          return { content };
+          return {
+            content,
+            structuredContent: {
+              viewType: "product-grid",
+              title: "Recommended For You",
+              products: recProducts.map((p) => ({
+                sku: p.sku, name: p.name, brand: p.brand, price: p.price,
+                color: p.color, size: p.size, image_url: p.image_url,
+                rating: p.rating, review_count: p.review_count,
+                stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
+              })),
+            },
+          };
         },
       );
     },

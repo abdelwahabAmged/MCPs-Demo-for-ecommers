@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc && cp src/data/*.json dist/data/ && cp -r src/public dist/public",
+    "build": "tsc && cp src/data/*.json dist/data/ && cp -r src/public dist/public && INPUT=store-app.html vite build",
     "dev": "tsx --env-file=.env --watch src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
@@ -13,12 +13,15 @@
   },
   "dependencies": {
     "@mcp-demos/shared": "workspace:*",
+    "@modelcontextprotocol/ext-apps": "^1.7.2",
     "better-sqlite3": "^12.10.0",
     "express": "^5.1.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/express": "^5.0.6"
+    "@types/express": "^5.0.6",
+    "vite": "^8.0.14",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }
