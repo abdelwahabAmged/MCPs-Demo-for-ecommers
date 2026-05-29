@@ -200,7 +200,18 @@ export function registerB2CTools(
       );
       return {
         contents: [
-          { uri: STORE_APP_RESOURCE_URI, mimeType: RESOURCE_MIME_TYPE, text: html },
+          {
+            uri: STORE_APP_RESOURCE_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            _meta: {
+              ui: {
+                csp: {
+                  resourceDomains: ["https://images.unsplash.com"],
+                },
+              },
+            },
+          },
         ],
       };
     },
