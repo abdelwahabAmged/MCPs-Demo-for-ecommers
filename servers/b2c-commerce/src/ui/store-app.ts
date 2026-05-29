@@ -192,18 +192,34 @@ async function addSelectedToCart() {
     }
   }
 
-  btn.classList.add("btn-cart-done");
+  btn.disabled = false;
+  btn.textContent = "Add to Cart";
+
   if (failed === 0) {
-    btn.textContent = `✓ ${success} added to cart`;
+    showToast(`✓ ${success} item${success > 1 ? "s" : ""} added to cart`, "success");
+  } else if (success > 0) {
+    showToast(`${success} added, ${failed} couldn't be added`, "warning");
   } else {
-    btn.textContent = `✓ ${success} added, ${failed} failed`;
+    showToast(`Failed to add items to cart`, "error");
   }
+}
+
+function showToast(message: string, type: "success" | "warning" | "error") {
+  const existing = document.getElementById("toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.id = "toast";
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="toast-icon">${type === "success" ? "✓" : type === "warning" ? "⚠" : "✕"}</span><span>${message}</span>`;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => toast.classList.add("toast-visible"));
 
   setTimeout(() => {
-    btn.disabled = false;
-    btn.classList.remove("btn-cart-done");
-    btn.textContent = "Add to Cart";
-  }, 2500);
+    toast.classList.remove("toast-visible");
+    toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+  }, 3000);
 }
 
 function renderCompareView(products: ProductData[]) {
@@ -377,5 +393,12 @@ style.textContent = `
   .cmp-price { font-size: 16px; font-weight: 700; color: #16a34a; }
   .cmp-label { text-align: left; font-weight: 600; color: #555; background: #fafafa; min-width: 100px; white-space: nowrap; }
   .cmp-cell { font-size: 13px; color: #333; }
+
+  .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; z-index: 200; box-shadow: 0 6px 20px rgba(0,0,0,0.15); opacity: 0; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s; pointer-events: none; }
+  .toast-visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .toast-success { background: #059669; color: #fff; }
+  .toast-warning { background: #d97706; color: #fff; }
+  .toast-error { background: #dc2626; color: #fff; }
+  .toast-icon { font-size: 16px; }
 `;
 document.head.appendChild(style);
