@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * Bump this number whenever products.json, orders.json or reviews.json change.
  * On next start the server will drop stale catalogue tables and re-seed.
  */
-const DATA_VERSION = 8;
+const DATA_VERSION = 9;
 
 function isDataCurrent(db: Database.Database): boolean {
   try {

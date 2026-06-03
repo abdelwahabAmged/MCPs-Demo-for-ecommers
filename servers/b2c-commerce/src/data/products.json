@@ -57,7 +57,7 @@
     "stock_qty": 0,
     "stock_status": "out_of_stock",
     "delivery_estimate": "Out of stock — back June 12, 2026",
-    "image_url": "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800",
+    "image_url": "https://images.unsplash.com/photo-1624434207284-727cf0e6ea8e?w=800",
     "tags": [
       "smartphone",
       "5G",
@@ -318,7 +318,7 @@
     "stock_qty": 4,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=800",
+    "image_url": "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=800",
     "tags": [
       "earbuds",
       "wireless",
@@ -404,7 +404,7 @@
     "stock_qty": 15,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1546868871-af0de0ae72be?w=800",
+    "image_url": "https://images.unsplash.com/photo-1629339837617-7069ce9e7f6b?w=800",
     "tags": [
       "smartwatch",
       "GPS",
@@ -705,7 +705,7 @@
     "stock_qty": 42,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800",
+    "image_url": "https://image-cdn.ubuy.com/400_400_100/657c9dd99ac31a35192a4992-anker-powercore-26800.jpg",
     "tags": [
       "power-bank",
       "USB-C",
@@ -748,7 +748,7 @@
     "stock_qty": 48,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800",
+    "image_url": "https://images.unsplash.com/photo-1721333084639-0f64b0583875?w=800",
     "tags": [
       "wireless-charger",
       "Qi",
@@ -959,7 +959,7 @@
     "stock_qty": 30,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800",
+    "image_url": "https://images.unsplash.com/photo-1722310752951-4d459d28c678?w=800",
     "tags": [
       "t-shirt",
       "organic-cotton",
@@ -1001,7 +1001,7 @@
     "stock_qty": 42,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800",
+    "image_url": "https://images.unsplash.com/photo-1625697501049-ed422e855f4e?w=800",
     "tags": [
       "t-shirt",
       "organic-cotton",
@@ -1127,7 +1127,7 @@
     "stock_qty": 4,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800",
+    "image_url": "https://images.unsplash.com/photo-1667729699384-aac3a128f18a?w=800",
     "tags": [
       "t-shirt",
       "organic-cotton",
@@ -1198,49 +1198,6 @@
     ]
   },
   {
-    "sku": "CLTH-BTN-001-BLU-L",
-    "name": "UrbanThread Oxford Button-Down",
-    "brand": "UrbanThread",
-    "category": "Clothing & Apparel",
-    "subcategory": "Men's",
-    "description": "Classic Oxford cotton button-down shirt with button-down collar, chest pocket, and tailored slim fit. Perfect for smart-casual occasions.",
-    "price": 69.0,
-    "currency": "EUR",
-    "color": "Light Blue",
-    "color_hex": "#ADD8E6",
-    "size": "L",
-    "stock_qty": 12,
-    "stock_status": "in_stock",
-    "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800",
-    "tags": [
-      "button-down",
-      "oxford",
-      "slim-fit",
-      "smart-casual"
-    ],
-    "rating": 4.4,
-    "review_count": 112,
-    "weight_grams": 230,
-    "material": "100% Oxford Cotton",
-    "specs": {
-      "fabric_weight": "140gsm",
-      "fit": "Slim",
-      "collar": "Button-down",
-      "care": "Machine wash 30°C"
-    },
-    "dimensions": {
-      "length": 77.0,
-      "width": 55.0,
-      "height": 1.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-JNS-001-BLU-L",
-      "CLTH-BLT-001-BRN"
-    ]
-  },
-  {
     "sku": "CLTH-JNS-001-BLU-M",
     "name": "UrbanThread Slim Straight Jeans",
     "brand": "UrbanThread",
@@ -1255,7 +1212,7 @@
     "stock_qty": 20,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=800",
+    "image_url": "https://images.unsplash.com/photo-1714143136372-ddaf8b606da7?w=800",
     "tags": [
       "jeans",
       "denim",
@@ -1341,7 +1298,7 @@
     "stock_qty": 22,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800",
+    "image_url": "https://images.unsplash.com/photo-1620799140188-3b2a02fd9a77?w=800",
     "tags": [
       "hoodie",
       "fleece",
@@ -1384,7 +1341,7 @@
     "stock_qty": 3,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800",
+    "image_url": "https://images.unsplash.com/photo-1680292783974-a9a336c10366?w=800",
     "tags": [
       "hoodie",
       "fleece",
@@ -1453,49 +1410,6 @@
     "frequently_bought_together": [
       "CLTH-JNS-001-BLU-L",
       "CLTH-TEE-001-BLK-L"
-    ]
-  },
-  {
-    "sku": "CLTH-BMB-001-BLK-M",
-    "name": "UrbanThread Bomber Jacket",
-    "brand": "UrbanThread",
-    "category": "Clothing & Apparel",
-    "subcategory": "Men's",
-    "description": "Classic bomber jacket with satin shell, ribbed collar and cuffs, two side zip pockets, and quilted lining for lightweight warmth.",
-    "price": 129.0,
-    "currency": "EUR",
-    "color": "Black",
-    "color_hex": "#1A1A1A",
-    "size": "M",
-    "stock_qty": 9,
-    "stock_status": "in_stock",
-    "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800",
-    "tags": [
-      "bomber",
-      "jacket",
-      "satin",
-      "quilted"
-    ],
-    "rating": 4.4,
-    "review_count": 78,
-    "weight_grams": 550,
-    "material": "100% Nylon Shell / Polyester Lining",
-    "specs": {
-      "fit": "Regular",
-      "closure": "Zip front",
-      "pockets": "2 side zip + 1 interior",
-      "care": "Dry clean only"
-    },
-    "dimensions": {
-      "length": 68.0,
-      "width": 56.0,
-      "height": 3.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-TEE-001-BLK-M",
-      "CLTH-JNS-001-BLU-M"
     ]
   },
   {
@@ -1585,92 +1499,6 @@
     ]
   },
   {
-    "sku": "CLTH-POL-001-NVY-L",
-    "name": "UrbanThread Classic Polo",
-    "brand": "UrbanThread",
-    "category": "Clothing & Apparel",
-    "subcategory": "Men's",
-    "description": "Piqué cotton polo shirt with ribbed collar, two-button placket, and embroidered logo. A timeless smart-casual staple.",
-    "price": 45.0,
-    "currency": "EUR",
-    "color": "Navy",
-    "color_hex": "#001F3F",
-    "size": "L",
-    "stock_qty": 0,
-    "stock_status": "out_of_stock",
-    "delivery_estimate": "Out of stock — back June 20, 2026",
-    "image_url": "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=800",
-    "tags": [
-      "polo",
-      "piqué",
-      "classic",
-      "smart-casual"
-    ],
-    "rating": 4.2,
-    "review_count": 145,
-    "weight_grams": 220,
-    "material": "100% Piqué Cotton",
-    "specs": {
-      "fabric_weight": "200gsm",
-      "fit": "Regular",
-      "collar": "Ribbed",
-      "care": "Machine wash 30°C"
-    },
-    "dimensions": {
-      "length": 75.0,
-      "width": 55.0,
-      "height": 1.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-JNS-001-BLU-L",
-      "CLTH-BLT-001-BRN"
-    ]
-  },
-  {
-    "sku": "CLTH-DRS-001-BLK-S",
-    "name": "FitForm Wrap Midi Dress",
-    "brand": "FitForm",
-    "category": "Clothing & Apparel",
-    "subcategory": "Women's",
-    "description": "Elegant wrap midi dress with V-neckline, adjustable waist tie, and flowing crepe fabric. Versatile from office to evening.",
-    "price": 89.0,
-    "currency": "EUR",
-    "color": "Black",
-    "color_hex": "#000000",
-    "size": "S",
-    "stock_qty": 2,
-    "stock_status": "low_stock",
-    "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://www.mytheresa.com/image/1094/1238/100/20/P01014433.jpg",
-    "tags": [
-      "dress",
-      "wrap",
-      "midi",
-      "crepe"
-    ],
-    "rating": 4.6,
-    "review_count": 98,
-    "weight_grams": 280,
-    "material": "95% Polyester / 5% Elastane Crepe",
-    "specs": {
-      "fit": "Wrap",
-      "length": "Midi",
-      "closure": "Tie waist",
-      "care": "Hand wash or dry clean"
-    },
-    "dimensions": {
-      "length": 110.0,
-      "width": 42.0,
-      "height": 1.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-SND-001-TAN-38",
-      "CLTH-SCF-001-BLK"
-    ]
-  },
-  {
     "sku": "CLTH-DRS-001-BLK-M",
     "name": "FitForm Wrap Midi Dress",
     "brand": "FitForm",
@@ -1710,48 +1538,6 @@
     },
     "frequently_bought_together": [
       "CLTH-SND-001-TAN-38",
-      "CLTH-SCF-001-BLK"
-    ]
-  },
-  {
-    "sku": "CLTH-BLS-001-WHT-S",
-    "name": "FitForm Silk Blouse",
-    "brand": "FitForm",
-    "category": "Clothing & Apparel",
-    "subcategory": "Women's",
-    "description": "Luxe satin blouse with concealed button placket, relaxed fit, and slightly curved hem. A wardrobe essential for layering or standalone wear.",
-    "price": 79.0,
-    "currency": "EUR",
-    "color": "Ivory White",
-    "color_hex": "#FFFFF0",
-    "size": "S",
-    "stock_qty": 16,
-    "stock_status": "in_stock",
-    "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800",
-    "tags": [
-      "blouse",
-      "satin",
-      "silk-look",
-      "elegant"
-    ],
-    "rating": 4.3,
-    "review_count": 67,
-    "weight_grams": 160,
-    "material": "100% Mulberry Silk",
-    "specs": {
-      "fit": "Relaxed",
-      "closure": "Concealed buttons",
-      "care": "Dry clean recommended"
-    },
-    "dimensions": {
-      "length": 65.0,
-      "width": 46.0,
-      "height": 1.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-JNS-001-BLU-M",
       "CLTH-SCF-001-BLK"
     ]
   },
@@ -1883,91 +1669,6 @@
     ]
   },
   {
-    "sku": "CLTH-YOG-001-BLK-M",
-    "name": "FitForm High-Rise Yoga Pants",
-    "brand": "FitForm",
-    "category": "Clothing & Apparel",
-    "subcategory": "Women's",
-    "description": "High-rise sculpting yoga pants with 4-way stretch, moisture-wicking fabric, hidden waistband pocket, and flatlock seams for chafe-free comfort.",
-    "price": 65.0,
-    "currency": "EUR",
-    "color": "Black",
-    "color_hex": "#000000",
-    "size": "M",
-    "stock_qty": 26,
-    "stock_status": "in_stock",
-    "delivery_estimate": "1–2 business days",
-    "image_url": "https://assets.aritzia.com/image/upload/c_crop,ar_1920:2623,g_south/q_auto,f_auto,dpr_auto/f24_a06_122856_2819_off_a",
-    "tags": [
-      "yoga-pants",
-      "high-rise",
-      "4-way-stretch",
-      "sculpting"
-    ],
-    "rating": 4.5,
-    "review_count": 278,
-    "weight_grams": 210,
-    "material": "78% Nylon / 22% Spandex",
-    "specs": {
-      "fit": "Compression",
-      "rise": "High",
-      "inseam": "25\"",
-      "care": "Machine wash cold"
-    },
-    "dimensions": {
-      "length": 95.0,
-      "width": 34.0,
-      "height": 1.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "SPRT-YOG-001",
-      "SPRT-WTR-001"
-    ]
-  },
-  {
-    "sku": "CLTH-SNK-001-WHT-42",
-    "name": "StrideCraft CloudWalk Sneakers",
-    "brand": "StrideCraft",
-    "category": "Clothing & Apparel",
-    "subcategory": "Footwear",
-    "description": "Minimalist white leather sneakers with cushioned insole, vulcanized rubber sole, and padded collar. The go-to everyday shoe.",
-    "price": 99.0,
-    "currency": "EUR",
-    "color": "White",
-    "color_hex": "#FFFFFF",
-    "size": "42",
-    "stock_qty": 18,
-    "stock_status": "in_stock",
-    "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800",
-    "tags": [
-      "sneakers",
-      "leather",
-      "minimalist",
-      "everyday"
-    ],
-    "rating": 4.4,
-    "review_count": 312,
-    "weight_grams": 340,
-    "material": "Full-Grain Leather / Rubber Sole",
-    "specs": {
-      "sole": "Vulcanized rubber",
-      "insole": "OrthoLite cushion",
-      "closure": "Lace-up"
-    },
-    "dimensions": {
-      "length": 28.5,
-      "width": 10.5,
-      "height": 11.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-JNS-001-BLU-M",
-      "CLTH-TEE-001-BLK-M"
-    ]
-  },
-  {
     "sku": "CLTH-SNK-001-WHT-44",
     "name": "StrideCraft CloudWalk Sneakers",
     "brand": "StrideCraft",
@@ -2007,49 +1708,6 @@
     "frequently_bought_together": [
       "CLTH-JNS-001-BLU-L",
       "CLTH-TEE-001-BLK-L"
-    ]
-  },
-  {
-    "sku": "CLTH-BTS-001-BRN-42",
-    "name": "StrideCraft Heritage Leather Boots",
-    "brand": "StrideCraft",
-    "category": "Clothing & Apparel",
-    "subcategory": "Footwear",
-    "description": "Handcrafted leather ankle boots with Goodyear welt construction, cork footbed, and oil-resistant commando sole. Ages beautifully over time.",
-    "price": 199.0,
-    "currency": "EUR",
-    "color": "Chestnut Brown",
-    "color_hex": "#954535",
-    "size": "42",
-    "stock_qty": 8,
-    "stock_status": "in_stock",
-    "delivery_estimate": "3–5 business days",
-    "image_url": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800",
-    "tags": [
-      "boots",
-      "leather",
-      "Goodyear-welt",
-      "heritage"
-    ],
-    "rating": 4.7,
-    "review_count": 65,
-    "weight_grams": 680,
-    "material": "Full-Grain Leather / Commando Rubber Sole",
-    "specs": {
-      "construction": "Goodyear Welt",
-      "sole": "Commando rubber",
-      "footbed": "Cork",
-      "care": "Leather conditioner"
-    },
-    "dimensions": {
-      "length": 30.0,
-      "width": 11.0,
-      "height": 18.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-JNS-001-BLU-M",
-      "CLTH-BLT-001-BRN"
     ]
   },
   {
@@ -2138,48 +1796,6 @@
     ]
   },
   {
-    "sku": "CLTH-SND-001-TAN-40",
-    "name": "StrideCraft Riviera Sandals",
-    "brand": "StrideCraft",
-    "category": "Clothing & Apparel",
-    "subcategory": "Footwear",
-    "description": "Artisan leather sandals with contoured cork footbed, adjustable buckle straps, and non-slip rubber outsole. Perfect for warm-weather comfort.",
-    "price": 69.0,
-    "currency": "EUR",
-    "color": "Tan",
-    "color_hex": "#D2B48C",
-    "size": "40",
-    "stock_qty": 15,
-    "stock_status": "in_stock",
-    "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1603487742131-4160ec999306?w=800",
-    "tags": [
-      "sandals",
-      "leather",
-      "cork-footbed",
-      "summer"
-    ],
-    "rating": 4.3,
-    "review_count": 87,
-    "weight_grams": 300,
-    "material": "Nubuck Leather / Cork / Rubber",
-    "specs": {
-      "footbed": "Contoured cork",
-      "closure": "Adjustable buckle",
-      "sole": "EVA/Rubber"
-    },
-    "dimensions": {
-      "length": 27.5,
-      "width": 10.5,
-      "height": 4.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-DRS-001-BLK-M",
-      "CLTH-SCF-001-BLK"
-    ]
-  },
-  {
     "sku": "CLTH-HTP-001-RED-42",
     "name": "StrideCraft HighTop Canvas",
     "brand": "StrideCraft",
@@ -2236,7 +1852,7 @@
     "stock_qty": 4,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800",
+    "image_url": "https://images.unsplash.com/photo-1678784973073-f6a227408e81?w=800",
     "tags": [
       "loafers",
       "suede",
@@ -2278,7 +1894,7 @@
     "stock_qty": 45,
     "stock_status": "in_stock",
     "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1588850561407-ed78c334e67a?w=800",
+    "image_url": "https://images.unsplash.com/photo-1691256676359-20e5c6d4bc92?w=800",
     "tags": [
       "cap",
       "baseball",
@@ -2362,7 +1978,7 @@
     "stock_qty": 0,
     "stock_status": "out_of_stock",
     "delivery_estimate": "Out of stock — back July 8, 2026",
-    "image_url": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800",
+    "image_url": "https://images.unsplash.com/photo-1664286074240-d7059e004dff?w=800",
     "tags": [
       "belt",
       "leather",
@@ -2790,7 +2406,7 @@
     "stock_qty": 2,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1507473885765-e6ed057ab3fe?w=800",
+    "image_url": "https://images.unsplash.com/photo-1667312939978-64cf31718a6e?w=800",
     "tags": [
       "lamp",
       "table",
@@ -2961,7 +2577,7 @@
     "stock_qty": 20,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800",
+    "image_url": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800",
     "tags": [
       "pillow",
       "memory-foam",
@@ -3004,7 +2620,7 @@
     "stock_qty": 0,
     "stock_status": "out_of_stock",
     "delivery_estimate": "Out of stock — back June 25, 2026",
-    "image_url": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800",
+    "image_url": "https://images.unsplash.com/photo-1688384452551-5cacc39946e0?w=800",
     "tags": [
       "weighted-blanket",
       "sleep",
@@ -5045,92 +4661,6 @@
     ]
   },
   {
-    "sku": "TOYS-CRD-001",
-    "name": "FunFactory Blitz! Party Card Game",
-    "brand": "FunFactory",
-    "category": "Toys & Games",
-    "subcategory": "Board Games",
-    "description": "Fast-paced party card game for 3–8 players. Quick rounds of pattern matching, bluffing, and speed. Perfect for game nights. 15–30 min play time.",
-    "price": 16.0,
-    "currency": "EUR",
-    "color": "Multi-Color",
-    "color_hex": "#FF4500",
-    "size": null,
-    "stock_qty": 40,
-    "stock_status": "in_stock",
-    "delivery_estimate": "1–2 business days",
-    "image_url": "https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=800",
-    "tags": [
-      "card-game",
-      "party",
-      "fast-paced",
-      "bluffing"
-    ],
-    "rating": 4.3,
-    "review_count": 345,
-    "weight_grams": 250,
-    "material": "Linen-Finish Playing Cards / Tin Box",
-    "specs": {
-      "players": "3–8",
-      "age": "8+",
-      "play_time": "15–30 min",
-      "cards": 110
-    },
-    "dimensions": {
-      "length": 12.0,
-      "width": 9.0,
-      "height": 4.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "TOYS-STR-001",
-      "TOYS-FAM-001"
-    ]
-  },
-  {
-    "sku": "TOYS-FAM-001",
-    "name": "FunFactory Quest Island Family Board Game",
-    "brand": "FunFactory",
-    "category": "Toys & Games",
-    "subcategory": "Board Games",
-    "description": "Cooperative family board game where players work together to find treasure on a sinking island. 2–5 players, suitable for ages 8+.",
-    "price": 34.0,
-    "currency": "EUR",
-    "color": "Multi-Color",
-    "color_hex": "#2E8B57",
-    "size": null,
-    "stock_qty": 0,
-    "stock_status": "out_of_stock",
-    "delivery_estimate": "Out of stock — back June 20, 2026",
-    "image_url": "https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=800",
-    "tags": [
-      "board-game",
-      "family",
-      "cooperative",
-      "adventure"
-    ],
-    "rating": 4.5,
-    "review_count": 189,
-    "weight_grams": 1200,
-    "material": "Cardboard / Plastic Figurines",
-    "specs": {
-      "players": "2–5",
-      "age": "8+",
-      "play_time": "45–60 min",
-      "type": "Cooperative"
-    },
-    "dimensions": {
-      "length": 27.0,
-      "width": 27.0,
-      "height": 7.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "TOYS-CRD-001",
-      "TOYS-PZL-001"
-    ]
-  },
-  {
     "sku": "TOYS-CHE-001",
     "name": "BrainBox Walnut & Maple Chess Set",
     "brand": "BrainBox",
@@ -5188,7 +4718,7 @@
     "stock_qty": 24,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1606503153255-59d8b8e0807e?w=800",
+    "image_url": "https://images.unsplash.com/photo-1571195555904-f0fe9968ee5f?w=800",
     "tags": [
       "puzzle",
       "1000-piece",
@@ -5231,7 +4761,7 @@
     "stock_qty": 12,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1606503153255-59d8b8e0807e?w=800",
+    "image_url": "https://images.unsplash.com/photo-1494059980473-813e73ee784b?w=800",
     "tags": [
       "3D-puzzle",
       "architecture",
@@ -5317,7 +4847,7 @@
     "stock_qty": 10,
     "stock_status": "in_stock",
     "delivery_estimate": "3–5 business days",
-    "image_url": "https://images.unsplash.com/photo-1587654780291-39c9404d7dd0?w=800",
+    "image_url": "https://images.unsplash.com/photo-1681415886376-15d24afd70cb?w=800",
     "tags": [
       "building-blocks",
       "city",
@@ -5360,7 +4890,7 @@
     "stock_qty": 22,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1587654780291-39c9404d7dd0?w=800",
+    "image_url": "https://images.unsplash.com/photo-1662123368509-73017ed17fa9?w=800",
     "tags": [
       "magnetic-tiles",
       "STEM",
@@ -5403,7 +4933,7 @@
     "stock_qty": 3,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=800",
+    "image_url": "https://images.unsplash.com/photo-1487901155524-307f976ad775?w=800",
     "tags": [
       "model-kit",
       "wooden",
@@ -5446,7 +4976,7 @@
     "stock_qty": 15,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800",
+    "image_url": "https://images.unsplash.com/photo-1643199319409-84b7066f45b9?w=800",
     "tags": [
       "science-kit",
       "educational",
@@ -5489,7 +5019,7 @@
     "stock_qty": 8,
     "stock_status": "in_stock",
     "delivery_estimate": "3–5 business days",
-    "image_url": "https://images.unsplash.com/photo-1532978379173-523e16f371f4?w=800",
+    "image_url": "https://images.unsplash.com/photo-1554249906-53d1582266b4?w=800",
     "tags": [
       "globe",
       "illuminated",
@@ -5532,7 +5062,7 @@
     "stock_qty": 5,
     "stock_status": "in_stock",
     "delivery_estimate": "3–5 business days",
-    "image_url": "https://images.unsplash.com/photo-1532978379173-523e16f371f4?w=800",
+    "image_url": "https://images.unsplash.com/photo-1600456548090-7d1b3f0bbea5?w=800",
     "tags": [
       "telescope",
       "refractor",
@@ -5918,7 +5448,7 @@
     "stock_qty": 1,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1617576683096-00fc8eecb3ab?w=800",
+    "image_url": "https://images.unsplash.com/photo-1615266876483-07e781e7befe?w=800",
     "tags": [
       "patio-chair",
       "Adirondack",
@@ -5961,7 +5491,7 @@
     "stock_qty": 4,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=800",
+    "image_url": "https://images.unsplash.com/photo-1576777739643-e73db5bd7441?w=800",
     "tags": [
       "hammock",
       "Brazilian",
@@ -6219,7 +5749,7 @@
     "stock_qty": 16,
     "stock_status": "in_stock",
     "delivery_estimate": "2–3 business days",
-    "image_url": "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=800",
+    "image_url": "https://images.unsplash.com/photo-1714482660648-b89ea715e202?w=800",
     "tags": [
       "bird-feeder",
       "cedar",
@@ -6506,49 +6036,6 @@
     ]
   },
   {
-    "sku": "CLTH-RNJ-001-BLK-M",
-    "name": "UrbanThread All-Weather Rain Jacket",
-    "brand": "UrbanThread",
-    "category": "Clothing & Apparel",
-    "subcategory": "Men's",
-    "description": "Lightweight waterproof rain jacket with sealed seams, adjustable hood, packable design, and reflective details. 10,000mm waterproof rating.",
-    "price": 99.0,
-    "currency": "EUR",
-    "color": "Black",
-    "color_hex": "#1A1A1A",
-    "size": "M",
-    "stock_qty": 1,
-    "stock_status": "low_stock",
-    "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800",
-    "tags": [
-      "rain-jacket",
-      "waterproof",
-      "packable",
-      "reflective"
-    ],
-    "rating": 4.3,
-    "review_count": 134,
-    "weight_grams": 280,
-    "material": "100% Recycled Nylon / DWR Coating",
-    "specs": {
-      "waterproof": "10,000mm",
-      "breathability": "8,000g/m²",
-      "seams": "Fully sealed",
-      "packable": true
-    },
-    "dimensions": {
-      "length": 72.0,
-      "width": 56.0,
-      "height": 2.0,
-      "unit": "cm"
-    },
-    "frequently_bought_together": [
-      "CLTH-HOD-001-GRY-M",
-      "CLTH-CAP-001-BLK"
-    ]
-  },
-  {
     "sku": "CLTH-RNJ-001-BLK-L",
     "name": "UrbanThread All-Weather Rain Jacket",
     "brand": "UrbanThread",
@@ -6606,7 +6093,7 @@
     "stock_qty": 2,
     "stock_status": "low_stock",
     "delivery_estimate": "Next day if ordered before 2pm",
-    "image_url": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800",
+    "image_url": "https://images.unsplash.com/photo-1551373884-8a0750074df7?w=800",
     "tags": [
       "frame",
       "gallery-wall",
