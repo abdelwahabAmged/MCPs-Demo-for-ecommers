@@ -57,25 +57,11 @@ export function renderProductsPage(): string {
     </div>
     <footer class="sw-footer">
       <div class="sw-footer-inner">
-        <div class="sw-footer-top">
-          <div class="sw-footer-brand">
-            <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
-              <span class="sw-logo-mark">s</span>
-              <span class="sw-logo-word">scandiweb</span>
-            </a>
-            <span class="sw-footer-divider"></span>
-            <span class="sw-footer-label">AI App Demo</span>
-          </div>
-          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-footer-btn">Get your AI App &rarr;</a>
-        </div>
-        <div class="sw-footer-bottom">
-          <div class="sw-footer-stats">
-            <span class="sw-stat"><strong>22+</strong> years</span>
-            <span class="sw-stat"><strong>700+</strong> brands</span>
-            <span class="sw-stat"><strong>2,100+</strong> projects</span>
-          </div>
-          <span class="sw-footer-copy">&copy; 2026 scandiweb.ai</span>
-        </div>
+        <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
+          <span class="sw-logo-word">scandiweb</span>
+          <span class="sw-footer-dot">&middot;</span>
+          <span class="sw-footer-label">AI App Demo</span>
+        </a>
       </div>
     </footer>
   </div>
@@ -110,25 +96,11 @@ export function renderCartPage(): string {
     </div>
     <footer class="sw-footer">
       <div class="sw-footer-inner">
-        <div class="sw-footer-top">
-          <div class="sw-footer-brand">
-            <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
-              <span class="sw-logo-mark">s</span>
-              <span class="sw-logo-word">scandiweb</span>
-            </a>
-            <span class="sw-footer-divider"></span>
-            <span class="sw-footer-label">AI App Demo</span>
-          </div>
-          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-footer-btn">Get your AI App &rarr;</a>
-        </div>
-        <div class="sw-footer-bottom">
-          <div class="sw-footer-stats">
-            <span class="sw-stat"><strong>22+</strong> years</span>
-            <span class="sw-stat"><strong>700+</strong> brands</span>
-            <span class="sw-stat"><strong>2,100+</strong> projects</span>
-          </div>
-          <span class="sw-footer-copy">&copy; 2026 scandiweb.ai</span>
-        </div>
+        <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
+          <span class="sw-logo-word">scandiweb</span>
+          <span class="sw-footer-dot">&middot;</span>
+          <span class="sw-footer-label">AI App Demo</span>
+        </a>
       </div>
     </footer>
   </div>
@@ -164,25 +136,11 @@ export function renderCheckoutPage(): string {
     </div>
     <footer class="sw-footer">
       <div class="sw-footer-inner">
-        <div class="sw-footer-top">
-          <div class="sw-footer-brand">
-            <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
-              <span class="sw-logo-mark">s</span>
-              <span class="sw-logo-word">scandiweb</span>
-            </a>
-            <span class="sw-footer-divider"></span>
-            <span class="sw-footer-label">AI App Demo</span>
-          </div>
-          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-footer-btn">Get your AI App &rarr;</a>
-        </div>
-        <div class="sw-footer-bottom">
-          <div class="sw-footer-stats">
-            <span class="sw-stat"><strong>22+</strong> years</span>
-            <span class="sw-stat"><strong>700+</strong> brands</span>
-            <span class="sw-stat"><strong>2,100+</strong> projects</span>
-          </div>
-          <span class="sw-footer-copy">&copy; 2026 scandiweb.ai</span>
-        </div>
+        <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
+          <span class="sw-logo-word">scandiweb</span>
+          <span class="sw-footer-dot">&middot;</span>
+          <span class="sw-footer-label">AI App Demo</span>
+        </a>
       </div>
     </footer>
   </div>
@@ -214,25 +172,11 @@ export function renderOrdersPage(): string {
     </div>
     <footer class="sw-footer">
       <div class="sw-footer-inner">
-        <div class="sw-footer-top">
-          <div class="sw-footer-brand">
-            <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
-              <span class="sw-logo-mark">s</span>
-              <span class="sw-logo-word">scandiweb</span>
-            </a>
-            <span class="sw-footer-divider"></span>
-            <span class="sw-footer-label">AI App Demo</span>
-          </div>
-          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-footer-btn">Get your AI App &rarr;</a>
-        </div>
-        <div class="sw-footer-bottom">
-          <div class="sw-footer-stats">
-            <span class="sw-stat"><strong>22+</strong> years</span>
-            <span class="sw-stat"><strong>700+</strong> brands</span>
-            <span class="sw-stat"><strong>2,100+</strong> projects</span>
-          </div>
-          <span class="sw-footer-copy">&copy; 2026 scandiweb.ai</span>
-        </div>
+        <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
+          <span class="sw-logo-word">scandiweb</span>
+          <span class="sw-footer-dot">&middot;</span>
+          <span class="sw-footer-label">AI App Demo</span>
+        </a>
       </div>
     </footer>
   </div>
@@ -260,25 +204,11 @@ export function renderOrderDetailPage(): string {
     </div>
     <footer class="sw-footer">
       <div class="sw-footer-inner">
-        <div class="sw-footer-top">
-          <div class="sw-footer-brand">
-            <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
-              <span class="sw-logo-mark">s</span>
-              <span class="sw-logo-word">scandiweb</span>
-            </a>
-            <span class="sw-footer-divider"></span>
-            <span class="sw-footer-label">AI App Demo</span>
-          </div>
-          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-footer-btn">Get your AI App &rarr;</a>
-        </div>
-        <div class="sw-footer-bottom">
-          <div class="sw-footer-stats">
-            <span class="sw-stat"><strong>22+</strong> years</span>
-            <span class="sw-stat"><strong>700+</strong> brands</span>
-            <span class="sw-stat"><strong>2,100+</strong> projects</span>
-          </div>
-          <span class="sw-footer-copy">&copy; 2026 scandiweb.ai</span>
-        </div>
+        <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
+          <span class="sw-logo-word">scandiweb</span>
+          <span class="sw-footer-dot">&middot;</span>
+          <span class="sw-footer-label">AI App Demo</span>
+        </a>
       </div>
     </footer>
   </div>
@@ -523,25 +453,11 @@ export function renderLoginPage(options: LoginPageOptions): string {
   </div>
   <footer class="sw-footer">
       <div class="sw-footer-inner">
-        <div class="sw-footer-top">
-          <div class="sw-footer-brand">
-            <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
-              <span class="sw-logo-mark">s</span>
-              <span class="sw-logo-word">scandiweb</span>
-            </a>
-            <span class="sw-footer-divider"></span>
-            <span class="sw-footer-label">AI App Demo</span>
-          </div>
-          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-footer-btn">Get your AI App &rarr;</a>
-        </div>
-        <div class="sw-footer-bottom">
-          <div class="sw-footer-stats">
-            <span class="sw-stat"><strong>22+</strong> years</span>
-            <span class="sw-stat"><strong>700+</strong> brands</span>
-            <span class="sw-stat"><strong>2,100+</strong> projects</span>
-          </div>
-          <span class="sw-footer-copy">&copy; 2026 scandiweb.ai</span>
-        </div>
+        <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
+          <span class="sw-logo-word">scandiweb</span>
+          <span class="sw-footer-dot">&middot;</span>
+          <span class="sw-footer-label">AI App Demo</span>
+        </a>
       </div>
     </footer>
   <script src="/static/app.js"></script>

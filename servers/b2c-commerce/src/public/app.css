@@ -193,155 +193,46 @@ body {
 /* ── scandiweb Footer ──────────────────────────────────── */
 
 .sw-footer {
-  margin-top: 64px;
-  background: #0f0f0f;
-  color: #fff;
-  border-radius: 20px 20px 0 0;
+  margin-top: 48px;
+  padding: 20px 0;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
 }
 
 .sw-footer-inner {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 32px 32px 24px;
-}
-
-.sw-footer-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-.sw-footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  padding: 0 28px;
 }
 
 .sw-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: #fff;
   transition: opacity 0.15s;
 }
 
 .sw-logo:hover {
-  opacity: 0.85;
-}
-
-.sw-logo-mark {
-  width: 28px;
-  height: 28px;
-  background: #e12726;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.5px;
+  opacity: 0.7;
 }
 
 .sw-logo-word {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  color: #fff;
+  letter-spacing: -0.3px;
+  color: #111827;
 }
 
-.sw-footer-divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(255,255,255,0.15);
+.sw-footer-dot {
+  color: #d1d5db;
+  font-size: 14px;
 }
 
 .sw-footer-label {
   font-size: 13px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 0.2px;
-}
-
-.sw-footer-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 22px;
-  background: #e12726;
-  color: #fff;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  letter-spacing: 0.1px;
-}
-
-.sw-footer-btn:hover {
-  background: #c91f1e;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(225,39,38,0.3);
-}
-
-.sw-footer-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 18px;
-}
-
-.sw-footer-stats {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.sw-stat {
-  font-size: 13px;
-  color: rgba(255,255,255,0.4);
   font-weight: 400;
-}
-
-.sw-stat strong {
-  color: rgba(255,255,255,0.85);
-  font-weight: 700;
-}
-
-.sw-footer-copy {
-  font-size: 12px;
-  color: rgba(255,255,255,0.3);
-}
-
-@media (max-width: 640px) {
-  .sw-footer {
-    margin-top: 48px;
-    border-radius: 16px 16px 0 0;
-  }
-
-  .sw-footer-inner {
-    padding: 24px 20px 20px;
-  }
-
-  .sw-footer-top {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .sw-footer-bottom {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .sw-footer-stats {
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+  color: #9ca3af;
 }
 
 /* ── Toast ─────────────────────────────────────────────── */
