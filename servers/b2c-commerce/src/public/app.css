@@ -194,19 +194,52 @@ body {
 
 .demo-badge {
   text-align: center;
-  padding: 10px;
+  padding: 16px 10px;
   margin-top: 40px;
-  font-size: 11px;
-  color: #9ca3af;
-  letter-spacing: 0.3px;
 }
 
-.demo-badge span {
-  background: #f3f4f6;
-  padding: 5px 14px;
-  border-radius: 20px;
+.powered-by-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  text-decoration: none;
+  color: #374151;
+  font-size: 13px;
   font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.powered-by-link:hover {
+  border-color: #111827;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+
+.powered-by-text {
   color: #9ca3af;
+  font-weight: 400;
+}
+
+.scandiweb-logo {
+  width: 80px;
+  height: 16px;
+  color: #111827;
+}
+
+.powered-by-separator {
+  color: #d1d5db;
+}
+
+.powered-by-product {
+  color: #6366f1;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.2px;
 }
 
 /* ── Toast ─────────────────────────────────────────────── */
