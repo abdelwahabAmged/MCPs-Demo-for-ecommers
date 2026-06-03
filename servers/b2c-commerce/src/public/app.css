@@ -190,56 +190,103 @@ body {
   padding: 32px 28px;
 }
 
-/* ── Footer badge ──────────────────────────────────────── */
+/* ── Site Footer ───────────────────────────────────────── */
 
-.demo-badge {
-  text-align: center;
-  padding: 16px 10px;
-  margin-top: 40px;
-}
-
-.powered-by-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 24px;
+.site-footer {
+  margin-top: 56px;
+  border-top: 1px solid #e5e7eb;
   background: #fff;
-  border: 1px solid #e5e7eb;
+}
+
+.footer-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-logo-link {
   text-decoration: none;
-  color: #374151;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
 }
 
-.powered-by-link:hover {
-  border-color: #111827;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transform: translateY(-1px);
-}
-
-.powered-by-text {
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-.scandiweb-logo {
-  width: 80px;
-  height: 16px;
+.footer-logo-text {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   color: #111827;
+  transition: color 0.15s;
 }
 
-.powered-by-separator {
-  color: #d1d5db;
+.footer-logo-link:hover .footer-logo-text {
+  color: #4f46e5;
 }
 
-.powered-by-product {
-  color: #6366f1;
+.footer-tagline {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 400;
+  border-left: 1px solid #e5e7eb;
+  padding-left: 16px;
+}
+
+.footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-badge {
+  font-size: 11px;
   font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 5px 12px;
+  border-radius: 6px;
+}
+
+.footer-cta {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4f46e5;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-cta:hover {
+  color: #4338ca;
+}
+
+@media (max-width: 640px) {
+  .footer-inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 20px 16px;
+  }
+
+  .footer-brand {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .footer-tagline {
+    border-left: none;
+    padding-left: 0;
+  }
 }
 
 /* ── Toast ─────────────────────────────────────────────── */

@@ -55,16 +55,20 @@ export function renderProductsPage(): string {
         </div>
       </div>
     </div>
-    <div class="demo-badge">
-      <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="powered-by-link">
-        <span class="powered-by-text">Built by</span>
-        <svg class="scandiweb-logo" viewBox="0 0 120 20" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="15" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" font-weight="700" fill="currentColor">scandiweb</text>
-        </svg>
-        <span class="powered-by-separator">·</span>
-        <span class="powered-by-product">AI App Demo</span>
-      </a>
-    </div>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-logo-link">
+            <span class="footer-logo-text">scandiweb</span>
+          </a>
+          <p class="footer-tagline">Your business, inside ChatGPT and Claude</p>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-badge">MCP App Demo</span>
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-cta">Learn more &rarr;</a>
+        </div>
+      </div>
+    </footer>
   </div>
   <div id="toast" class="toast"></div>
   <script src="/static/app.js"></script>
@@ -95,16 +99,20 @@ export function renderCartPage(): string {
       </div>
       <div id="cart-summary"></div>
     </div>
-    <div class="demo-badge">
-      <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="powered-by-link">
-        <span class="powered-by-text">Built by</span>
-        <svg class="scandiweb-logo" viewBox="0 0 120 20" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="15" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" font-weight="700" fill="currentColor">scandiweb</text>
-        </svg>
-        <span class="powered-by-separator">·</span>
-        <span class="powered-by-product">AI App Demo</span>
-      </a>
-    </div>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-logo-link">
+            <span class="footer-logo-text">scandiweb</span>
+          </a>
+          <p class="footer-tagline">Your business, inside ChatGPT and Claude</p>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-badge">MCP App Demo</span>
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-cta">Learn more &rarr;</a>
+        </div>
+      </div>
+    </footer>
   </div>
   <div id="toast" class="toast"></div>
   <script src="/static/app.js"></script>
@@ -136,16 +144,20 @@ export function renderCheckoutPage(): string {
       </div>
       <div id="checkout-sidebar"></div>
     </div>
-    <div class="demo-badge">
-      <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="powered-by-link">
-        <span class="powered-by-text">Built by</span>
-        <svg class="scandiweb-logo" viewBox="0 0 120 20" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="15" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" font-weight="700" fill="currentColor">scandiweb</text>
-        </svg>
-        <span class="powered-by-separator">·</span>
-        <span class="powered-by-product">AI App Demo</span>
-      </a>
-    </div>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-logo-link">
+            <span class="footer-logo-text">scandiweb</span>
+          </a>
+          <p class="footer-tagline">Your business, inside ChatGPT and Claude</p>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-badge">MCP App Demo</span>
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-cta">Learn more &rarr;</a>
+        </div>
+      </div>
+    </footer>
   </div>
   <div id="toast" class="toast"></div>
   <script src="/static/app.js"></script>
@@ -173,16 +185,20 @@ export function renderOrdersPage(): string {
     <div id="orders-content">
       <div class="orders-loading"><div class="spinner"></div>Loading orders...</div>
     </div>
-    <div class="demo-badge">
-      <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="powered-by-link">
-        <span class="powered-by-text">Built by</span>
-        <svg class="scandiweb-logo" viewBox="0 0 120 20" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="15" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" font-weight="700" fill="currentColor">scandiweb</text>
-        </svg>
-        <span class="powered-by-separator">·</span>
-        <span class="powered-by-product">AI App Demo</span>
-      </a>
-    </div>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-logo-link">
+            <span class="footer-logo-text">scandiweb</span>
+          </a>
+          <p class="footer-tagline">Your business, inside ChatGPT and Claude</p>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-badge">MCP App Demo</span>
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-cta">Learn more &rarr;</a>
+        </div>
+      </div>
+    </footer>
   </div>
   <script src="/static/app.js"></script>
   <script src="/static/orders.js"></script>
@@ -206,16 +222,20 @@ export function renderOrderDetailPage(): string {
     <div id="orders-content">
       <div class="orders-loading"><div class="spinner"></div>Loading order...</div>
     </div>
-    <div class="demo-badge">
-      <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="powered-by-link">
-        <span class="powered-by-text">Built by</span>
-        <svg class="scandiweb-logo" viewBox="0 0 120 20" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="15" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" font-weight="700" fill="currentColor">scandiweb</text>
-        </svg>
-        <span class="powered-by-separator">·</span>
-        <span class="powered-by-product">AI App Demo</span>
-      </a>
-    </div>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-logo-link">
+            <span class="footer-logo-text">scandiweb</span>
+          </a>
+          <p class="footer-tagline">Your business, inside ChatGPT and Claude</p>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-badge">MCP App Demo</span>
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-cta">Learn more &rarr;</a>
+        </div>
+      </div>
+    </footer>
   </div>
   <script src="/static/app.js"></script>
   <script src="/static/orders.js"></script>
@@ -456,16 +476,20 @@ export function renderLoginPage(options: LoginPageOptions): string {
       </div>
     </div>
   </div>
-  <div class="demo-badge">
-      <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="powered-by-link">
-        <span class="powered-by-text">Built by</span>
-        <svg class="scandiweb-logo" viewBox="0 0 120 20" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="15" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" font-weight="700" fill="currentColor">scandiweb</text>
-        </svg>
-        <span class="powered-by-separator">·</span>
-        <span class="powered-by-product">AI App Demo</span>
-      </a>
-    </div>
+  <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-logo-link">
+            <span class="footer-logo-text">scandiweb</span>
+          </a>
+          <p class="footer-tagline">Your business, inside ChatGPT and Claude</p>
+        </div>
+        <div class="footer-meta">
+          <span class="footer-badge">MCP App Demo</span>
+          <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="footer-cta">Learn more &rarr;</a>
+        </div>
+      </div>
+    </footer>
   <script src="/static/app.js"></script>
   <script>
     async function checkUser() {
