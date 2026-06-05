@@ -129,6 +129,8 @@ const BLOCKED_TITLE_FRAGMENTS = [
   "FYORR 15ML Quick Dry",
   "Fine Foxy Fro Wig",
   "Maternity Maxi Dress",
+  "Coco Reef Enrapture Bra",
+  "GPATIO 120FT Outdoor String Lights",
 ];
 
 function isBlockedProduct(name, category, subcategory) {
