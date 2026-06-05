@@ -111,20 +111,47 @@ const BLOCKED_SUBCATS = new Set([
   "Rompers", "Platforms & Wedges", "Heeled Sandals",
 ]);
 const WOMEN_ONLY_SUBCATS = new Set(["Sets", "Casual"]);
-const WOMEN_BODY_RE = /women'?s?.*(bra\b|panty|panties|underwear|lingerie|nightgown|swimsuit|swimdress|bikini|bodysuit|corset|camisole)/i;
 const MENS_KIDS_RE = /\b(men'?s|boys'?|kid'?s|unisex|toddler|little boy)\b/i;
 
+// Any product in clothing category with "women/womens/for women" in the name
+const WOMEN_CLOTHING_RE = /\b(women'?s?|womens|for women|woman within)\b/i;
+
+// Explicit title fragments to block (non-clothing misc items)
+const BLOCKED_TITLE_FRAGMENTS = [
+  "Extra Large Heavy Duty Moving Bags",
+  "Electric Heated Blanket",
+  "Hannah Linen Fleece Throw Blankets",
+  "KERDOM Office Chair",
+  "Kitdacnin Mothers Day for Wife Gifts",
+  "J.west Galaxy S10 Plus Case",
+  "Bocasal Crossbody Wallet Case",
+  "The Definitive Vince Guaraldi",
+  "FYORR 15ML Quick Dry",
+  "Fine Foxy Fro Wig",
+  "Maternity Maxi Dress",
+];
+
 function isBlockedProduct(name, category, subcategory) {
+  // Always block explicit title fragments regardless of category
+  const nameLower = name.toLowerCase();
+  for (const frag of BLOCKED_TITLE_FRAGMENTS) {
+    if (nameLower.includes(frag.toLowerCase())) return true;
+  }
+
   const cat = (category || "").toLowerCase();
   if (cat !== "clothing, shoes & jewelry" && cat !== "women") return false;
 
+  // Block entire subcategories (unless product is for men/boys/kids)
   if (BLOCKED_SUBCATS.has(subcategory || "")) {
     return !MENS_KIDS_RE.test(name);
   }
-  if (WOMEN_ONLY_SUBCATS.has(subcategory || "")) {
-    return /\b(women'?s?|womens)\b/i.test(name);
+
+  // Block ANY women's clothing item by name pattern
+  if (WOMEN_CLOTHING_RE.test(name) && !MENS_KIDS_RE.test(name)) {
+    return true;
   }
-  return WOMEN_BODY_RE.test(name);
+
+  return false;
 }
 
 // ── Stock Generation ─────────────────────────────────────────
