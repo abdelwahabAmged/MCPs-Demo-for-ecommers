@@ -210,7 +210,11 @@ for (const row of rows) {
   const sku = `ACM-${catCode}-${String(skuCounters[catCode]).padStart(3, "0")}`;
 
   const originalPrice = toUSD(row.initial_price, currency);
-  const discount = row.discount && row.discount !== "null" ? row.discount.trim() : null;
+  let discount = null;
+  if (originalPrice && originalPrice > price) {
+    const pct = Math.round(((originalPrice - price) / originalPrice) * 100);
+    if (pct >= 1) discount = `-${pct}%`;
+  }
 
   const { stock_qty, stock_status } = generateStock(
     row.availability,
