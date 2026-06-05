@@ -8,6 +8,7 @@ interface ProductData {
   original_price?: number | null;
   discount?: string | null;
   image_url: string;
+  images?: string[];
   rating: number;
   review_count: number;
   stock_status: string;
@@ -15,6 +16,12 @@ interface ProductData {
   description?: string;
   weight?: string;
   dimensions?: string;
+  badge?: string;
+  top_review?: string;
+  variations?: string[];
+  delivery?: string;
+  model_number?: string;
+  date_first_available?: string;
 }
 
 interface CartItemData {
@@ -262,18 +269,41 @@ function renderProductDetail(p: ProductData) {
     ? `<div class="detail-price">$${p.price.toFixed(2)} <span class="price-original">$${p.original_price.toFixed(2)}</span>${p.discount ? ` <span class="badge-discount">${esc(p.discount)}</span>` : ""}</div>`
     : `<div class="detail-price">$${p.price.toFixed(2)}</div>`;
 
+  const badgeHtml = p.badge ? `<span class="badge badge-promo">${esc(p.badge)}</span>` : "";
+
+  const variationsHtml = p.variations && p.variations.length > 0
+    ? `<div class="detail-variations"><span class="detail-var-label">Options:</span> ${p.variations.map(v => `<span class="detail-var-chip">${esc(v)}</span>`).join(" ")}</div>`
+    : "";
+
+  const deliveryHtml = p.delivery
+    ? `<div class="detail-meta">📦 ${esc(p.delivery)}</div>`
+    : `<div class="detail-meta">📦 ${esc(p.delivery_estimate)}</div>`;
+
+  const topReviewHtml = p.top_review
+    ? `<div class="detail-top-review"><div class="detail-tr-label">Top Review</div><div class="detail-tr-text">"${esc(p.top_review)}"</div></div>`
+    : "";
+
+  const imagesCount = p.images && p.images.length > 1
+    ? `<div class="detail-meta">📸 ${p.images.length} product photos</div>`
+    : "";
+
   appEl.innerHTML = `
     <div class="detail">
       ${imgWithFallback(p.image_url, p.name, "detail-img")}
       <div class="detail-info">
         <div class="detail-name">${esc(p.name)}</div>
-        <div class="detail-brand">${esc(p.brand)}</div>
+        <div class="detail-brand">${esc(p.brand)} ${badgeHtml}</div>
         ${priceHtml}
         <div class="detail-meta">${stars(p.rating)} (${p.review_count} reviews) ${stockBadge(p.stock_status)}</div>
-        <div class="detail-meta">📦 ${esc(p.delivery_estimate)}</div>
+        ${deliveryHtml}
+        ${imagesCount}
+        ${variationsHtml}
         ${p.description ? `<div class="detail-desc">${esc(p.description)}</div>` : ""}
         ${p.weight ? `<div class="detail-meta">Weight: ${esc(p.weight)}</div>` : ""}
         ${p.dimensions ? `<div class="detail-meta">Dimensions: ${esc(p.dimensions)}</div>` : ""}
+        ${p.model_number ? `<div class="detail-meta">Model: ${esc(p.model_number)}</div>` : ""}
+        ${p.date_first_available ? `<div class="detail-meta">Available since: ${esc(p.date_first_available)}</div>` : ""}
+        ${topReviewHtml}
         <div class="sku" style="margin-top:12px">${esc(p.sku)}</div>
       </div>
     </div>`;
@@ -332,6 +362,13 @@ style.textContent = `
   .sku { font-size: 10px; color: #aaa; font-family: monospace; }
   .price-original { text-decoration: line-through; color: #999; font-size: 0.85em; font-weight: 400; }
   .badge-discount { display: inline-block; background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
+  .badge-promo { background: #6366f1; color: #fff; margin-left: 8px; vertical-align: middle; }
+  .detail-variations { margin: 8px 0; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .detail-var-label { font-size: 12px; color: #666; margin-right: 4px; }
+  .detail-var-chip { display: inline-block; font-size: 11px; padding: 2px 8px; background: #f3f4f6; border-radius: 4px; color: #374151; }
+  .detail-top-review { margin-top: 12px; padding: 10px 14px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; }
+  .detail-tr-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #7c3aed; margin-bottom: 4px; }
+  .detail-tr-text { font-size: 13px; line-height: 1.5; color: #374151; font-style: italic; }
   .detail { display: flex; gap: 24px; flex-wrap: wrap; }
   .detail-img { flex: 0 0 320px; max-width: 100%; height: auto; border-radius: 12px; object-fit: cover; background: #eee; }
   .detail-info { flex: 1; min-width: 240px; }

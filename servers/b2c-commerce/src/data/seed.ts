@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * Bump this number whenever products_1.json or reviews_1.json change.
  * On next start the server will drop stale catalogue tables and re-seed.
  */
-const DATA_VERSION = 11;
+const DATA_VERSION = 15;
 
 function isDataCurrent(db: Database.Database): boolean {
   try {
@@ -81,6 +81,13 @@ export function seedB2CData(db: Database.Database): void {
       department TEXT,
       bought_past_month INTEGER,
       country_of_origin TEXT,
+      images TEXT,
+      top_review TEXT,
+      badge TEXT,
+      variations TEXT,
+      delivery TEXT,
+      model_number TEXT,
+      date_first_available TEXT,
       frequently_bought_together TEXT
     )
   `,

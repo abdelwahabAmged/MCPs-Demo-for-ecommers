@@ -263,6 +263,7 @@ interface ProductRow {
   stock_status: string;
   rating: number;
   review_count: number;
+  badge: string | null;
 }
 
 app.get("/api/products", (req: Request, res: Response) => {
@@ -274,7 +275,7 @@ app.get("/api/products", (req: Request, res: Response) => {
 
   let countSql = "SELECT COUNT(*) as total FROM products WHERE 1=1";
   let dataSql =
-    "SELECT sku, name, brand, category, subcategory, price, original_price, discount, image_url, stock_status, rating, review_count FROM products WHERE 1=1";
+    "SELECT sku, name, brand, category, subcategory, price, original_price, discount, image_url, stock_status, rating, review_count, badge FROM products WHERE 1=1";
   const params: unknown[] = [];
 
   if (category) {
@@ -602,7 +603,7 @@ app.get("/api/products/:sku", (req: Request, res: Response) => {
   }
 
   // Parse JSON fields
-  for (const key of ["features", "frequently_bought_together"]) {
+  for (const key of ["features", "frequently_bought_together", "images", "variations"]) {
     if (product[key] && typeof product[key] === "string") {
       try {
         product[key] = JSON.parse(product[key] as string);

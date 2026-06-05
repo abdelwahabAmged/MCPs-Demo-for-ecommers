@@ -38,6 +38,7 @@ interface Product {
   stock_status: string;
   delivery_estimate: string;
   image_url: string;
+  images: string | null;
   rating: number;
   review_count: number;
   weight: string | null;
@@ -47,6 +48,12 @@ interface Product {
   department: string | null;
   bought_past_month: number | null;
   country_of_origin: string | null;
+  top_review: string | null;
+  badge: string | null;
+  variations: string | null;
+  delivery: string | null;
+  model_number: string | null;
+  date_first_available: string | null;
   frequently_bought_together: string | null;
 }
 
@@ -304,7 +311,7 @@ export function registerB2CTools(
           const results = scored
             .map(
               ({ product: p }) =>
-                `**${p.name}** by ${p.brand}\n` +
+                `**${p.name}** by ${p.brand}${p.badge ? ` 🏷️ ${p.badge}` : ""}\n` +
                 `SKU: ${p.sku} | $${p.price.toFixed(2)}${formatDiscount(p)} | ${formatStock(p)}\n` +
                 `★ ${p.rating}/5 (${p.review_count} reviews) | Delivery: ${p.delivery_estimate}\n` +
                 `${p.image_url}`,
@@ -475,20 +482,52 @@ export function registerB2CTools(
             ? `$${first.price.toFixed(2)} ~~$${first.original_price.toFixed(2)}~~ ${first.discount || ""}`
             : `$${first.price.toFixed(2)}`;
 
+          let badgeText = first.badge ? `\n**Badge:** 🏷️ ${first.badge}` : "";
+          let variationsText = "";
+          if (first.variations) {
+            try {
+              const vars = JSON.parse(first.variations) as string[];
+              if (vars.length > 0) {
+                variationsText = `\n**Available Options:** ${vars.join(", ")}`;
+              }
+            } catch { /* ignore */ }
+          }
+          let deliveryText = first.delivery ? `\n**Delivery:** ${first.delivery}` : "";
+          let modelText = first.model_number ? `\n**Model:** ${first.model_number}` : "";
+          let dateText = first.date_first_available ? `\n**Available Since:** ${first.date_first_available}` : "";
+          let topReviewText = first.top_review ? `\n\n## Top Customer Review\n> ${first.top_review}` : "";
+
+          let imagesBlock = "";
+          if (first.images) {
+            try {
+              const imgs = JSON.parse(first.images) as string[];
+              if (imgs.length > 1) {
+                imagesBlock = `\n**Images:** ${imgs.length} photos available`;
+              }
+            } catch { /* ignore */ }
+          }
+
           const text =
             `# ${first.name}\n\n` +
-            `**Brand:** ${first.brand}\n` +
-            `**Category:** ${first.category}${first.subcategory ? ` › ${first.subcategory}` : ""}\n` +
+            `**Brand:** ${first.brand}` +
+            badgeText +
+            `\n**Category:** ${first.category}${first.subcategory ? ` › ${first.subcategory}` : ""}\n` +
             `**Description:** ${first.description}\n` +
             `**Price:** ${priceText}\n` +
             `**Rating:** ★ ${first.rating}/5 (${first.review_count} reviews)\n` +
-            `**Manufacturer:** ${first.manufacturer || first.brand}\n` +
-            `**Weight:** ${first.weight || "N/A"}\n` +
-            `**Stock:** ${formatStock(first)}\n` +
-            `**Delivery:** ${first.delivery_estimate}\n` +
+            `**Manufacturer:** ${first.manufacturer || first.brand}` +
+            modelText +
+            `\n**Weight:** ${first.weight || "N/A"}\n` +
+            `**Stock:** ${formatStock(first)}` +
+            deliveryText +
+            `\n**Estimated Shipping:** ${first.delivery_estimate}\n` +
             `**Image:** ${first.image_url}` +
+            imagesBlock +
+            dateText +
+            variationsText +
             dimsBlock +
             featuresBlock +
+            topReviewText +
             fbtBlock +
             urgencyBlock;
 
@@ -520,6 +559,13 @@ export function registerB2CTools(
                 description: first.description,
                 weight: first.weight ?? undefined,
                 dimensions: first.dimensions ?? undefined,
+                badge: first.badge ?? undefined,
+                top_review: first.top_review ?? undefined,
+                variations: first.variations ? (() => { try { return JSON.parse(first.variations!); } catch { return undefined; } })() : undefined,
+                delivery: first.delivery ?? undefined,
+                model_number: first.model_number ?? undefined,
+                date_first_available: first.date_first_available ?? undefined,
+                images: first.images ? (() => { try { return JSON.parse(first.images!); } catch { return undefined; } })() : undefined,
               },
             },
           };
@@ -889,7 +935,7 @@ export function registerB2CTools(
             sorted
               .map(
                 ({ product: p }, i) =>
-                  `${i + 1}. **${p.name}** by ${p.brand} — $${p.price.toFixed(2)}${formatDiscount(p)}\n   ${p.description.substring(0, 120)}…\n   ★ ${p.rating}/5 | ${formatStock(p)} | SKU: ${p.sku}`,
+                  `${i + 1}. **${p.name}** by ${p.brand}${p.badge ? ` 🏷️ ${p.badge}` : ""} — $${p.price.toFixed(2)}${formatDiscount(p)}\n   ${p.description.substring(0, 120)}…\n   ★ ${p.rating}/5 | ${formatStock(p)} | SKU: ${p.sku}`,
               )
               .join("\n\n");
 
@@ -1716,7 +1762,7 @@ export function registerB2CTools(
               text += prods
                 .map(
                   (p) =>
-                    `• **${p.name}** by ${p.brand} — $${p.price.toFixed(2)}${formatDiscount(p)} — ★ ${p.rating}/5 (${p.review_count} reviews)\n  ${p.description.substring(0, 80)}…`,
+                    `• **${p.name}** by ${p.brand}${p.badge ? ` 🏷️ ${p.badge}` : ""} — $${p.price.toFixed(2)}${formatDiscount(p)} — ★ ${p.rating}/5 (${p.review_count} reviews)\n  ${p.description.substring(0, 80)}…`,
                 )
                 .join("\n\n");
               text += "\n";

@@ -100,6 +100,33 @@ function getCategoryCode(category) {
   return code;
 }
 
+// ── Product Content Filter ───────────────────────────────
+const BLOCKED_SUBCATS = new Set([
+  "Everyday Bras", "Sports Bras", "Bras",
+  "Panties", "Hipsters", "Briefs",
+  "Bodysuits", "Lingerie", "Intimates",
+  "Nightgowns & Sleepshirts",
+  "One-Pieces", "Cover-Ups", "Bikinis",
+  "Dresses", "Cocktail", "Formal", "Suit Sets",
+  "Rompers", "Platforms & Wedges", "Heeled Sandals",
+]);
+const WOMEN_ONLY_SUBCATS = new Set(["Sets", "Casual"]);
+const WOMEN_BODY_RE = /women'?s?.*(bra\b|panty|panties|underwear|lingerie|nightgown|swimsuit|swimdress|bikini|bodysuit|corset|camisole)/i;
+const MENS_KIDS_RE = /\b(men'?s|boys'?|kid'?s|unisex|toddler|little boy)\b/i;
+
+function isBlockedProduct(name, category, subcategory) {
+  const cat = (category || "").toLowerCase();
+  if (cat !== "clothing, shoes & jewelry" && cat !== "women") return false;
+
+  if (BLOCKED_SUBCATS.has(subcategory || "")) {
+    return !MENS_KIDS_RE.test(name);
+  }
+  if (WOMEN_ONLY_SUBCATS.has(subcategory || "")) {
+    return /\b(women'?s?|womens)\b/i.test(name);
+  }
+  return WOMEN_BODY_RE.test(name);
+}
+
 // ── Stock Generation ─────────────────────────────────────────
 function generateStock(availability, isAvailable) {
   const avail = (availability || "").toLowerCase();
@@ -177,6 +204,61 @@ function cleanDescription(desc) {
     .trim();
 }
 
+// ── Badge Mapping ───────────────────────────────────────────
+function mapBadge(raw) {
+  if (!raw || raw === "null" || raw === "false" || raw === "") return null;
+  const s = raw.trim().toLowerCase();
+  if (s.includes("choice")) return "Staff Pick";
+  if (s.includes("best seller")) return "Best Seller";
+  if (s.includes("new release")) return "New Arrival";
+  return null;
+}
+
+// ── Variations Extraction ───────────────────────────────────
+function extractVariations(raw) {
+  const parsed = safeParseJSON(raw);
+  if (!Array.isArray(parsed) || parsed.length === 0) return null;
+  const names = parsed
+    .map((v) => (typeof v === "object" && v.name ? v.name : null))
+    .filter(Boolean)
+    .slice(0, 10);
+  return names.length > 0 ? names : null;
+}
+
+// ── Delivery Parsing ────────────────────────────────────────
+function parseDelivery(raw) {
+  const parsed = safeParseJSON(raw);
+  if (!Array.isArray(parsed) || parsed.length === 0) return null;
+  let first = parsed[0] || "";
+  first = first
+    .replace(/amazon/gi, "")
+    .replace(/\.com/gi, "")
+    .replace(/orders shipped by\s+over \$\d+/gi, "")
+    .replace(/Order within[\s\S]*/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  if (!first) return null;
+  return first;
+}
+
+// ── Date Parsing ────────────────────────────────────────────
+function parseDate(raw) {
+  if (!raw || raw === "null" || raw === "") return null;
+  const d = new Date(raw.trim());
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().split("T")[0];
+}
+
+// ── Images Extraction ───────────────────────────────────────
+function extractImages(rawImages, mainUrl) {
+  const parsed = safeParseJSON(rawImages);
+  if (Array.isArray(parsed) && parsed.length > 0) {
+    return parsed.filter((u) => typeof u === "string" && u.startsWith("http")).slice(0, 8);
+  }
+  if (!mainUrl) return null;
+  return [mainUrl];
+}
+
 // ── Main Conversion ──────────────────────────────────────────
 console.log("Reading CSV...");
 const csvText = readFileSync(CSV_PATH, "utf-8");
@@ -204,6 +286,8 @@ for (const row of rows) {
     categories && categories.length > 1
       ? categories[categories.length - 1]
       : null;
+
+  if (isBlockedProduct(title, category, subcategory)) continue;
 
   const catCode = getCategoryCode(category);
   skuCounters[catCode] = (skuCounters[catCode] || 0) + 1;
@@ -252,6 +336,24 @@ for (const row of rows) {
   const brand =
     row.brand && row.brand !== "null" ? row.brand.trim() : "Acme";
 
+  const images = extractImages(row.images, imageUrl);
+  const topReview =
+    row.top_review && row.top_review !== "null"
+      ? row.top_review
+          .replace(/amazon/gi, "")
+          .replace(/\.com/gi, "")
+          .trim()
+          .substring(0, 500)
+      : null;
+  const badge = mapBadge(row.badge);
+  const variations = extractVariations(row.variations);
+  const delivery = parseDelivery(row.delivery);
+  const modelNumber =
+    row.model_number && row.model_number !== "null"
+      ? row.model_number.trim()
+      : null;
+  const dateFirstAvailable = parseDate(row.date_first_available);
+
   products.push({
     sku,
     name: title,
@@ -267,6 +369,7 @@ for (const row of rows) {
     stock_status,
     delivery_estimate: generateDelivery(),
     image_url: imageUrl,
+    images,
     rating: Math.round(rating * 10) / 10,
     review_count: reviewCount,
     weight,
@@ -276,6 +379,12 @@ for (const row of rows) {
     department,
     bought_past_month: boughtPastMonth,
     country_of_origin: countryOfOrigin,
+    top_review: topReview,
+    badge,
+    variations,
+    delivery,
+    model_number: modelNumber,
+    date_first_available: dateFirstAvailable,
     frequently_bought_together: null, // filled in second pass
   });
 }

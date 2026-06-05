@@ -72,14 +72,37 @@
           '<span class="bc-current">' + esc(p.name).substring(0, 50) + "</span>" +
         "</nav>";
 
-      // Image
-      var imgUrl = optimizeImg(p.image_url, 800);
+      // Image gallery
+      var allImages = (p.images && p.images.length > 0) ? p.images : (p.image_url ? [p.image_url] : []);
+      var mainImgUrl = allImages.length > 0 ? optimizeImg(allImages[0], 800) : "";
+
+      var thumbsHtml = "";
+      if (allImages.length > 1) {
+        thumbsHtml = '<div class="pdp-thumbs">';
+        allImages.forEach(function (url, idx) {
+          var thumbUrl = optimizeImg(url, 120);
+          thumbsHtml +=
+            '<button class="pdp-thumb' + (idx === 0 ? " active" : "") + '" data-idx="' + idx + '">' +
+              '<img src="' + thumbUrl + '" alt="View ' + (idx + 1) + '">' +
+            "</button>";
+        });
+        thumbsHtml += "</div>";
+      }
+
+      var badgeOverlay = "";
+      if (p.badge) {
+        badgeOverlay = '<div class="pdp-product-badge">' + esc(p.badge) + "</div>";
+      } else if (p.discount) {
+        badgeOverlay = '<div class="pdp-badge">' + esc(p.discount) + "</div>";
+      }
+
       var gallery =
         '<div class="pdp-gallery">' +
-          '<div class="pdp-image-main">' +
-            (p.discount ? '<div class="pdp-badge">' + esc(p.discount) + "</div>" : "") +
-            (imgUrl ? '<img src="' + imgUrl + '" alt="' + esc(p.name) + '">' : "") +
+          '<div class="pdp-image-main" id="pdp-main-image">' +
+            badgeOverlay +
+            (mainImgUrl ? '<img src="' + mainImgUrl + '" alt="' + esc(p.name) + '" id="pdp-main-img">' : "") +
           "</div>" +
+          thumbsHtml +
         "</div>";
 
       // Rating row
@@ -102,7 +125,22 @@
           (p.original_price ? '<div class="pdp-price-note">You save $' + (p.original_price - p.price).toFixed(2) + "</div>" : "") +
         "</div>";
 
+      // Variations
+      var variationsHtml = "";
+      if (p.variations && p.variations.length > 0) {
+        variationsHtml =
+          '<div class="pdp-variations">' +
+            '<div class="pdp-variations-label">Available options</div>' +
+            '<div class="pdp-variations-list">' +
+            p.variations.map(function (v) {
+              return '<span class="pdp-variation-chip">' + esc(v) + "</span>";
+            }).join("") +
+            "</div>" +
+          "</div>";
+      }
+
       // Availability
+      var deliveryText = p.delivery || ("Estimated: " + (p.delivery_estimate || "3-7 business days"));
       var availability =
         '<div class="pdp-availability">' +
           '<div class="pdp-stock-row">' +
@@ -112,7 +150,7 @@
           "</div>" +
           '<div class="pdp-delivery-row">' +
             '<span class="pdp-delivery-icon">📦</span>' +
-            '<span class="pdp-delivery-text">Delivery: ' + esc(p.delivery_estimate) + "</span>" +
+            '<span class="pdp-delivery-text">' + esc(deliveryText) + "</span>" +
           "</div>" +
         "</div>";
 
@@ -148,10 +186,12 @@
       var specs = [];
       if (p.brand) specs.push({ label: "Brand", value: p.brand });
       if (p.manufacturer && p.manufacturer !== p.brand) specs.push({ label: "Manufacturer", value: p.manufacturer });
+      if (p.model_number) specs.push({ label: "Model", value: p.model_number });
       if (p.weight) specs.push({ label: "Weight", value: p.weight });
       if (p.dimensions) specs.push({ label: "Dimensions", value: p.dimensions });
       if (p.department) specs.push({ label: "Department", value: p.department });
       if (p.country_of_origin) specs.push({ label: "Country of Origin", value: p.country_of_origin });
+      if (p.date_first_available) specs.push({ label: "Available Since", value: p.date_first_available });
       specs.push({ label: "SKU", value: p.sku });
 
       var specsHtml = "";
@@ -188,6 +228,20 @@
           "</div></div>";
       }
 
+      // Top Review (separate from generated reviews)
+      var topReviewHtml = "";
+      if (p.top_review) {
+        topReviewHtml =
+          '<div class="pdp-top-review">' +
+            '<h2 class="pdp-top-review-title">Top Review</h2>' +
+            '<div class="pdp-top-review-card">' +
+              '<div class="pdp-top-review-quote">\u201C</div>' +
+              '<p class="pdp-top-review-text">' + esc(p.top_review) + "</p>" +
+              '<div class="pdp-top-review-badge">Verified Customer</div>' +
+            "</div>" +
+          "</div>";
+      }
+
       // Reviews
       var reviewsHtml = "";
       if (reviews.length > 0) {
@@ -220,16 +274,21 @@
       }
 
       // Render
+      var badgeInline = p.badge
+        ? '<span class="pdp-inline-badge">' + esc(p.badge) + "</span>"
+        : "";
+
       var el = document.getElementById("pdp-content");
       el.innerHTML =
         breadcrumb +
         '<div class="pdp-main">' +
           gallery +
           '<div class="pdp-info">' +
-            '<div class="pdp-brand">' + esc(p.brand) + "</div>" +
+            '<div class="pdp-brand">' + esc(p.brand) + badgeInline + "</div>" +
             '<h1 class="pdp-title">' + esc(p.name) + "</h1>" +
             ratingRow +
             priceBlock +
+            variationsHtml +
             availability +
             actions +
             "<hr class='pdp-divider'>" +
@@ -238,6 +297,7 @@
             specsHtml +
           "</div>" +
         "</div>" +
+        topReviewHtml +
         fbtHtml +
         reviewsHtml;
 
@@ -282,6 +342,41 @@
       document.getElementById("pdp-wishlist").addEventListener("click", function () {
         showToast("\u2661 Use the AI assistant to save to your wishlist");
       });
+
+      // Thumbnail gallery switching with fade transition
+      var thumbs = document.querySelectorAll(".pdp-thumb");
+      if (thumbs.length > 0) {
+        thumbs.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var idx = parseInt(this.getAttribute("data-idx"));
+            var mainImg = document.getElementById("pdp-main-img");
+            var container = document.getElementById("pdp-main-image");
+            if (!mainImg || !allImages[idx]) return;
+
+            var newSrc = optimizeImg(allImages[idx], 800);
+            if (mainImg.src === newSrc) return;
+
+            thumbs.forEach(function (t) { t.classList.remove("active"); });
+            btn.classList.add("active");
+
+            mainImg.classList.add("pdp-img-fading");
+            container.classList.add("pdp-img-loading");
+
+            var next = new Image();
+            next.onload = function () {
+              mainImg.src = newSrc;
+              mainImg.classList.remove("pdp-img-fading");
+              container.classList.remove("pdp-img-loading");
+            };
+            next.onerror = function () {
+              mainImg.src = newSrc;
+              mainImg.classList.remove("pdp-img-fading");
+              container.classList.remove("pdp-img-loading");
+            };
+            next.src = newSrc;
+          });
+        });
+      }
 
     })
     .catch(function () {

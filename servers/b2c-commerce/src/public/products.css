@@ -486,6 +486,10 @@
   padding: 3px 8px;
   border-radius: 6px;
   z-index: 2;
+}
+
+.product-card-badge--promo {
+  background: #6366f1;
   letter-spacing: 0.3px;
 }
 

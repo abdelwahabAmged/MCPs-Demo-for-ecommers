@@ -68,11 +68,16 @@
         "</span>";
     }
 
+    var badgeHtml = "";
+    if (p.badge) {
+      badgeHtml = '<div class="product-card-badge product-card-badge--promo">' + p.badge + "</div>";
+    } else if (p.discount) {
+      badgeHtml = '<div class="product-card-badge">' + p.discount + "</div>";
+    }
+
     return (
       '<a href="/product/' + p.sku + '" class="product-card">' +
-      (p.discount
-        ? '<div class="product-card-badge">' + p.discount + "</div>"
-        : "") +
+      badgeHtml +
       img +
       '<div class="product-card-body">' +
       '<div class="product-card-category">' +
