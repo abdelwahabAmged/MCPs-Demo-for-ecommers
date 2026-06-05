@@ -116,7 +116,7 @@
           '<div class="checkout-item-name">' + item.name + '</div>' +
           '<div class="checkout-item-qty">Qty: ' + item.quantity + '</div>' +
         '</div>' +
-        '<div class="checkout-item-price">\u20ac' + (item.unit_price * item.quantity).toFixed(2) + '</div>' +
+        '<div class="checkout-item-price">$' + (item.unit_price * item.quantity).toFixed(2) + '</div>' +
       '</div>';
     }).join('');
 
@@ -129,14 +129,14 @@
         '<div class="checkout-summary-header"><h2>Order Summary</h2></div>' +
         '<div class="checkout-summary-items">' + itemsHtml + '</div>' +
         '<div class="checkout-totals">' +
-          '<div class="checkout-total-row"><span>Subtotal</span><span>\u20ac' + cart.totalPrice.toFixed(2) + '</span></div>' +
-          '<div class="checkout-total-row"><span>Shipping</span><span>' + (shipping === 0 ? '<span style="color:#34c759">Free</span>' : '\u20ac' + shipping.toFixed(2)) + '</span></div>' +
-          '<div class="checkout-total-row"><span>Tax (21%)</span><span>\u20ac' + tax.toFixed(2) + '</span></div>' +
-          '<div class="checkout-total-row grand"><span>Total</span><span>\u20ac' + grandTotal.toFixed(2) + '</span></div>' +
+          '<div class="checkout-total-row"><span>Subtotal</span><span>$' + cart.totalPrice.toFixed(2) + '</span></div>' +
+          '<div class="checkout-total-row"><span>Shipping</span><span>' + (shipping === 0 ? '<span style="color:#34c759">Free</span>' : '$' + shipping.toFixed(2)) + '</span></div>' +
+          '<div class="checkout-total-row"><span>Tax (21%)</span><span>$' + tax.toFixed(2) + '</span></div>' +
+          '<div class="checkout-total-row grand"><span>Total</span><span>$' + grandTotal.toFixed(2) + '</span></div>' +
         '</div>' +
         '<div class="place-order-section">' +
           '<button class="place-order-btn" id="place-order-btn" onclick="Checkout.placeOrder()">' +
-            ICONS.lock + ' Place Order \u2014 \u20ac' + grandTotal.toFixed(2) +
+            ICONS.lock + ' Place Order \u2014 $' + grandTotal.toFixed(2) +
           '</button>' +
           '<div style="text-align:center;margin-top:12px;font-size:12px;color:#8e8e93">' +
             ICONS.shield + ' Your payment info is secure and encrypted' +

@@ -87,19 +87,19 @@
         '<div class="order-summary-body">' +
           '<div class="summary-row">' +
             '<span class="label">Subtotal (' + data.totalItems + ' item' + (data.totalItems !== 1 ? 's' : '') + ')</span>' +
-            '<span class="value">\u20ac' + data.totalPrice.toFixed(2) + '</span>' +
+            '<span class="value">$' + data.totalPrice.toFixed(2) + '</span>' +
           '</div>' +
           '<div class="summary-row">' +
             '<span class="label">Shipping</span>' +
-            '<span class="value">' + (shipping === 0 ? '<span style="color:#34c759;font-weight:600">Free</span>' : '\u20ac' + shipping.toFixed(2)) + '</span>' +
+            '<span class="value">' + (shipping === 0 ? '<span style="color:#34c759;font-weight:600">Free</span>' : '$' + shipping.toFixed(2)) + '</span>' +
           '</div>' +
           '<div class="summary-row">' +
             '<span class="label">Tax (estimated)</span>' +
-            '<span class="value">\u20ac' + (data.totalPrice * 0.21).toFixed(2) + '</span>' +
+            '<span class="value">$' + (data.totalPrice * 0.21).toFixed(2) + '</span>' +
           '</div>' +
           '<div class="summary-row total">' +
             '<span class="label">Total</span>' +
-            '<span class="value">\u20ac' + (grandTotal + data.totalPrice * 0.21).toFixed(2) + '</span>' +
+            '<span class="value">$' + (grandTotal + data.totalPrice * 0.21).toFixed(2) + '</span>' +
           '</div>' +
           '<button class="checkout-btn" onclick="window.location.href=\'/checkout\'">' +
             ICONS.lock + ' Checkout' +
@@ -135,21 +135,12 @@
         ? '<div class="item-img-wrap"><img class="item-img" src="' + item.image_url + '" alt="' + item.name.replace(/"/g, '&quot;') + '"></div>'
         : '<div class="item-img-wrap"><div class="item-img-placeholder">' + ICONS.packageIcon + '</div></div>';
 
-      var colorHtml = item.color
-        ? '<span class="item-color-dot" style="background:' + (item.color_hex || '#999') + '"></span>' + item.color
-        : '';
-      var sizeHtml = item.size ? ' \u00b7 Size ' + item.size : '';
-      var variantLine = (colorHtml || sizeHtml)
-        ? '<div class="item-meta">' + colorHtml + sizeHtml + '</div>'
-        : '';
-
       return (
         '<div class="item-row" data-id="' + item.id + '">' +
           imgHtml +
           '<div class="item-info">' +
             '<div class="item-name">' + item.name + '</div>' +
             '<div class="item-meta"><span class="item-sku">' + item.sku + '</span></div>' +
-            variantLine +
             '<div class="item-actions">' +
               '<button class="remove-btn" onclick="Cart.removeItem(\'' + item.id + '\')">' +
                 ICONS.trash + ' Remove' +
@@ -162,8 +153,8 @@
             '<button class="qty-btn" onclick="Cart.updateQty(\'' + item.id + '\',' + (item.quantity + 1) + ')">' + ICONS.plus + '</button>' +
           '</div>' +
           '<div class="item-price">' +
-            '<div class="item-unit">\u20ac' + item.unit_price.toFixed(2) + ' each</div>' +
-            '<div class="item-subtotal">\u20ac' + sub + '</div>' +
+            '<div class="item-unit">$' + item.unit_price.toFixed(2) + ' each</div>' +
+            '<div class="item-subtotal">$' + sub + '</div>' +
           '</div>' +
         '</div>'
       );

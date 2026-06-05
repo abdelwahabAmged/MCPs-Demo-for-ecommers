@@ -31,21 +31,22 @@ interface Product {
   subcategory: string | null;
   description: string;
   price: number;
+  original_price: number | null;
+  discount: string | null;
   currency: string;
-  color: string;
-  color_hex: string | null;
-  size: string | null;
   stock_qty: number;
   stock_status: string;
   delivery_estimate: string;
   image_url: string;
-  tags: string;
   rating: number;
   review_count: number;
-  weight_grams: number | null;
-  material: string | null;
-  specs: string | null;
+  weight: string | null;
   dimensions: string | null;
+  features: string | null;
+  manufacturer: string | null;
+  department: string | null;
+  bought_past_month: number | null;
+  country_of_origin: string | null;
   frequently_bought_together: string | null;
 }
 
@@ -173,12 +174,13 @@ function stockUrgencyNotice(db: Database.Database, p: Product): string {
   if (available <= 0)
     return `\n\n🚨 **STOCK ALERT:** All ${p.stock_qty} units are reserved by other shoppers. This item may sell out imminently.`;
   if (available <= 3)
-    return `\n\n🚨 **STOCK ALERT:** Only ${available} unreserved unit${available === 1 ? "" : "s"} left (${p.stock_qty} total, ${p.stock_qty - available} reserved by other shoppers). This is a fast-moving item — offer to reserve it for the customer now using the reserve_product tool.`;
+    return `\n\n🚨 **STOCK ALERT:** Only ${available} unreserved unit${available === 1 ? "" : "s"} left (${p.stock_qty} total, ${p.stock_qty - available} reserved). This is a fast-moving item — offer to reserve it for the customer now using the reserve_product tool.`;
   return `\n\n⚠️ **LOW STOCK:** ${available} available (${p.stock_qty} total). Consider offering to reserve this item for the customer.`;
 }
 
-function formatSize(p: Product): string {
-  return p.size ? `Size ${p.size}` : "One size";
+function formatDiscount(p: Product): string {
+  if (!p.discount || !p.original_price) return "";
+  return ` ~~$${p.original_price.toFixed(2)}~~ ${p.discount}`;
 }
 
 export function registerB2CTools(
@@ -206,8 +208,8 @@ export function registerB2CTools(
             text: html,
             _meta: {
               ui: {
-                csp: {
-                  resourceDomains: ["https://images.unsplash.com"],
+                  csp: {
+                  resourceDomains: ["https://images.unsplash.com", "https://m.media-amazon.com", "https://images-na.ssl-images-amazon.com"],
                 },
               },
             },
@@ -224,7 +226,7 @@ export function registerB2CTools(
     {
       title: "Search Products",
       description:
-        'Search the product catalog by natural language query. Returns matching products with name, price, stock, image, and delivery info. Supports filters for price, category, and size. Use for queries like "wireless headphones under €100" or "running shoes size 42".',
+        'Search the product catalog by natural language query. Returns matching products with name, price, stock, image, and delivery info. Supports filters for price and category. Use for queries like "wireless headphones under $100" or "running shoes".',
       _meta: { ui: { resourceUri: STORE_APP_RESOURCE_URI } },
       inputSchema: {
         query: z
@@ -235,23 +237,19 @@ export function registerB2CTools(
         max_price: z
           .number()
           .optional()
-          .describe("Maximum price filter in EUR"),
+          .describe("Maximum price filter in USD"),
         category: z
           .string()
           .optional()
           .describe('Filter by category (e.g. "Electronics", "Clothing")'),
-        size: z
-          .string()
-          .optional()
-          .describe('Size filter (e.g. "42", "M", "XL")'),
       },
     },
-    async ({ query, max_price, category, size }) => {
+    async ({ query, max_price, category }) => {
       return withLogAsync(
         db,
         "search_products",
         getSessionId(),
-        { query, max_price, category, size },
+        { query, max_price, category },
         async () => {
           const keywords = query
             .toLowerCase()
@@ -269,17 +267,14 @@ export function registerB2CTools(
             sql += " AND LOWER(category) = LOWER(?)";
             params.push(category);
           }
-          if (size) {
-            sql += " AND (size = ? OR size IS NULL)";
-            params.push(size);
-          }
 
           const allProducts = db.prepare(sql).all(...params) as Product[];
 
           const scored = allProducts
             .map((p) => {
+              const featuresText = p.features ? (JSON.parse(p.features) as string[]).join(" ") : "";
               const searchText =
-                `${p.name} ${p.category} ${p.subcategory || ""} ${p.description} ${p.tags} ${p.color} ${p.brand}`.toLowerCase();
+                `${p.name} ${p.category} ${p.subcategory || ""} ${p.description} ${p.department || ""} ${p.brand} ${featuresText}`.toLowerCase();
               const score = keywords.reduce(
                 (s: number, kw: string) =>
                   s + (searchText.includes(kw) ? 1 : 0),
@@ -309,8 +304,8 @@ export function registerB2CTools(
           const results = scored
             .map(
               ({ product: p }) =>
-                `**${p.name}** by ${p.brand} (${p.color}, ${formatSize(p)})\n` +
-                `SKU: ${p.sku} | €${p.price.toFixed(2)} | ${formatStock(p)}\n` +
+                `**${p.name}** by ${p.brand}\n` +
+                `SKU: ${p.sku} | $${p.price.toFixed(2)}${formatDiscount(p)} | ${formatStock(p)}\n` +
                 `★ ${p.rating}/5 (${p.review_count} reviews) | Delivery: ${p.delivery_estimate}\n` +
                 `${p.image_url}`,
             )
@@ -333,12 +328,11 @@ export function registerB2CTools(
             { type: "text" as const, text: results + urgencyBlock },
           ];
 
-          // Tier 1: Fetch product images as base64 for Claude's vision
-          const products = scored.map((s) => s.product);
+          const matchedProducts = scored.map((s) => s.product);
           const images = await fetchMultipleImages(
-            products.map((p) => ({ imageUrl: p.image_url, width: 300 })),
+            matchedProducts.map((p) => ({ imageUrl: p.image_url, width: 300 })),
           );
-          for (let i = 0; i < products.length; i++) {
+          for (let i = 0; i < matchedProducts.length; i++) {
             const img = images[i];
             if (img) {
               content.push({
@@ -354,9 +348,10 @@ export function registerB2CTools(
             structuredContent: {
               viewType: "product-grid",
               title: `Search results for "${query}"`,
-              products: products.map((p) => ({
+              products: matchedProducts.map((p) => ({
                 sku: p.sku, name: p.name, brand: p.brand, price: p.price,
-                color: p.color, size: p.size, image_url: p.image_url,
+                original_price: p.original_price, discount: p.discount,
+                image_url: p.image_url,
                 rating: p.rating, review_count: p.review_count,
                 stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
               })),
@@ -390,11 +385,11 @@ export function registerB2CTools(
         { product_name },
         async () => {
           const searchName = product_name.toLowerCase();
-          const variants = db
+          const matches = db
             .prepare("SELECT * FROM products WHERE LOWER(name) LIKE ?")
             .all(`%${searchName}%`) as Product[];
 
-          if (variants.length === 0) {
+          if (matches.length === 0) {
             return {
               content: [
                 {
@@ -405,25 +400,20 @@ export function registerB2CTools(
             };
           }
 
-          const first = variants[0]!;
-          const variantList = variants
-            .map(
-              (v) =>
-                `  • ${v.color}${v.size ? `, ${formatSize(v)}` : ""} — SKU: ${v.sku} — €${v.price.toFixed(2)} — ${formatStock(v)} — ${v.delivery_estimate}` +
-                (v.stock_status === "low_stock" ? ` 🔥 SELLING FAST` : ""),
-            )
-            .join("\n");
+          const first = matches[0]!;
 
-          let specsBlock = "";
-          let parsedSpecs: Record<string, string> | undefined;
-          if (first.specs) {
+          let featuresBlock = "";
+          let parsedFeatures: string[] | undefined;
+          if (first.features) {
             try {
-              parsedSpecs = JSON.parse(first.specs) as Record<string, string>;
-              specsBlock =
-                "\n\n## Specifications\n" +
-                Object.entries(parsedSpecs)
-                  .map(([k, v]) => `  • **${k}:** ${v}`)
-                  .join("\n");
+              parsedFeatures = JSON.parse(first.features) as string[];
+              if (parsedFeatures.length > 0) {
+                featuresBlock =
+                  "\n\n## Features\n" +
+                  parsedFeatures
+                    .map((f) => `  • ${f}`)
+                    .join("\n");
+              }
             } catch {
               /* ignore parse errors */
             }
@@ -431,17 +421,7 @@ export function registerB2CTools(
 
           let dimsBlock = "";
           if (first.dimensions) {
-            try {
-              const dims = JSON.parse(first.dimensions) as {
-                length: number;
-                width: number;
-                height: number;
-                unit: string;
-              };
-              dimsBlock = `\n**Dimensions:** ${dims.length} × ${dims.width} × ${dims.height} ${dims.unit}`;
-            } catch {
-              /* ignore */
-            }
+            dimsBlock = `\n**Dimensions:** ${first.dimensions}`;
           }
 
           let fbtBlock = "";
@@ -454,7 +434,7 @@ export function registerB2CTools(
                 const placeholders = fbtSkus.map(() => "?").join(",");
                 const fbtProducts = db
                   .prepare(
-                    `SELECT sku, name, price, color, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`,
+                    `SELECT sku, name, price, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`,
                   )
                   .all(...fbtSkus) as Array<
                   Product & { stock_status: string; stock_qty: number }
@@ -468,13 +448,13 @@ export function registerB2CTools(
                     fbtProducts
                       .map(
                         (fp) =>
-                          `  • **${fp.name}** (${fp.color}) — €${fp.price.toFixed(2)} — SKU: ${fp.sku}` +
+                          `  • **${fp.name}** — $${fp.price.toFixed(2)} — SKU: ${fp.sku}` +
                           (fp.stock_status === "low_stock"
                             ? ` ⚠️ only ${fp.stock_qty} left`
                             : ""),
                       )
                       .join("\n") +
-                    `\n  **Bundle price (all together): €${bundleTotal.toFixed(2)}**` +
+                    `\n  **Bundle price (all together): $${bundleTotal.toFixed(2)}**` +
                     '\n\n**ASSISTANT INSTRUCTION:** The customer is actively looking at this product. Proactively recommend these complementary items — e.g. "This pairs great with the [X], many customers get them together. Want me to add both to your cart?"';
                 }
               }
@@ -483,35 +463,32 @@ export function registerB2CTools(
             }
           }
 
-          const lowStockVariants = variants.filter(
-            (v) => v.stock_status === "low_stock",
-          );
           let urgencyBlock = "";
-          if (lowStockVariants.length > 0) {
+          if (first.stock_status === "low_stock") {
+            const available = getAvailableStock(db, first);
             urgencyBlock =
-              "\n\n---\n⚡ **STOCK URGENCY:** " +
-              lowStockVariants
-                .map((v) => {
-                  const available = getAvailableStock(db, v);
-                  return `${v.color}${v.size ? ` (${v.size})` : ""}: ${available} left`;
-                })
-                .join(", ") +
+              `\n\n---\n⚡ **STOCK URGENCY:** Only ${available} left` +
               ". Proactively tell the customer about low availability and offer to reserve with reserve_product.";
           }
+
+          const priceText = first.original_price
+            ? `$${first.price.toFixed(2)} ~~$${first.original_price.toFixed(2)}~~ ${first.discount || ""}`
+            : `$${first.price.toFixed(2)}`;
 
           const text =
             `# ${first.name}\n\n` +
             `**Brand:** ${first.brand}\n` +
             `**Category:** ${first.category}${first.subcategory ? ` › ${first.subcategory}` : ""}\n` +
             `**Description:** ${first.description}\n` +
-            `**Price:** €${first.price.toFixed(2)}\n` +
+            `**Price:** ${priceText}\n` +
             `**Rating:** ★ ${first.rating}/5 (${first.review_count} reviews)\n` +
-            `**Material:** ${first.material || "N/A"}\n` +
-            `**Weight:** ${first.weight_grams ? `${first.weight_grams}g` : "N/A"}\n` +
+            `**Manufacturer:** ${first.manufacturer || first.brand}\n` +
+            `**Weight:** ${first.weight || "N/A"}\n` +
+            `**Stock:** ${formatStock(first)}\n` +
+            `**Delivery:** ${first.delivery_estimate}\n` +
             `**Image:** ${first.image_url}` +
             dimsBlock +
-            specsBlock +
-            `\n\n## Available Variants\n${variantList}` +
+            featuresBlock +
             fbtBlock +
             urgencyBlock;
 
@@ -519,7 +496,6 @@ export function registerB2CTools(
             { type: "text" as const, text },
           ];
 
-          // Tier 1: Fetch product image as base64 for Claude's vision
           const img = await fetchImageAsBase64(first.image_url, 600);
           if (img) {
             content.push({
@@ -536,14 +512,14 @@ export function registerB2CTools(
               title: first.name,
               product: {
                 sku: first.sku, name: first.name, brand: first.brand,
-                price: first.price, color: first.color, size: first.size,
+                price: first.price, original_price: first.original_price,
+                discount: first.discount,
                 image_url: first.image_url, rating: first.rating,
                 review_count: first.review_count, stock_status: first.stock_status,
                 delivery_estimate: first.delivery_estimate,
                 description: first.description,
-                material: first.material ?? undefined,
-                weight_grams: first.weight_grams ?? undefined,
-                specs: parsedSpecs,
+                weight: first.weight ?? undefined,
+                dimensions: first.dimensions ?? undefined,
               },
             },
           };
@@ -560,7 +536,7 @@ export function registerB2CTools(
       description:
         "Check real-time availability of a specific product SKU. Returns stock quantity, status, and delivery estimate.",
       inputSchema: {
-        sku: z.string().describe('Product SKU code (e.g. "ELEC-PHN-001-BLK")'),
+        sku: z.string().describe('Product SKU code (e.g. "ACM-ELEC-001")'),
       },
     },
     async ({ sku }) => {
@@ -586,7 +562,7 @@ export function registerB2CTools(
             {
               type: "text" as const,
               text:
-                `**${product.name}** (${product.color}${product.size ? `, ${formatSize(product)}` : ""})\nSKU: ${product.sku}\nStock: ${formatStock(product)}\nDelivery: ${product.delivery_estimate}` +
+                `**${product.name}**\nSKU: ${product.sku}\nStock: ${formatStock(product)}\nDelivery: ${product.delivery_estimate}` +
                 urgency,
             },
           ],
@@ -680,7 +656,7 @@ export function registerB2CTools(
                 type: "text" as const,
                 text:
                   `✓ **Reserved!**\n\n` +
-                  `**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""})\n` +
+                  `**${product.name}**\n` +
                   `Quantity: ${quantity} held for you\n` +
                   `**Expires:** 15 minutes (at ${expiryTime})\n` +
                   `**Reservation ID:** ${reservationId.substring(0, 8).toUpperCase()}\n\n` +
@@ -735,15 +711,13 @@ export function registerB2CTools(
 
           const items = JSON.parse(order.items) as Array<{
             name: string;
-            color: string;
-            size?: string;
             quantity: number;
             price: number;
           }>;
           const itemList = items
             .map(
               (i) =>
-                `  • ${i.name} (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${i.price.toFixed(2)}`,
+                `  • ${i.name} × ${i.quantity} — $${i.price.toFixed(2)}`,
             )
             .join("\n");
 
@@ -756,7 +730,7 @@ export function registerB2CTools(
             content: [
               {
                 type: "text" as const,
-                text: `# Order ${order.order_id}\n\n${statusLine}\n**Delivery:** ${order.delivery_estimate}\n**Order Date:** ${order.order_date}\n**Total:** €${order.total.toFixed(2)}\n\n**Items:**\n${itemList}`,
+                text: `# Order ${order.order_id}\n\n${statusLine}\n**Delivery:** ${order.delivery_estimate}\n**Order Date:** ${order.order_date}\n**Total:** $${order.total.toFixed(2)}\n\n**Items:**\n${itemList}`,
               },
             ],
           };
@@ -880,8 +854,9 @@ export function registerB2CTools(
             { product: Product; score: number }
           >();
           for (const p of allProducts) {
+            const featuresText = p.features ? (JSON.parse(p.features) as string[]).join(" ") : "";
             const searchText =
-              `${p.name} ${p.category} ${p.subcategory || ""} ${p.description} ${p.tags} ${p.brand}`.toLowerCase();
+              `${p.name} ${p.category} ${p.subcategory || ""} ${p.description} ${p.department || ""} ${p.brand} ${featuresText}`.toLowerCase();
             const score = keywords.reduce(
               (s: number, kw: string) => s + (searchText.includes(kw) ? 1 : 0),
               0,
@@ -914,7 +889,7 @@ export function registerB2CTools(
             sorted
               .map(
                 ({ product: p }, i) =>
-                  `${i + 1}. **${p.name}** by ${p.brand} — €${p.price.toFixed(2)}\n   ${p.description.substring(0, 120)}…\n   ★ ${p.rating}/5 | ${formatStock(p)} | SKU: ${p.sku}`,
+                  `${i + 1}. **${p.name}** by ${p.brand} — $${p.price.toFixed(2)}${formatDiscount(p)}\n   ${p.description.substring(0, 120)}…\n   ★ ${p.rating}/5 | ${formatStock(p)} | SKU: ${p.sku}`,
               )
               .join("\n\n");
 
@@ -922,9 +897,9 @@ export function registerB2CTools(
             { type: "text" as const, text },
           ];
 
-          const products = sorted.map((s) => s.product);
+          const recProducts = sorted.map((s) => s.product);
           const images = await fetchMultipleImages(
-            products.map((p) => ({ imageUrl: p.image_url, width: 300 })),
+            recProducts.map((p) => ({ imageUrl: p.image_url, width: 300 })),
           );
           for (const img of images) {
             if (img) {
@@ -937,9 +912,10 @@ export function registerB2CTools(
             structuredContent: {
               viewType: "product-grid",
               title: `Recommendations for "${context}"`,
-              products: products.map((p) => ({
+              products: recProducts.map((p) => ({
                 sku: p.sku, name: p.name, brand: p.brand, price: p.price,
-                color: p.color, size: p.size, image_url: p.image_url,
+                original_price: p.original_price, discount: p.discount,
+                image_url: p.image_url,
                 rating: p.rating, review_count: p.review_count,
                 stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
               })),
@@ -1022,14 +998,12 @@ export function registerB2CTools(
             ).run(quantity, existing.id);
           } else {
             db.prepare(
-              "INSERT INTO cart_items (id, cart_id, sku, name, color, size, quantity, unit_price, currency, image_url, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              "INSERT INTO cart_items (id, cart_id, sku, name, quantity, unit_price, currency, image_url, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             ).run(
               randomUUID(),
               cartId,
               product.sku,
               product.name,
-              product.color,
-              product.size,
               quantity,
               product.price,
               product.currency,
@@ -1071,13 +1045,12 @@ export function registerB2CTools(
                 const placeholders = newSuggestions.map(() => "?").join(",");
                 const companions = db
                   .prepare(
-                    `SELECT sku, name, price, color, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`,
+                    `SELECT sku, name, price, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`,
                   )
                   .all(...newSuggestions) as Array<{
                   sku: string;
                   name: string;
                   price: number;
-                  color: string;
                   stock_status: string;
                   stock_qty: number;
                 }>;
@@ -1087,7 +1060,7 @@ export function registerB2CTools(
                     companions
                       .map(
                         (c) =>
-                          `• **${c.name}** (${c.color}) — €${c.price.toFixed(2)} — SKU: ${c.sku}` +
+                          `• **${c.name}** — $${c.price.toFixed(2)} — SKU: ${c.sku}` +
                           (c.stock_status === "low_stock"
                             ? ` ⚠️ only ${c.stock_qty} left`
                             : ""),
@@ -1106,7 +1079,7 @@ export function registerB2CTools(
               {
                 type: "text" as const,
                 text:
-                  `✓ Added to cart!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""})\nQuantity: ${quantity} | Unit Price: €${product.price.toFixed(2)} | Subtotal: €${(product.price * quantity).toFixed(2)}\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\nView your cart: ${cartUrl}` +
+                  `✓ Added to cart!\n\n**${product.name}**\nQuantity: ${quantity} | Unit Price: $${product.price.toFixed(2)} | Subtotal: $${(product.price * quantity).toFixed(2)}\n\n🛒 Cart: ${totalItems} item(s) — $${totalPrice.toFixed(2)} total\n\nView your cart: ${cartUrl}` +
                   crossSellBlock,
               },
             ],
@@ -1196,14 +1169,14 @@ export function registerB2CTools(
         const itemList = cartItems
           .map(
             (i) =>
-              `  • ${i.name} × ${i.quantity} — €${(i.unit_price * i.quantity).toFixed(2)}`,
+              `  • ${i.name} × ${i.quantity} — $${(i.unit_price * i.quantity).toFixed(2)}`,
           )
           .join("\n");
         return {
           content: [
             {
               type: "text" as const,
-              text: `✓ ${sku ? "Item removed" : "Cart cleared"}!\n\n🛒 Cart: ${totalItems} item(s) — €${totalPrice.toFixed(2)} total\n\n${itemList}\n\nView your cart: ${cartUrl}`,
+              text: `✓ ${sku ? "Item removed" : "Cart cleared"}!\n\n🛒 Cart: ${totalItems} item(s) — $${totalPrice.toFixed(2)} total\n\n${itemList}\n\nView your cart: ${cartUrl}`,
             },
           ],
         };
@@ -1242,8 +1215,6 @@ export function registerB2CTools(
           sku: string;
           quantity: number;
           unit_price: number;
-          color: string;
-          size: string | null;
           image_url: string | null;
         }>;
 
@@ -1270,7 +1241,7 @@ export function registerB2CTools(
         const itemList = cartItems
           .map(
             (i) =>
-              `  • **${i.name}** (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${(i.unit_price * i.quantity).toFixed(2)}`,
+              `  • **${i.name}** × ${i.quantity} — $${(i.unit_price * i.quantity).toFixed(2)}`,
           )
           .join("\n");
 
@@ -1293,14 +1264,14 @@ export function registerB2CTools(
           const skuArr = Array.from(suggestedSkus).slice(0, 4);
           const placeholders = skuArr.map(() => "?").join(",");
           const suggestions = db
-            .prepare(`SELECT sku, name, price, color, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`)
-            .all(...skuArr) as Array<{ sku: string; name: string; price: number; color: string; stock_status: string; stock_qty: number }>;
+            .prepare(`SELECT sku, name, price, stock_status, stock_qty FROM products WHERE sku IN (${placeholders})`)
+            .all(...skuArr) as Array<{ sku: string; name: string; price: number; stock_status: string; stock_qty: number }>;
           if (suggestions.length > 0) {
             crossSellBlock =
               "\n\n---\n🛍️ **Complete your order — goes well with what's in your cart:**\n" +
               suggestions
                 .map((c) =>
-                  `• **${c.name}** (${c.color}) — €${c.price.toFixed(2)} — SKU: ${c.sku}` +
+                  `• **${c.name}** — $${c.price.toFixed(2)} — SKU: ${c.sku}` +
                   (c.stock_status === "low_stock" ? ` ⚠️ only ${c.stock_qty} left` : ""))
                 .join("\n") +
               "\n\n**ASSISTANT INSTRUCTION:** Suggest these to the customer naturally, e.g. \"Before you check out, the [X] pairs really well with your [Y] — want me to add it?\"";
@@ -1310,7 +1281,7 @@ export function registerB2CTools(
         const content: ContentBlock[] = [
           {
             type: "text" as const,
-            text: `🛒 **Your Cart** — ${totalItems} item${totalItems !== 1 ? "s" : ""}\n\n${itemList}\n\n**Total: €${totalPrice.toFixed(2)}**\n\nView your cart: ${cartUrl}` + crossSellBlock,
+            text: `🛒 **Your Cart** — ${totalItems} item${totalItems !== 1 ? "s" : ""}\n\n${itemList}\n\n**Total: $${totalPrice.toFixed(2)}**\n\nView your cart: ${cartUrl}` + crossSellBlock,
           },
         ];
 
@@ -1320,7 +1291,7 @@ export function registerB2CTools(
             viewType: "cart",
             title: "Your Cart",
             cartItems: cartItems.map((i) => ({
-              name: i.name, sku: i.sku, color: i.color, size: i.size,
+              name: i.name, sku: i.sku,
               quantity: i.quantity, unit_price: i.unit_price,
               image_url: i.image_url ?? undefined,
             })),
@@ -1399,7 +1370,7 @@ export function registerB2CTools(
                     : o.status === "cancelled"
                       ? "✗"
                       : "↩";
-            return `${icon} **${o.order_id}** — ${o.order_date} — €${o.total.toFixed(2)} — ${o.status}\n   ${itemNames}`;
+            return `${icon} **${o.order_id}** — ${o.order_date} — $${o.total.toFixed(2)} — ${o.status}\n   ${itemNames}`;
           });
 
           return {
@@ -1470,8 +1441,6 @@ export function registerB2CTools(
               category?: string;
               quantity: number;
               price: number;
-              color?: string;
-              size?: string;
             }>;
             for (const item of items) {
               if (
@@ -1487,8 +1456,6 @@ export function registerB2CTools(
                 sku: item.sku,
                 name: item.name,
                 category: item.category || "Unknown",
-                color: item.color || null,
-                size: item.size || null,
                 quantity: item.quantity,
                 unit_price: item.price,
                 line_total: item.price * item.quantity,
@@ -1588,11 +1555,11 @@ export function registerB2CTools(
 
           const monthlyLines = Object.entries(monthlySpend)
             .sort(([a], [b]) => a.localeCompare(b))
-            .map(([m, v]) => `  ${m}: €${v.toFixed(2)}`)
+            .map(([m, v]) => `  ${m}: $${v.toFixed(2)}`)
             .join("\n");
           const categoryLines = Object.entries(categorySpend)
             .sort(([, a], [, b]) => b - a)
-            .map(([c, v]) => `  ${c}: €${v.toFixed(2)}`)
+            .map(([c, v]) => `  ${c}: $${v.toFixed(2)}`)
             .join("\n");
           const topProducts = Object.entries(productCount)
             .sort(([, a], [, b]) => b - a)
@@ -1604,7 +1571,7 @@ export function registerB2CTools(
             content: [
               {
                 type: "text" as const,
-                text: `## Order Analytics\n\n**Total Orders:** ${orders.length}\n**Total Spent:** €${totalSpent.toFixed(2)}\n**Average Order Value:** €${avgOrderValue.toFixed(2)}\n\n### Monthly Spending\n${monthlyLines}\n\n### Spending by Category\n${categoryLines}\n\n### Most Purchased Products\n${topProducts}`,
+                text: `## Order Analytics\n\n**Total Orders:** ${orders.length}\n**Total Spent:** $${totalSpent.toFixed(2)}\n**Average Order Value:** $${avgOrderValue.toFixed(2)}\n\n### Monthly Spending\n${monthlyLines}\n\n### Spending by Category\n${categoryLines}\n\n### Most Purchased Products\n${topProducts}`,
               },
             ],
           };
@@ -1749,7 +1716,7 @@ export function registerB2CTools(
               text += prods
                 .map(
                   (p) =>
-                    `• **${p.name}** by ${p.brand} — €${p.price.toFixed(2)} — ★ ${p.rating}/5 (${p.review_count} reviews)\n  ${p.description.substring(0, 80)}…`,
+                    `• **${p.name}** by ${p.brand} — $${p.price.toFixed(2)}${formatDiscount(p)} — ★ ${p.rating}/5 (${p.review_count} reviews)\n  ${p.description.substring(0, 80)}…`,
                 )
                 .join("\n\n");
               text += "\n";
@@ -1772,7 +1739,7 @@ export function registerB2CTools(
 
           const lines = categories.map(
             (c) =>
-              `• **${c.category}** — ${c.product_count} products (${c.sku_count} SKUs) — €${c.min_price.toFixed(2)} – €${c.max_price.toFixed(2)}`,
+              `• **${c.category}** — ${c.product_count} products (${c.sku_count} SKUs) — $${c.min_price.toFixed(2)} – $${c.max_price.toFixed(2)}`,
           );
 
           return {
@@ -2024,7 +1991,7 @@ export function registerB2CTools(
           content: [
             {
               type: "text" as const,
-              text: `♡ Saved to wishlist!\n\n**${product.name}** (${product.color}${product.size ? `, Size ${product.size}` : ""}) — €${product.price.toFixed(2)}\n\nYou have ${count} item${count !== 1 ? "s" : ""} on your wishlist.`,
+              text: `♡ Saved to wishlist!\n\n**${product.name}** — $${product.price.toFixed(2)}\n\nYou have ${count} item${count !== 1 ? "s" : ""} on your wishlist.`,
             },
           ],
         };
@@ -2053,15 +2020,15 @@ export function registerB2CTools(
 
         const items = db
           .prepare(
-            `SELECT w.*, p.name, p.color, p.size, p.price, p.stock_status, p.stock_qty, p.delivery_estimate, p.rating, p.brand, p.image_url, p.review_count, p.currency
+            `SELECT w.*, p.name, p.price, p.original_price, p.discount, p.stock_status, p.stock_qty, p.delivery_estimate, p.rating, p.brand, p.image_url, p.review_count, p.currency
          FROM wishlist w JOIN products p ON w.sku = p.sku WHERE w.session_id = ? ORDER BY w.added_at DESC`,
           )
           .all(ownerId) as Array<
           WishlistItem & {
             name: string;
-            color: string;
-            size: string | null;
             price: number;
+            original_price: number | null;
+            discount: string | null;
             stock_status: string;
             stock_qty: number;
             delivery_estimate: string;
@@ -2090,7 +2057,8 @@ export function registerB2CTools(
               : i.stock_status === "low_stock"
                 ? `⚠ Low stock (${i.stock_qty} left)`
                 : "✗ Out of stock";
-          return `• **${i.name}** (${i.color}${i.size ? `, Size ${i.size}` : ""}) — €${i.price.toFixed(2)}\n  SKU: ${i.sku} — ${stockIcon} — ★ ${i.rating}/5\n  Saved: ${i.added_at}`;
+          const discountText = i.discount && i.original_price ? ` ~~$${i.original_price.toFixed(2)}~~ ${i.discount}` : "";
+          return `• **${i.name}** — $${i.price.toFixed(2)}${discountText}\n  SKU: ${i.sku} — ${stockIcon} — ★ ${i.rating}/5\n  Saved: ${i.added_at}`;
         });
 
         const content: ContentBlock[] = [
@@ -2107,7 +2075,8 @@ export function registerB2CTools(
             title: `Your Wishlist (${items.length} items)`,
             products: items.map((i) => ({
               sku: i.sku, name: i.name, brand: i.brand, price: i.price,
-              color: i.color, size: i.size, image_url: i.image_url,
+              original_price: i.original_price, discount: i.discount,
+              image_url: i.image_url,
               rating: i.rating, review_count: i.review_count,
               stock_status: i.stock_status, delivery_estimate: i.delivery_estimate,
             })),
@@ -2274,14 +2243,14 @@ export function registerB2CTools(
             const lines = companions
               .map(
                 (c) =>
-                  `• **${c.name}** (${c.color}) — €${c.price.toFixed(2)} — ${formatStock(c)}\n  ${c.description.substring(0, 80)}…\n  SKU: ${c.sku}`,
+                  `• **${c.name}** — $${c.price.toFixed(2)} — ${formatStock(c)}\n  ${c.description.substring(0, 80)}…\n  SKU: ${c.sku}`,
               )
               .join("\n\n");
 
             const content: ContentBlock[] = [
               {
                 type: "text" as const,
-                text: `## Frequently Bought With: ${product.name}\n\n${lines}\n\n**Bundle total (${1 + companions.length} items): €${bundleTotal.toFixed(2)}**`,
+                text: `## Frequently Bought With: ${product.name}\n\n${lines}\n\n**Bundle total (${1 + companions.length} items): $${bundleTotal.toFixed(2)}**`,
               },
             ];
 
@@ -2301,7 +2270,8 @@ export function registerB2CTools(
                 title: `Frequently Bought With: ${product.name}`,
                 products: companions.map((c) => ({
                   sku: c.sku, name: c.name, brand: c.brand, price: c.price,
-                  color: c.color, size: c.size, image_url: c.image_url,
+                  original_price: c.original_price, discount: c.discount,
+                  image_url: c.image_url,
                   rating: c.rating, review_count: c.review_count,
                   stock_status: c.stock_status, delivery_estimate: c.delivery_estimate,
                 })),
@@ -2465,7 +2435,7 @@ export function registerB2CTools(
                 ? ` — ⚠️ only ${p.stock_qty} left!`
                 : "";
             return (
-              `• **${p.name}** (${p.color}) — €${p.price.toFixed(2)}${stockNote}\n` +
+              `• **${p.name}** — $${p.price.toFixed(2)}${stockNote}\n` +
               `  _${r.reason} (purchased ${r.sourceDate})_\n` +
               `  SKU: ${p.sku}`
             );
@@ -2498,7 +2468,8 @@ export function registerB2CTools(
               title: "Recommended For You",
               products: recProducts.map((p) => ({
                 sku: p.sku, name: p.name, brand: p.brand, price: p.price,
-                color: p.color, size: p.size, image_url: p.image_url,
+                original_price: p.original_price, discount: p.discount,
+                image_url: p.image_url,
                 rating: p.rating, review_count: p.review_count,
                 stock_status: p.stock_status, delivery_estimate: p.delivery_estimate,
               })),
@@ -2584,11 +2555,8 @@ export function registerB2CTools(
             .all(cartId) as Array<{
             sku: string;
             name: string;
-            color: string;
-            size: string | null;
             quantity: number;
             unit_price: number;
-            category?: string;
           }>;
 
           if (cartItems.length === 0) {
@@ -2610,8 +2578,6 @@ export function registerB2CTools(
           const orderItems = cartItems.map((i) => ({
             sku: i.sku,
             name: i.name,
-            color: i.color,
-            size: i.size,
             quantity: i.quantity,
             price: i.unit_price,
           }));
@@ -2631,7 +2597,7 @@ export function registerB2CTools(
             new Date().toISOString().split("T")[0],
             JSON.stringify(orderItems),
             total,
-            "EUR",
+            "USD",
             1,
             new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
               .toISOString()
@@ -2644,7 +2610,7 @@ export function registerB2CTools(
           const itemList = orderItems
             .map(
               (i) =>
-                `  • ${i.name} (${i.color}${i.size ? `, Size ${i.size}` : ""}) × ${i.quantity} — €${(i.price * i.quantity).toFixed(2)}`,
+                `  • ${i.name} × ${i.quantity} — $${(i.price * i.quantity).toFixed(2)}`,
             )
             .join("\n");
 
@@ -2652,7 +2618,7 @@ export function registerB2CTools(
             content: [
               {
                 type: "text" as const,
-                text: `## Order Placed!\n\n**Order ID:** ${orderId}\n**Status:** Processing\n**Payment:** ${payment_method.replace(/_/g, " ")}\n**Shipping to:** ${shipping_address}\n**Estimated Delivery:** ${deliveryDate.toISOString().split("T")[0]}\n\n**Items:**\n${itemList}\n\n**Total: €${total.toFixed(2)}**\n\nThank you, ${user.name}! You'll receive a confirmation email at ${user.email}.`,
+                text: `## Order Placed!\n\n**Order ID:** ${orderId}\n**Status:** Processing\n**Payment:** ${payment_method.replace(/_/g, " ")}\n**Shipping to:** ${shipping_address}\n**Estimated Delivery:** ${deliveryDate.toISOString().split("T")[0]}\n\n**Items:**\n${itemList}\n\n**Total: $${total.toFixed(2)}**\n\nThank you, ${user.name}! You'll receive a confirmation email at ${user.email}.`,
               },
             ],
           };

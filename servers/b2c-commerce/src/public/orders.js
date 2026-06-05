@@ -65,7 +65,7 @@
             '<div class="order-card-item-count">' + totalQty + ' item' + (totalQty !== 1 ? 's' : '') + '</div>' +
           '</div>' +
           '<div class="order-card-right">' +
-            '<div class="order-card-total">\u20ac' + o.total.toFixed(2) + '</div>' +
+            '<div class="order-card-total">$' + o.total.toFixed(2) + '</div>' +
           '</div>' +
           '<span class="order-card-arrow">' + ICONS.arrowRight + '</span>' +
         '</div>' +
@@ -95,16 +95,15 @@
       var img = item.image_url
         ? '<img class="order-detail-item-img" src="' + item.image_url + '" alt="">'
         : '<div class="order-detail-item-img" style="display:flex;align-items:center;justify-content:center;color:#c7c7cc">' + ICONS.packageIcon + '</div>';
-      var variant = [item.color, item.size ? 'Size ' + item.size : ''].filter(Boolean).join(' \u00b7 ');
       return '<div class="order-detail-item">' +
         img +
         '<div class="order-detail-item-info">' +
           '<div class="order-detail-item-name">' + item.name + '</div>' +
-          '<div class="order-detail-item-variant">' + variant + ' \u00b7 Qty ' + item.quantity + '</div>' +
+          '<div class="order-detail-item-variant">Qty ' + item.quantity + '</div>' +
         '</div>' +
         '<div class="order-detail-item-price">' +
-          '<div class="order-detail-item-unit">\u20ac' + item.price.toFixed(2) + ' each</div>' +
-          '<div class="order-detail-item-total">\u20ac' + (item.price * item.quantity).toFixed(2) + '</div>' +
+          '<div class="order-detail-item-unit">$' + item.price.toFixed(2) + ' each</div>' +
+          '<div class="order-detail-item-total">$' + (item.price * item.quantity).toFixed(2) + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -157,7 +156,7 @@
             '<div class="order-detail-meta">' +
               '<span class="status-badge ' + statusClass(order.status) + '">' + order.status + '</span>' +
               '<span>' + formatDate(order.order_date) + '</span>' +
-              '<span>\u20ac' + order.total.toFixed(2) + '</span>' +
+              '<span>$' + order.total.toFixed(2) + '</span>' +
             '</div>' +
           '</div>' +
           '<div class="order-items-list">' + itemsHtml + '</div>' +
@@ -175,7 +174,7 @@
               '<div class="info-row"><span class="info-label">Delivery</span><span class="info-value">' + (order.delivery_estimate || 'TBD') + '</span></div>' +
               trackingHtml +
               returnHtml +
-              '<div class="info-row total-row"><span class="info-label">Total</span><span class="info-value">\u20ac' + order.total.toFixed(2) + '</span></div>' +
+              '<div class="info-row total-row"><span class="info-label">Total</span><span class="info-value">$' + order.total.toFixed(2) + '</span></div>' +
             '</div>' +
           '</div>' +
         '</div>' +

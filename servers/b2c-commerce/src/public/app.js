@@ -29,8 +29,34 @@
     }
   }
 
+  function updateCartBadge(count) {
+    var link = document.querySelector('.header-cart-link');
+    if (!link) return;
+    var badge = link.querySelector('.cart-badge');
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'cart-badge';
+        link.appendChild(badge);
+      }
+      badge.textContent = count > 99 ? '99+' : count;
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+
+  window.updateCartBadge = updateCartBadge;
+
   fetch('/api/me')
     .then(function (res) { return res.json(); })
-    .then(function (data) { renderUserBar(data.user); })
+    .then(function (data) {
+      renderUserBar(data.user);
+      if (data.user) {
+        fetch('/api/cart', { credentials: 'include' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (cart) { if (cart) updateCartBadge(cart.totalItems); })
+          .catch(function () {});
+      }
+    })
     .catch(function () { renderUserBar(null); });
 })();

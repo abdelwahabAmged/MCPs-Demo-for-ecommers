@@ -168,7 +168,7 @@
           '<div class="ticket-info-row"><span class="t-label">Order</span><span class="t-value">' + t.order.order_id + '</span></div>' +
           '<div class="ticket-info-row"><span class="t-label">Status</span><span class="t-value" style="text-transform:capitalize">' + t.order.status + '</span></div>' +
           '<div class="ticket-info-row"><span class="t-label">Date</span><span class="t-value">' + formatDate(t.order.order_date) + '</span></div>' +
-          '<div class="ticket-info-row"><span class="t-label">Total</span><span class="t-value">\u20ac' + t.order.total.toFixed(2) + '</span></div>' +
+          '<div class="ticket-info-row"><span class="t-label">Total</span><span class="t-value">$' + t.order.total.toFixed(2) + '</span></div>' +
         '</div>' +
         '<a href="/orders/' + t.order.order_id + '" class="ticket-order-link">View order details ' + ICONS.link + '</a>' +
       '</div>';

@@ -6,6 +6,7 @@ import {
   renderCartPage,
   renderLoginPage,
   renderProductsPage,
+  renderProductDetailPage,
   renderCheckoutPage,
   renderOrdersPage,
   renderOrderDetailPage,
@@ -29,8 +30,6 @@ interface CartItem {
   cart_id: string;
   sku: string;
   name: string;
-  color: string | null;
-  size: string | null;
   quantity: number;
   unit_price: number;
   currency: string;
@@ -165,6 +164,41 @@ function getCartResponse(userId: string) {
 }
 
 // ── Cart API ──────────────────────────────────────────────────
+app.post("/api/cart", async (req: Request, res: Response) => {
+  const userId = await resolveCartUser(req, res);
+  if (!userId) return;
+  const { sku, quantity } = req.body;
+  if (!sku || typeof sku !== "string") {
+    res.status(400).json({ error: "sku is required" });
+    return;
+  }
+  const qty = typeof quantity === "number" && quantity > 0 ? quantity : 1;
+
+  const product = db
+    .prepare("SELECT sku, name, price, currency, image_url FROM products WHERE sku = ?")
+    .get(sku) as { sku: string; name: string; price: number; currency: string; image_url: string | null } | undefined;
+
+  if (!product) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+
+  const existing = db
+    .prepare("SELECT id, quantity FROM cart_items WHERE cart_id = ? AND sku = ?")
+    .get(userId, sku) as { id: string; quantity: number } | undefined;
+
+  if (existing) {
+    db.prepare("UPDATE cart_items SET quantity = quantity + ? WHERE id = ?").run(qty, existing.id);
+  } else {
+    const { randomUUID } = await import("node:crypto");
+    db.prepare(
+      "INSERT INTO cart_items (id, cart_id, sku, name, quantity, unit_price, currency, image_url, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    ).run(randomUUID(), userId, product.sku, product.name, qty, product.price, product.currency, product.image_url, userId);
+  }
+
+  res.json(getCartResponse(userId));
+});
+
 app.get("/api/cart", async (req: Request, res: Response) => {
   const userId = await resolveCartUser(req, res);
   if (!userId) return;
@@ -223,26 +257,72 @@ interface ProductRow {
   category: string;
   subcategory: string | null;
   price: number;
+  original_price: number | null;
+  discount: string | null;
   image_url: string | null;
   stock_status: string;
   rating: number;
   review_count: number;
 }
 
-app.get("/api/products", (_req: Request, res: Response) => {
-  const products = db
-    .prepare(
-      "SELECT sku, name, brand, category, subcategory, price, image_url, stock_status, rating, review_count FROM products ORDER BY category, name",
-    )
-    .all() as ProductRow[];
+app.get("/api/products", (req: Request, res: Response) => {
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 24));
+  const category = (req.query.category as string) || null;
+  const search = (req.query.search as string) || null;
+  const offset = (page - 1) * limit;
 
-  const categorySet = new Set<string>();
-  for (const p of products) {
-    categorySet.add(p.category);
+  let countSql = "SELECT COUNT(*) as total FROM products WHERE 1=1";
+  let dataSql =
+    "SELECT sku, name, brand, category, subcategory, price, original_price, discount, image_url, stock_status, rating, review_count FROM products WHERE 1=1";
+  const params: unknown[] = [];
+
+  if (category) {
+    countSql += " AND category = ?";
+    dataSql += " AND category = ?";
+    params.push(category);
   }
-  const categories = Array.from(categorySet).sort();
+  if (search) {
+    const clause =
+      " AND (LOWER(name) LIKE ? OR LOWER(brand) LIKE ? OR LOWER(category) LIKE ? OR LOWER(subcategory) LIKE ?)";
+    countSql += clause;
+    dataSql += clause;
+    const like = `%${search.toLowerCase()}%`;
+    params.push(like, like, like, like);
+  }
 
-  res.json({ products, categories });
+  dataSql += " ORDER BY category, name LIMIT ? OFFSET ?";
+
+  const totalRow = db.prepare(countSql).get(...params) as { total: number };
+  const products = db
+    .prepare(dataSql)
+    .all(...params, limit, offset) as ProductRow[];
+
+  // Categories are always fetched in full (lightweight query)
+  const catRows = db
+    .prepare(
+      "SELECT category, COUNT(*) as count FROM products GROUP BY category ORDER BY category",
+    )
+    .all() as Array<{ category: string; count: number }>;
+
+  res.json({
+    products,
+    categories: catRows.map((c) => c.category),
+    categoryCounts: catRows.reduce(
+      (acc, c) => {
+        acc[c.category] = c.count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
+    pagination: {
+      page,
+      limit,
+      total: totalRow.total,
+      totalPages: Math.ceil(totalRow.total / limit),
+      hasMore: offset + products.length < totalRow.total,
+    },
+  });
 });
 
 // ── Checkout API ─────────────────────────────────────────────
@@ -292,8 +372,6 @@ app.post("/api/checkout", async (req: Request, res: Response) => {
   const orderItems = cartItems.map((i) => ({
     sku: i.sku,
     name: i.name,
-    color: i.color,
-    size: i.size,
     quantity: i.quantity,
     price: i.unit_price,
     image_url: i.image_url,
@@ -315,7 +393,7 @@ app.post("/api/checkout", async (req: Request, res: Response) => {
     new Date().toISOString().split("T")[0],
     JSON.stringify(orderItems),
     total,
-    "EUR",
+    "USD",
     1,
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     user.id,
@@ -510,6 +588,52 @@ app.get("/support/:ticketId", async (req: Request, res: Response) => {
   if (!user) { res.redirect("/login"); return; }
   res.setHeader("Content-Type", "text/html");
   res.send(renderTicketDetailPage());
+});
+
+// ── Product Detail API ───────────────────────────────────────
+app.get("/api/products/:sku", (req: Request, res: Response) => {
+  const product = db
+    .prepare("SELECT * FROM products WHERE sku = ?")
+    .get(req.params.sku) as Record<string, unknown> | undefined;
+
+  if (!product) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+
+  // Parse JSON fields
+  for (const key of ["features", "frequently_bought_together"]) {
+    if (product[key] && typeof product[key] === "string") {
+      try {
+        product[key] = JSON.parse(product[key] as string);
+      } catch { /* keep as string */ }
+    }
+  }
+
+  // Fetch FBT products
+  let fbtProducts: Record<string, unknown>[] = [];
+  if (Array.isArray(product.frequently_bought_together) && (product.frequently_bought_together as string[]).length > 0) {
+    const fbtSkus = product.frequently_bought_together as string[];
+    const placeholders = fbtSkus.map(() => "?").join(",");
+    fbtProducts = db
+      .prepare(
+        `SELECT sku, name, brand, price, original_price, discount, image_url, rating, review_count, stock_status FROM products WHERE sku IN (${placeholders})`,
+      )
+      .all(...fbtSkus) as Record<string, unknown>[];
+  }
+
+  // Fetch reviews
+  const reviews = db
+    .prepare("SELECT * FROM reviews WHERE sku = ? ORDER BY created_at DESC LIMIT 10")
+    .all(req.params.sku);
+
+  res.json({ product, fbtProducts, reviews });
+});
+
+// ── Product Detail Page ──────────────────────────────────────
+app.get("/product/:sku", (_req: Request, res: Response) => {
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderProductDetailPage());
 });
 
 // ── Homepage (Products page) ─────────────────────────────────

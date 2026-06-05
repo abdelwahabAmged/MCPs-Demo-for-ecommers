@@ -5,24 +5,21 @@ interface ProductData {
   name: string;
   brand: string;
   price: number;
-  color: string;
-  size: string | null;
+  original_price?: number | null;
+  discount?: string | null;
   image_url: string;
   rating: number;
   review_count: number;
   stock_status: string;
   delivery_estimate: string;
   description?: string;
-  material?: string;
-  weight_grams?: number;
-  specs?: Record<string, string>;
+  weight?: string;
+  dimensions?: string;
 }
 
 interface CartItemData {
   name: string;
   sku: string;
-  color: string;
-  size: string | null;
   quantity: number;
   unit_price: number;
   image_url?: string;
@@ -131,8 +128,8 @@ function renderProductGrid(title: string, products: ProductData[]) {
       ${imgWithFallback(p.image_url, p.name, "card-img")}
       <div class="card-body">
         <div class="card-title">${esc(p.name)}</div>
-        <div class="card-brand">${esc(p.brand)} · ${esc(p.color)}</div>
-        <div class="card-price">€${p.price.toFixed(2)}</div>
+        <div class="card-brand">${esc(p.brand)}</div>
+        <div class="card-price">$${p.price.toFixed(2)}${p.original_price ? ` <span class="price-original">$${p.original_price.toFixed(2)}</span>` : ""}${p.discount ? ` <span class="badge-discount">${esc(p.discount)}</span>` : ""}</div>
         <div class="card-meta">
           ${stars(p.rating)} <span>(${p.review_count})</span>
           ${stockBadge(p.stock_status)}
@@ -223,18 +220,13 @@ function showToast(message: string, type: "success" | "warning" | "error") {
 }
 
 function renderCompareView(products: ProductData[]) {
-  const allKeys = new Set<string>();
-  for (const p of products) {
-    if (p.specs) Object.keys(p.specs).forEach((k) => allKeys.add(k));
-  }
-
   const headerCells = products
     .map((p) => `
       <th class="cmp-header">
         ${imgWithFallback(p.image_url, p.name, "cmp-img")}
         <div class="cmp-name">${esc(p.name)}</div>
         <div class="cmp-brand">${esc(p.brand)}</div>
-        <div class="cmp-price">€${p.price.toFixed(2)}</div>
+        <div class="cmp-price">$${p.price.toFixed(2)}</div>
       </th>`)
     .join("");
 
@@ -243,15 +235,11 @@ function renderCompareView(products: ProductData[]) {
 
   const rows = [
     row("Rating", products.map((p) => `${stars(p.rating)} (${p.review_count})`)),
-    row("Color", products.map((p) => esc(p.color))),
-    row("Size", products.map((p) => p.size ? esc(p.size) : "One size")),
     row("Stock", products.map((p) => stockBadge(p.stock_status))),
     row("Delivery", products.map((p) => esc(p.delivery_estimate))),
-    ...(products.some((p) => p.material) ? [row("Material", products.map((p) => p.material ? esc(p.material) : "—"))] : []),
-    ...(products.some((p) => p.weight_grams) ? [row("Weight", products.map((p) => p.weight_grams ? `${p.weight_grams}g` : "—"))] : []),
-    ...[...allKeys].map((key) =>
-      row(key, products.map((p) => p.specs?.[key] ? esc(p.specs[key]) : "—"))
-    ),
+    ...(products.some((p) => p.weight) ? [row("Weight", products.map((p) => p.weight ? esc(p.weight) : "—"))] : []),
+    ...(products.some((p) => p.dimensions) ? [row("Dimensions", products.map((p) => p.dimensions ? esc(p.dimensions) : "—"))] : []),
+    ...(products.some((p) => p.discount) ? [row("Discount", products.map((p) => p.discount ? esc(p.discount) : "—"))] : []),
   ].join("");
 
   appEl.innerHTML = `
@@ -270,25 +258,22 @@ function renderCompareView(products: ProductData[]) {
 }
 
 function renderProductDetail(p: ProductData) {
-  const specsHtml = p.specs
-    ? `<table class="specs-table">${Object.entries(p.specs)
-        .map(([k, v]) => `<tr><td class="spec-key">${esc(k)}</td><td>${esc(v)}</td></tr>`)
-        .join("")}</table>`
-    : "";
+  const priceHtml = p.original_price
+    ? `<div class="detail-price">$${p.price.toFixed(2)} <span class="price-original">$${p.original_price.toFixed(2)}</span>${p.discount ? ` <span class="badge-discount">${esc(p.discount)}</span>` : ""}</div>`
+    : `<div class="detail-price">$${p.price.toFixed(2)}</div>`;
 
   appEl.innerHTML = `
     <div class="detail">
       ${imgWithFallback(p.image_url, p.name, "detail-img")}
       <div class="detail-info">
         <div class="detail-name">${esc(p.name)}</div>
-        <div class="detail-brand">${esc(p.brand)} · ${esc(p.color)}${p.size ? ` · Size ${esc(p.size)}` : ""}</div>
-        <div class="detail-price">€${p.price.toFixed(2)}</div>
+        <div class="detail-brand">${esc(p.brand)}</div>
+        ${priceHtml}
         <div class="detail-meta">${stars(p.rating)} (${p.review_count} reviews) ${stockBadge(p.stock_status)}</div>
         <div class="detail-meta">📦 ${esc(p.delivery_estimate)}</div>
         ${p.description ? `<div class="detail-desc">${esc(p.description)}</div>` : ""}
-        ${p.material ? `<div class="detail-meta">Material: ${esc(p.material)}</div>` : ""}
-        ${p.weight_grams ? `<div class="detail-meta">Weight: ${p.weight_grams}g</div>` : ""}
-        ${specsHtml}
+        ${p.weight ? `<div class="detail-meta">Weight: ${esc(p.weight)}</div>` : ""}
+        ${p.dimensions ? `<div class="detail-meta">Dimensions: ${esc(p.dimensions)}</div>` : ""}
         <div class="sku" style="margin-top:12px">${esc(p.sku)}</div>
       </div>
     </div>`;
@@ -303,11 +288,10 @@ function renderCart(items: CartItemData[], total: number) {
       ${i.image_url ? imgWithFallback(i.image_url, i.name, "cart-img") : '<div class="cart-placeholder">🛍️</div>'}
       <div class="cart-info">
         <div class="cart-name">${esc(i.name)}</div>
-        <div class="cart-variant">${esc(i.color)}${i.size ? ` · Size ${esc(i.size)}` : ""}</div>
         <div class="sku">${esc(i.sku)}</div>
       </div>
       <div class="cart-qty">×${i.quantity}</div>
-      <div class="cart-price">€${(i.unit_price * i.quantity).toFixed(2)}</div>
+      <div class="cart-price">$${(i.unit_price * i.quantity).toFixed(2)}</div>
     </div>`,
     )
     .join("");
@@ -317,7 +301,7 @@ function renderCart(items: CartItemData[], total: number) {
     ${rows}
     <div class="cart-total">
       <span>Total (${totalQty} items)</span>
-      <span class="cart-total-price">€${total.toFixed(2)}</span>
+      <span class="cart-total-price">$${total.toFixed(2)}</span>
     </div>`;
 }
 
@@ -346,6 +330,8 @@ style.textContent = `
   .badge-low { background: #fef3c7; color: #92400e; }
   .badge-out { background: #fee2e2; color: #991b1b; }
   .sku { font-size: 10px; color: #aaa; font-family: monospace; }
+  .price-original { text-decoration: line-through; color: #999; font-size: 0.85em; font-weight: 400; }
+  .badge-discount { display: inline-block; background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 4px; }
   .detail { display: flex; gap: 24px; flex-wrap: wrap; }
   .detail-img { flex: 0 0 320px; max-width: 100%; height: auto; border-radius: 12px; object-fit: cover; background: #eee; }
   .detail-info { flex: 1; min-width: 240px; }

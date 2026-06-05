@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Bump this number whenever products.json, orders.json or reviews.json change.
+ * Bump this number whenever products_1.json or reviews_1.json change.
  * On next start the server will drop stale catalogue tables and re-seed.
  */
-const DATA_VERSION = 9;
+const DATA_VERSION = 10;
 
 function isDataCurrent(db: Database.Database): boolean {
   try {
@@ -47,13 +47,10 @@ export function seedB2CData(db: Database.Database): void {
   dropCatalogueTables(db);
 
   const products = JSON.parse(
-    readFileSync(join(__dirname, "products.json"), "utf-8"),
-  );
-  const orders = JSON.parse(
-    readFileSync(join(__dirname, "orders.json"), "utf-8"),
+    readFileSync(join(__dirname, "products_1.json"), "utf-8"),
   );
   const reviews = JSON.parse(
-    readFileSync(join(__dirname, "reviews.json"), "utf-8"),
+    readFileSync(join(__dirname, "reviews_1.json"), "utf-8"),
   );
 
   seedTableRaw(
@@ -68,31 +65,30 @@ export function seedB2CData(db: Database.Database): void {
       subcategory TEXT,
       description TEXT,
       price REAL NOT NULL,
-      currency TEXT DEFAULT 'EUR',
-      color TEXT,
-      color_hex TEXT,
-      size TEXT,
+      original_price REAL,
+      discount TEXT,
+      currency TEXT DEFAULT 'USD',
       stock_qty INTEGER DEFAULT 0,
       stock_status TEXT DEFAULT 'in_stock',
       delivery_estimate TEXT,
       image_url TEXT,
-      tags TEXT,
       rating REAL DEFAULT 0,
       review_count INTEGER DEFAULT 0,
-      weight_grams INTEGER,
-      material TEXT,
-      specs TEXT,
+      weight TEXT,
       dimensions TEXT,
+      features TEXT,
+      manufacturer TEXT,
+      department TEXT,
+      bought_past_month INTEGER,
+      country_of_origin TEXT,
       frequently_bought_together TEXT
     )
   `,
     products,
   );
 
-  seedTableRaw(
-    db,
-    "orders",
-    `
+  // Orders table exists but starts empty — users create orders via checkout
+  db.exec(`
     CREATE TABLE IF NOT EXISTS orders (
       order_id TEXT PRIMARY KEY,
       status TEXT NOT NULL,
@@ -102,18 +98,12 @@ export function seedB2CData(db: Database.Database): void {
       order_date TEXT,
       items TEXT NOT NULL,
       total REAL NOT NULL,
-      currency TEXT DEFAULT 'EUR',
+      currency TEXT DEFAULT 'USD',
       eligible_for_return INTEGER DEFAULT 0,
       return_deadline TEXT,
       user_id TEXT
     )
-  `,
-    orders.map((o: Record<string, unknown>) => ({
-      ...o,
-      items: JSON.stringify(o.items),
-      eligible_for_return: o.eligible_for_return ? 1 : 0,
-    })),
-  );
+  `);
 
   seedTableRaw(
     db,
@@ -159,11 +149,9 @@ function ensureRuntimeTables(db: Database.Database): void {
       cart_id TEXT NOT NULL,
       sku TEXT NOT NULL,
       name TEXT NOT NULL,
-      color TEXT,
-      size TEXT,
       quantity INTEGER NOT NULL DEFAULT 1,
       unit_price REAL NOT NULL,
-      currency TEXT DEFAULT 'EUR',
+      currency TEXT DEFAULT 'USD',
       image_url TEXT,
       added_at TEXT DEFAULT (datetime('now')),
       user_id TEXT

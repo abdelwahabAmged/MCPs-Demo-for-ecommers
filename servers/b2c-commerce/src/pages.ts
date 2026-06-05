@@ -47,12 +47,8 @@ export function renderProductsPage(): string {
             <input type="text" id="product-search" placeholder="Search products...">
           </div>
         </div>
-        <div class="product-grid" id="product-grid">
-          <div class="products-loading">
-            <div class="spinner"></div>
-            Loading products...
-          </div>
-        </div>
+        <div class="product-grid" id="product-grid"></div>
+        <div id="scroll-sentinel"></div>
       </div>
     </div>
     <footer class="sw-footer">
@@ -68,6 +64,39 @@ export function renderProductsPage(): string {
   <div id="toast" class="toast"></div>
   <script src="/static/app.js"></script>
   <script src="/static/products.js"></script>
+</body>
+</html>`;
+}
+
+export function renderProductDetailPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — Acme Store</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/pdp.css">
+</head>
+<body>
+  ${siteHeader('shop')}
+  <div class="page-container pdp-container">
+    <div id="pdp-content">
+      <div class="pdp-loading"><div class="spinner"></div></div>
+    </div>
+    <footer class="sw-footer">
+      <div class="sw-footer-inner">
+        <a href="https://scandiweb.ai/ai-app" target="_blank" rel="noopener" class="sw-logo">
+          <span class="sw-logo-word">scandiweb</span>
+          <span class="sw-footer-dot">&middot;</span>
+          <span class="sw-footer-label">AI App Demo</span>
+        </a>
+      </div>
+    </footer>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="/static/app.js"></script>
+  <script src="/static/pdp.js"></script>
 </body>
 </html>`;
 }
