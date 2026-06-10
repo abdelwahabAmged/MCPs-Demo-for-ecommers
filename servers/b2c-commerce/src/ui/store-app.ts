@@ -310,7 +310,6 @@ function renderProductDetail(p: ProductData) {
   if (p.dimensions) specs.push(["Dimensions", p.dimensions]);
   if (p.model_number) specs.push(["Model", p.model_number]);
   if (p.date_first_available) specs.push(["Available since", p.date_first_available]);
-  if (p.images && p.images.length > 1) specs.push(["Photos", `${p.images.length} images`]);
 
   const specsHtml =
     specs.length > 0
@@ -343,11 +342,17 @@ function renderProductDetail(p: ProductData) {
   const badgeHtml = p.badge ? `<span class="pdp-promo-badge">${esc(p.badge)}</span>` : "";
   const canAdd = p.stock_status !== "out_of_stock";
 
+  const galleryBadge =
+    p.images && p.images.length > 1
+      ? `<span class="pdp-gallery-count"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M4 5a2 2 0 00-2 2v6a2 2 0 002 2h9a2 2 0 002-2v-1.5l2.3 1.7a1 1 0 001.6-.8V6.6a1 1 0 00-1.6-.8L15 7.5V7a2 2 0 00-2-2H4z"/></svg>${p.images.length}</span>`
+      : "";
+
   appEl.innerHTML = `
     <article class="pdp-card">
       <div class="pdp-hero">
         <div class="pdp-image-wrap">
           ${imgWithFallback(p.image_url, p.name, "pdp-img")}
+          ${galleryBadge}
         </div>
         <div class="pdp-hero-content">
           <div class="pdp-brand-row">
@@ -491,39 +496,56 @@ style.textContent = `
 
   /* ── Product detail card (chat-optimized) ── */
   .pdp-card {
-    max-width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
     background: #fff;
     border: 1px solid #e8eaed;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 28px rgba(17,24,39,0.07);
   }
   .pdp-hero {
     display: grid;
-    grid-template-columns: 108px 1fr;
-    gap: 14px;
-    padding: 14px 14px 12px;
+    grid-template-columns: clamp(104px, 32%, 168px) 1fr;
+    gap: 16px;
+    padding: 16px 16px 14px;
     align-items: start;
   }
   .pdp-image-wrap {
-    width: 108px;
-    height: 108px;
-    border-radius: 10px;
-    background: linear-gradient(145deg, #f9fafb 0%, #f3f4f6 100%);
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #f9fafb 0%, #f1f2f5 100%);
     border: 1px solid #eef0f3;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    flex-shrink: 0;
   }
   .pdp-img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
-    padding: 6px;
+    padding: 8px;
   }
+  .pdp-gallery-count {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px 2px 5px;
+    border-radius: 999px;
+    background: rgba(17,24,39,0.72);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+  }
+  .pdp-gallery-count svg { width: 12px; height: 12px; }
   .pdp-img.placeholder {
     display: flex;
     align-items: center;
@@ -557,13 +579,14 @@ style.textContent = `
     letter-spacing: 0.02em;
   }
   .pdp-title {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 650;
-    line-height: 1.35;
-    color: #111827;
+    line-height: 1.32;
+    color: #0f172a;
+    letter-spacing: -0.01em;
     margin-bottom: 8px;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -589,10 +612,10 @@ style.textContent = `
     margin-bottom: 8px;
   }
   .pdp-price {
-    font-size: 20px;
-    font-weight: 750;
-    color: #059669;
-    letter-spacing: -0.02em;
+    font-size: 22px;
+    font-weight: 800;
+    color: #047857;
+    letter-spacing: -0.03em;
   }
   .pdp-price-was {
     font-size: 12px;

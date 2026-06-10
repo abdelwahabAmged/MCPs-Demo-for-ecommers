@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc && cp src/data/*.json dist/data/ && cp -r src/public dist/public && INPUT=store-app.html vite build",
+    "build": "tsc && cp src/data/*.json dist/data/ && rm -rf dist/public && cp -r src/public dist/public && INPUT=store-app.html vite build",
     "dev": "tsx --env-file=.env --watch src/index.ts",
     "start": "node dist/index.js",
     "test": "vitest run",
