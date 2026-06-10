@@ -27,8 +27,10 @@ function isDataCurrent(db: Database.Database): boolean {
 }
 
 function dropCatalogueTables(db: Database.Database): void {
+  // Only catalogue (seed-owned) tables may be dropped on a DATA_VERSION bump.
+  // NEVER drop `orders` (or any other user-generated table) here — those hold
+  // real customer data that must survive catalogue re-seeds and deploys.
   db.exec(`DROP TABLE IF EXISTS products`);
-  db.exec(`DROP TABLE IF EXISTS orders`);
   db.exec(`DROP TABLE IF EXISTS reviews`);
 }
 

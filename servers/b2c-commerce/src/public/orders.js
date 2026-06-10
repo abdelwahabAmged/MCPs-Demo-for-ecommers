@@ -9,6 +9,13 @@
 
   var STATUS_STEPS = ['processing', 'shipped', 'delivered'];
 
+  // Neutral grey placeholder shown when a snapshotted product image URL no
+  // longer resolves (e.g. external CDN rotated/blocked the URL). Keeps order
+  // history readable instead of rendering a broken-image icon.
+  var PLACEHOLDER_IMG =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23f2f2f7'/%3E%3Cpath d='M20 26h24v16H20z' fill='none' stroke='%23c7c7cc' stroke-width='2'/%3E%3Ccircle cx='27' cy='32' r='3' fill='%23c7c7cc'/%3E%3Cpath d='M22 40l7-6 5 4 6-5 4 3' fill='none' stroke='%23c7c7cc' stroke-width='2'/%3E%3C/svg%3E";
+  var IMG_FALLBACK = " onerror=\"this.onerror=null;this.src='" + PLACEHOLDER_IMG + "'\"";
+
   var isDetailPage = window.location.pathname.match(/^\/orders\/(.+)$/);
 
   function statusClass(s) { return 'status-' + s; }
@@ -43,7 +50,7 @@
       var items = o.items || [];
       var images = items.slice(0, 3).map(function (item) {
         return item.image_url
-          ? '<img src="' + item.image_url + '" alt="">'
+          ? '<img src="' + item.image_url + '" alt=""' + IMG_FALLBACK + '>'
           : '';
       }).filter(Boolean).join('');
       var moreCount = items.length > 3 ? items.length - 3 : 0;
@@ -93,7 +100,7 @@
 
     var itemsHtml = items.map(function (item) {
       var img = item.image_url
-        ? '<img class="order-detail-item-img" src="' + item.image_url + '" alt="">'
+        ? '<img class="order-detail-item-img" src="' + item.image_url + '" alt=""' + IMG_FALLBACK + '>'
         : '<div class="order-detail-item-img" style="display:flex;align-items:center;justify-content:center;color:#c7c7cc">' + ICONS.packageIcon + '</div>';
       return '<div class="order-detail-item">' +
         img +
