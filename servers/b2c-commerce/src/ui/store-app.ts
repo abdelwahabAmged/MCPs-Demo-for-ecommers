@@ -499,7 +499,7 @@ style.textContent = `
   .card-selected { border-color: #4f46e5; box-shadow: 0 0 0 1px #4f46e5, 0 4px 12px rgba(79,70,229,0.15); }
   .card-check { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.85); border: 2px solid #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; z-index: 2; transition: all 0.15s; }
   .card-selected .card-check { background: #4f46e5; border-color: #4f46e5; }
-  .card-img { width: 100%; height: 180px; object-fit: cover; background: #eee; display: block; }
+  .card-img { width: 100%; height: 180px; object-fit: contain; background: #fff; padding: 12px; display: block; border-bottom: 1px solid #f0f0f0; }
   .card-img.placeholder { display: flex; align-items: center; justify-content: center; font-size: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
   .card-body { padding: 12px 14px; }
   .card-title { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -905,7 +905,7 @@ style.textContent = `
   .cmp-table { border-collapse: collapse; width: 100%; min-width: 500px; }
   .cmp-table th, .cmp-table td { padding: 10px 14px; text-align: center; vertical-align: top; border-bottom: 1px solid #f0f0f0; }
   .cmp-header { min-width: 180px; background: #fafafa; }
-  .cmp-img { width: 120px; height: 120px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
+  .cmp-img { width: 120px; height: 120px; object-fit: contain; background: #fff; padding: 8px; border: 1px solid #f0f0f0; border-radius: 10px; margin-bottom: 8px; }
   .cmp-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
   .cmp-brand { font-size: 12px; color: #666; margin-bottom: 4px; }
   .cmp-price { font-size: 16px; font-weight: 700; color: #16a34a; }
