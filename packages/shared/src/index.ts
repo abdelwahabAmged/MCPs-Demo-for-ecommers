@@ -1,6 +1,6 @@
 export { createDatabase, SessionDataManager } from './db.js';
 export { createServerApp } from './transport.js';
-export type { CreateServerAppOptions, ServerApp } from './transport.js';
+export type { CreateServerAppOptions, ServerApp, ServerIcon } from './transport.js';
 export { createRateLimiter } from './rate-limit.js';
 export { initLoggerTable, logToolCall, getRecentLogs, getLogCount, createLogApiHandler } from './logger.js';
 export { createHealthHandler } from './health.js';

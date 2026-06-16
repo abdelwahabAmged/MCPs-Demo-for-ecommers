@@ -97,6 +97,14 @@ const { app, db, start, auth } = createServerApp(
     serverVersion: "1.0.0",
     port: PORT,
     auth: authConfig,
+    websiteUrl: BASE_URL,
+    icons: [
+      {
+        src: `${BASE_URL}/static/favicon.svg`,
+        mimeType: "image/svg+xml",
+        sizes: ["any"],
+      },
+    ],
   },
 );
 
@@ -104,6 +112,12 @@ seedB2CData(db);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 app.use("/static", express.static(join(__dirname, "public")));
+
+// Favicon — serve the branded SVG for both the default /favicon.ico request and /favicon.svg
+app.get(["/favicon.ico", "/favicon.svg"], (_req: Request, res: Response) => {
+  res.setHeader("Content-Type", "image/svg+xml");
+  res.sendFile(join(__dirname, "public", "favicon.svg"));
+});
 
 // ── Auth pages ────────────────────────────────────────────────
 app.get("/login", (_req: Request, res: Response) => {

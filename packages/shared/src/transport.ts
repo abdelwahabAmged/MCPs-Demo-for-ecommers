@@ -25,6 +25,13 @@ import type {
 import type Database from "better-sqlite3";
 import { join } from "node:path";
 
+export interface ServerIcon {
+  src: string;
+  mimeType?: string;
+  sizes?: string[];
+  theme?: "light" | "dark";
+}
+
 export interface CreateServerAppOptions {
   port?: number;
   serverName: string;
@@ -32,6 +39,10 @@ export interface CreateServerAppOptions {
   dbPath?: string;
   getSessionCount?: () => number;
   auth?: AuthConfig;
+  /** Icons advertised to MCP clients in the server's implementation info. */
+  icons?: ServerIcon[];
+  /** Website URL advertised to MCP clients in the server's implementation info. */
+  websiteUrl?: string;
 }
 
 export interface ServerApp {
@@ -120,6 +131,8 @@ export function createServerApp(
     const server = new McpServer({
       name: options.serverName,
       version: options.serverVersion || "1.0.0",
+      ...(options.icons ? { icons: options.icons } : {}),
+      ...(options.websiteUrl ? { websiteUrl: options.websiteUrl } : {}),
     });
 
     registerTools(

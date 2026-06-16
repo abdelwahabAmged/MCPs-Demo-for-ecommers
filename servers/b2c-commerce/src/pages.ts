@@ -26,6 +26,7 @@ export function renderProductsPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shop — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/products.css">
 </head>
@@ -75,6 +76,7 @@ export function renderProductDetailPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/pdp.css">
 </head>
@@ -108,6 +110,7 @@ export function renderCartPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Cart — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/cart.css">
 </head>
@@ -147,6 +150,7 @@ export function renderCheckoutPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/checkout.css">
 </head>
@@ -187,6 +191,7 @@ export function renderOrdersPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Orders — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/orders.css">
 </head>
@@ -222,6 +227,7 @@ export function renderOrderDetailPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Order Details — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/orders.css">
 </head>
@@ -259,6 +265,7 @@ export function renderTicketsPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Support Tickets — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/tickets.css">
 </head>
@@ -293,6 +300,7 @@ export function renderTicketDetailPage(): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ticket Details — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/tickets.css">
 </head>
@@ -332,6 +340,7 @@ export function renderLoginPage(options: LoginPageOptions): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/app.css">
   <style>
     .login-container {
