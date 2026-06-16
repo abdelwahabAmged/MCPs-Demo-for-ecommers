@@ -109,10 +109,7 @@ function stockBadge(status: string): string {
 }
 
 function stars(rating: number): string {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5 ? 1 : 0;
-  const empty = 5 - full - half;
-  return `<span class="stars">${"★".repeat(full)}${half ? "½" : ""}${"☆".repeat(empty)} ${rating}</span>`;
+  return `<span class="stars">${renderStarsInline(rating)} <span class="stars-num">${rating}</span></span>`;
 }
 
 function esc(s: string): string {
@@ -506,7 +503,8 @@ style.textContent = `
   .card-brand { font-size: 12px; color: #666; margin-bottom: 6px; }
   .card-price { font-size: 16px; font-weight: 700; color: #16a34a; }
   .card-meta { font-size: 11px; color: #888; margin-top: 6px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .stars { color: #f59e0b; }
+  .stars { display: inline-flex; align-items: center; gap: 3px; color: #f59e0b; }
+  .stars-num { color: #6b7280; font-weight: 600; }
   .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
   .badge-stock { background: #dcfce7; color: #166534; }
   .badge-low { background: #fef3c7; color: #92400e; }
