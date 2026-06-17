@@ -2603,6 +2603,7 @@ export function registerB2CTools(
             name: string;
             quantity: number;
             unit_price: number;
+            image_url: string | null;
           }>;
 
           if (cartItems.length === 0) {
@@ -2626,6 +2627,7 @@ export function registerB2CTools(
             name: i.name,
             quantity: i.quantity,
             price: i.unit_price,
+            image_url: i.image_url,
           }));
 
           const deliveryDate = new Date();
