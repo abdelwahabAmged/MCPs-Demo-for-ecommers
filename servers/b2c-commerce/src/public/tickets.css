@@ -167,6 +167,59 @@
   height: 18px;
 }
 
+/* ── Delete (X) button ─────────────────────────────────── */
+/* Kept subtle: only reveals on hover so it stays out of the way. */
+
+.ticket-delete-btn {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #c7c7cc;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+
+.ticket-card:hover .ticket-delete-btn {
+  opacity: 1;
+}
+
+.ticket-delete-btn:hover {
+  background: #fce8e6;
+  color: #d93025;
+}
+
+.ticket-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ticket-delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ticket-detail-header {
+  position: relative;
+}
+
+.ticket-delete-btn-detail {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.ticket-detail-card:hover .ticket-delete-btn-detail {
+  opacity: 1;
+}
+
 /* ── Status badge (reused) ─────────────────────────────── */
 
 .ticket-status {

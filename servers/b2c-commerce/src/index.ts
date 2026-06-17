@@ -483,6 +483,37 @@ app.get("/api/orders/:orderId", async (req: Request, res: Response) => {
   });
 });
 
+app.delete("/api/orders/:orderId", async (req: Request, res: Response) => {
+  if (!auth) {
+    res.status(401).json({ error: "Authentication not configured" });
+    return;
+  }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) {
+    res.status(401).json({ error: "Sign in required", loginUrl: "/login" });
+    return;
+  }
+
+  const order = db
+    .prepare("SELECT order_id FROM orders WHERE order_id = ? AND user_id = ?")
+    .get(req.params.orderId, user.id) as { order_id: string } | undefined;
+
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  // Remove the order and any rows that reference it, so nothing is orphaned.
+  const removeOrder = db.transaction((orderId: string, userId: string) => {
+    db.prepare("DELETE FROM returns WHERE order_id = ? AND user_id = ?").run(orderId, userId);
+    db.prepare("DELETE FROM support_tickets WHERE order_id = ? AND user_id = ?").run(orderId, userId);
+    db.prepare("DELETE FROM orders WHERE order_id = ? AND user_id = ?").run(orderId, userId);
+  });
+  removeOrder(order.order_id, user.id);
+
+  res.json({ success: true, order_id: order.order_id });
+});
+
 // ── Checkout page ────────────────────────────────────────────
 app.get("/checkout", async (req: Request, res: Response) => {
   if (!auth) { res.redirect("/login"); return; }
@@ -553,6 +584,22 @@ app.get("/api/tickets/:ticketId", async (req: Request, res: Response) => {
     .get(ticket.order_id) as { order_id: string; status: string; order_date: string; total: number; currency: string } | undefined;
 
   res.json({ ...ticket, order: order || null });
+});
+
+app.delete("/api/tickets/:ticketId", async (req: Request, res: Response) => {
+  if (!auth) { res.status(401).json({ error: "Authentication not configured" }); return; }
+  const user = await getSessionUser(auth, req.headers);
+  if (!user) { res.status(401).json({ error: "Sign in required", loginUrl: "/login" }); return; }
+
+  const ticket = db
+    .prepare("SELECT ticket_id FROM support_tickets WHERE ticket_id = ? AND user_id = ?")
+    .get(req.params.ticketId, user.id) as { ticket_id: string } | undefined;
+
+  if (!ticket) { res.status(404).json({ error: "Ticket not found" }); return; }
+
+  db.prepare("DELETE FROM support_tickets WHERE ticket_id = ? AND user_id = ?").run(ticket.ticket_id, user.id);
+
+  res.json({ success: true, ticket_id: ticket.ticket_id });
 });
 
 app.post("/api/tickets", async (req: Request, res: Response) => {

@@ -4,7 +4,8 @@
     arrowRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
     arrowLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
     packageIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
-    bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>'
+    bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
   };
 
   var STATUS_STEPS = ['processing', 'shipped', 'delivered'];
@@ -62,6 +63,7 @@
           '<span class="order-card-id">' + o.order_id + '</span>' +
           '<span class="status-badge ' + statusClass(o.status) + '">' + o.status + '</span>' +
           '<span class="order-card-date">' + formatDate(o.order_date) + '</span>' +
+          '<button type="button" class="order-delete-btn" data-order-id="' + o.order_id + '" title="Delete order" aria-label="Delete order">' + ICONS.close + '</button>' +
         '</div>' +
         '<div class="order-card-body">' +
           '<div class="order-card-items-preview">' + images +
@@ -159,6 +161,7 @@
       '<div class="order-detail-layout">' +
         '<div class="order-detail-card">' +
           '<div class="order-detail-header">' +
+            '<button type="button" class="order-delete-btn order-delete-btn-detail" data-order-id="' + order.order_id + '" data-redirect="1" title="Delete order" aria-label="Delete order">' + ICONS.close + '</button>' +
             '<h1>Order ' + order.order_id + '</h1>' +
             '<div class="order-detail-meta">' +
               '<span class="status-badge ' + statusClass(order.status) + '">' + order.status + '</span>' +
@@ -187,6 +190,43 @@
         '</div>' +
       '</div>';
   }
+
+  /* ── Delete order ────────────────────────────────────── */
+
+  function deleteOrder(orderId, btn) {
+    if (!window.confirm('Delete order ' + orderId + '? This cannot be undone.')) return;
+    if (btn) btn.disabled = true;
+    fetch('/api/orders/' + orderId, { method: 'DELETE', credentials: 'include' })
+      .then(function (res) {
+        if (res.status === 401) { window.location.href = '/login'; return null; }
+        if (!res.ok) throw new Error('Failed to delete order');
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data) return;
+        if (btn && btn.dataset.redirect) {
+          window.location.href = '/orders';
+          return;
+        }
+        var card = btn && btn.closest('.order-card');
+        if (card) card.remove();
+        var remaining = document.querySelectorAll('.order-card').length;
+        var titleEl = document.getElementById('orders-count');
+        if (titleEl) titleEl.textContent = '(' + remaining + ')';
+      })
+      .catch(function () {
+        if (btn) btn.disabled = false;
+        window.alert('Could not delete the order. Please try again.');
+      });
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.order-delete-btn');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    deleteOrder(btn.dataset.orderId, btn);
+  });
 
   /* ── Load data ───────────────────────────────────────── */
 

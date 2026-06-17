@@ -7,7 +7,8 @@
     alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
     send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
-    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
   };
 
   var isDetailPage = window.location.pathname.match(/^\/support\/(.+)$/);
@@ -61,6 +62,7 @@
             '<span class="ticket-status ' + statusClass + '">' + t.status.replace(/_/g, ' ') + '</span>' +
             '<span class="ticket-priority ' + iconClass + '">' + t.priority + '</span>' +
           '</div>' +
+          '<button type="button" class="ticket-delete-btn" data-ticket-id="' + t.ticket_id + '" title="Delete ticket" aria-label="Delete ticket">' + ICONS.close + '</button>' +
           '<span class="ticket-card-arrow">' + ICONS.arrowRight + '</span>' +
         '</div>' +
       '</a>';
@@ -181,6 +183,7 @@
       '<div class="ticket-detail-layout">' +
         '<div class="ticket-detail-card">' +
           '<div class="ticket-detail-header">' +
+            '<button type="button" class="ticket-delete-btn ticket-delete-btn-detail" data-ticket-id="' + t.ticket_id + '" data-redirect="1" title="Delete ticket" aria-label="Delete ticket">' + ICONS.close + '</button>' +
             '<h1>' + t.ticket_id + '</h1>' +
             '<div class="ticket-detail-badges">' +
               '<span class="ticket-status ' + statusClass + '">' + t.status.replace(/_/g, ' ') + '</span>' +
@@ -211,6 +214,43 @@
         '</div>' +
       '</div>';
   }
+
+  /* ── Delete ticket ───────────────────────────────────── */
+
+  function deleteTicket(ticketId, btn) {
+    if (!window.confirm('Delete ticket ' + ticketId + '? This cannot be undone.')) return;
+    if (btn) btn.disabled = true;
+    fetch('/api/tickets/' + ticketId, { method: 'DELETE', credentials: 'include' })
+      .then(function (res) {
+        if (res.status === 401) { window.location.href = '/login'; return null; }
+        if (!res.ok) throw new Error('Failed to delete ticket');
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data) return;
+        if (btn && btn.dataset.redirect) {
+          window.location.href = '/support';
+          return;
+        }
+        var card = btn && btn.closest('.ticket-card');
+        if (card) card.remove();
+        var remaining = document.querySelectorAll('.ticket-card').length;
+        var countEl = document.getElementById('tickets-count');
+        if (countEl) countEl.textContent = '(' + remaining + ')';
+      })
+      .catch(function () {
+        if (btn) btn.disabled = false;
+        window.alert('Could not delete the ticket. Please try again.');
+      });
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.ticket-delete-btn');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    deleteTicket(btn.dataset.ticketId, btn);
+  });
 
   /* ── Toggle new ticket form ──────────────────────────── */
 
