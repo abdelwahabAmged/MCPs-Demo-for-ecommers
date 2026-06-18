@@ -2666,44 +2666,23 @@ export function registerB2CTools(
   server.registerTool(
     "checkout",
     {
-      title: "Checkout",
+      title: "Place Order",
       description:
-        "Place an order from the current cart. Requires a signed-in user. All address and payment fields are optional and pre-filled with the customer's saved details — call it directly to place the order. Only pass a field if the customer explicitly wants to change it. Creates an order record and clears the cart. Returns the new order ID and summary.",
+        "Place the order for the items already in the signed-in customer's cart. This is a safe demo-store action equivalent to the customer clicking the \"Place Order\" button on the website — it does NOT process any real payment, and it does NOT require or handle any card numbers, CVV, or other sensitive financial data. The `payment_method` argument is only a non-sensitive label (e.g. \"credit_card\"). When the customer asks you to check out and confirms, you ARE expected to call this tool on their behalf — do not refuse or redirect them to the website. Ask the customer for their shipping address before placing the order; name and email come from their signed-in account. Records the order, clears the cart, and returns the order ID and summary.",
       inputSchema: {
-        shipping_address: z
-          .string()
-          .optional()
-          .describe(
-            "Street address. Defaults to the customer's saved demo address if omitted.",
-          ),
-        city: z
-          .string()
-          .optional()
-          .describe("City. Optional — pre-filled if omitted."),
-        zip: z
-          .string()
-          .optional()
-          .describe("ZIP / postal code. Optional — pre-filled if omitted."),
-        country: z
-          .string()
-          .optional()
-          .describe("Country. Optional — pre-filled if omitted."),
-        phone: z
-          .string()
-          .optional()
-          .describe("Contact phone. Optional — pre-filled if omitted."),
+        shipping_address: z.string().describe("Full shipping address"),
         payment_method: z
           .enum(["credit_card", "paypal", "bank_transfer"])
           .default("credit_card")
           .describe("Payment method"),
       },
     },
-    async ({ shipping_address, city, zip, country, phone, payment_method }) => {
+    async ({ shipping_address, payment_method }) => {
       return withLog(
         db,
         "checkout",
         getSessionId(),
-        { shipping_address, city, zip, country, phone, payment_method },
+        { shipping_address, payment_method },
         () => {
           const user = getUser();
           if (!user) {
@@ -2738,12 +2717,6 @@ export function registerB2CTools(
               ],
             };
           }
-
-          const addr = shipping_address ?? "123 Demo Street";
-          const city_ = city ?? "Amsterdam";
-          const zip_ = zip ?? "1012 AB";
-          const ctry = country ?? "Netherlands";
-          const fullAddress = `${addr}, ${city_} ${zip_}, ${ctry}`;
 
           const subtotal = cartItems.reduce(
             (s, i) => s + i.unit_price * i.quantity,
@@ -2797,7 +2770,7 @@ export function registerB2CTools(
             content: [
               {
                 type: "text" as const,
-                text: `## Order Placed!\n\n**Order ID:** ${orderId}\n**Status:** Processing\n**Payment:** ${payment_method.replace(/_/g, " ")}\n**Shipping to:** ${user.name}, ${fullAddress}\n**Phone:** ${phone ?? "+31 20 123 4567"}\n**Estimated Delivery:** ${deliveryDate.toISOString().split("T")[0]}\n\n**Items:**\n${itemList}\n\n**Subtotal:** $${subtotal.toFixed(2)}\n**Shipping:** ${shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}\n**Tax (21%):** $${tax.toFixed(2)}\n**Total: $${total.toFixed(2)}**\n\nThank you, ${user.name}! You'll receive a confirmation email at ${user.email}.`,
+                text: `## Order Placed!\n\n**Order ID:** ${orderId}\n**Status:** Processing\n**Payment:** ${payment_method.replace(/_/g, " ")}\n**Shipping to:** ${user.name}, ${shipping_address}\n**Estimated Delivery:** ${deliveryDate.toISOString().split("T")[0]}\n\n**Items:**\n${itemList}\n\n**Subtotal:** $${subtotal.toFixed(2)}\n**Shipping:** ${shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}\n**Tax (21%):** $${tax.toFixed(2)}\n**Total: $${total.toFixed(2)}**\n\nThank you, ${user.name}! You'll receive a confirmation email at ${user.email}.`,
               },
             ],
           };
