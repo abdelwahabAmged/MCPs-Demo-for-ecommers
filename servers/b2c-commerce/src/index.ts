@@ -412,6 +412,43 @@ function adminUrl(path: string): string {
   return `${path}${path.includes("?") ? "&" : "?"}${ADMIN_DEMO_QUERY}`;
 }
 
+function resetBackOfficeDemoState() {
+  const reset = db.transaction(() => {
+    db.prepare("DELETE FROM supplier_reorders WHERE sku = ?").run(ADMIN_DEMO_SKU);
+    db.prepare(
+      "DELETE FROM sent_emails WHERE purpose IN ('supplier_reorder', 'customer_support_reply')",
+    ).run();
+    db.prepare(
+      "UPDATE support_tickets SET status = 'open', resolution = NULL, updated_at = ? WHERE ticket_id = ?",
+    ).run("2026-07-13T09:15:00.000Z", "TKT-DEMO-ASICS");
+    db.prepare("UPDATE products SET delivery_estimate = ? WHERE sku = ?").run(
+      "3-7 business days",
+      ADMIN_DEMO_SKU,
+    );
+  });
+
+  reset();
+
+  const ticket = db
+    .prepare("SELECT * FROM support_tickets WHERE ticket_id = ?")
+    .get("TKT-DEMO-ASICS") as TicketRow | undefined;
+  const reorders = db
+    .prepare("SELECT * FROM supplier_reorders WHERE sku = ?")
+    .all(ADMIN_DEMO_SKU) as ReorderRow[];
+  const emails = db
+    .prepare(
+      "SELECT * FROM sent_emails WHERE purpose IN ('supplier_reorder', 'customer_support_reply') ORDER BY created_at DESC",
+    )
+    .all() as EmailRow[];
+
+  return {
+    reset_at: new Date().toISOString(),
+    ticket,
+    reorders,
+    emails,
+  };
+}
+
 function getPerformanceRows(sku: string): PerformanceRow[] {
   return db
     .prepare(
@@ -622,6 +659,11 @@ app.get("/api/admin/emails", (_req: Request, res: Response) => {
     .prepare("SELECT * FROM sent_emails ORDER BY created_at DESC")
     .all() as EmailRow[];
   res.json({ emails });
+});
+
+app.post("/api/admin/reset-demo", (req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(req, res)) return;
+  res.json(resetBackOfficeDemoState());
 });
 
 // ── Checkout API ─────────────────────────────────────────────

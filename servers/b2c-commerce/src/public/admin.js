@@ -31,6 +31,32 @@
     });
   }
 
+  function postJson(url) {
+    var sep = url.indexOf("?") === -1 ? "?" : "&";
+    var query = adminQuery.replace(/^\?/, "");
+    return fetch(url + sep + query, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: "{}"
+    }).then(function (res) {
+      if (!res.ok) throw new Error("Request failed: " + res.status);
+      return res.json();
+    });
+  }
+
+  function showNotice(message, type) {
+    var existing = document.querySelector(".admin-notice");
+    if (existing) existing.remove();
+    var notice = document.createElement("div");
+    notice.className = "admin-notice admin-notice-" + (type || "info");
+    notice.textContent = message;
+    document.querySelector(".admin-shell").prepend(notice);
+    setTimeout(function () {
+      notice.remove();
+    }, 4000);
+  }
+
   function renderError(error) {
     content.innerHTML = '<div class="admin-empty">Could not load admin data: ' + esc(error.message) + "</div>";
   }
@@ -132,6 +158,32 @@
   }
 
   if (!content) return;
+
+  var resetBtn = document.getElementById("admin-reset-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", function () {
+      if (!window.confirm("Reset demo data so the MCP flow can be repeated?")) return;
+      resetBtn.disabled = true;
+      resetBtn.textContent = "Resetting...";
+      postJson("/api/admin/reset-demo")
+        .then(function () {
+          showNotice("Demo data reset. Reorders and logged emails were cleared; ticket is open again.", "success");
+          if (view === "analytics") {
+            var sku = new URLSearchParams(window.location.search).get("sku") || TARGET_SKU;
+            return loadJson("/api/admin/products/" + encodeURIComponent(sku) + "/performance").then(renderAnalytics);
+          }
+          if (view === "support") return loadJson("/api/admin/support").then(renderSupport);
+          return loadJson("/api/admin/attention").then(renderDashboard);
+        })
+        .catch(function (error) {
+          showNotice("Reset failed: " + error.message, "error");
+        })
+        .finally(function () {
+          resetBtn.disabled = false;
+          resetBtn.textContent = "Reset Demo";
+        });
+    });
+  }
 
   if (view === "analytics") {
     var sku = new URLSearchParams(window.location.search).get("sku") || TARGET_SKU;

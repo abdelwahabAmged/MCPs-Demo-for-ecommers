@@ -3106,11 +3106,21 @@ export function registerB2CTools(
     },
     async () => {
       return withLog(db, "get_next_attention_item", getSessionId(), {}, () => {
-        const ticket = db
+        const demoTicket = db
           .prepare(
-            "SELECT * FROM support_tickets WHERE status NOT IN ('resolved', 'closed', 'replied') ORDER BY priority DESC, created_at DESC LIMIT 1",
+            "SELECT * FROM support_tickets WHERE ticket_id = ? AND status NOT IN ('resolved', 'closed', 'replied')",
           )
-          .get() as SupportTicket | undefined;
+          .get("TKT-DEMO-ASICS") as SupportTicket | undefined;
+        const ticket =
+          demoTicket ||
+          (db
+            .prepare(
+              `SELECT * FROM support_tickets
+               WHERE status NOT IN ('resolved', 'closed', 'replied')
+               ORDER BY CASE priority WHEN 'high' THEN 0 WHEN 'normal' THEN 1 ELSE 2 END, created_at DESC
+               LIMIT 1`,
+            )
+            .get() as SupportTicket | undefined);
 
         if (ticket) {
           return {

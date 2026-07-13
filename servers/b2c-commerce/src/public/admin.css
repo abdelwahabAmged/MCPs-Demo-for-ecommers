@@ -49,6 +49,46 @@
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
+.admin-reset-btn {
+  flex-shrink: 0;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-reset-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.admin-reset-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.admin-notice {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-notice-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-notice-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .admin-loading,
 .admin-empty {
   padding: 24px;
@@ -352,6 +392,10 @@
   }
 
   .admin-tabs {
+    width: 100%;
+  }
+
+  .admin-reset-btn {
     width: 100%;
   }
 

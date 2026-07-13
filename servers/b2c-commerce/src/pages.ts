@@ -342,6 +342,7 @@ export function renderAdminDashboardPage(): string {
         <a href="/admin/analytics?admin=1">Analytics</a>
         <a href="/admin/support?admin=1">Support</a>
       </nav>
+      <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
     </div>
     <section id="admin-content" class="admin-loading">Loading attention report...</section>
   </main>
@@ -375,6 +376,7 @@ export function renderAdminAnalyticsPage(): string {
         <a href="/admin/analytics?admin=1" class="active">Analytics</a>
         <a href="/admin/support?admin=1">Support</a>
       </nav>
+      <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
     </div>
     <section id="admin-content" class="admin-loading">Loading product analytics...</section>
   </main>
@@ -408,6 +410,7 @@ export function renderAdminSupportPage(): string {
         <a href="/admin/analytics?admin=1">Analytics</a>
         <a href="/admin/support?admin=1" class="active">Support</a>
       </nav>
+      <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
     </div>
     <section id="admin-content" class="admin-loading">Loading support inbox...</section>
   </main>
