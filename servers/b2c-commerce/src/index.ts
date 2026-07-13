@@ -12,6 +12,9 @@ import {
   renderOrderDetailPage,
   renderTicketsPage,
   renderTicketDetailPage,
+  renderAdminDashboardPage,
+  renderAdminAnalyticsPage,
+  renderAdminSupportPage,
 } from "./pages.js";
 import type { Request, Response } from "express";
 import express from "express";
@@ -340,6 +343,287 @@ app.get("/api/products", (req: Request, res: Response) => {
   });
 });
 
+// ── Admin Demo API ─────────────────────────────────────────
+interface AdminProductRow {
+  sku: string;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  stock_qty: number;
+  stock_status: string;
+  delivery_estimate: string | null;
+  image_url: string | null;
+  rating: number;
+  review_count: number;
+}
+
+interface PerformanceRow {
+  sku: string;
+  date: string;
+  sessions: number;
+  product_views: number;
+  conversion_rate: number;
+  units_sold: number;
+  revenue: number;
+  stock_qty: number;
+}
+
+interface ReorderRow {
+  reorder_id: string;
+  sku: string;
+  quantity: number;
+  supplier_name: string;
+  supplier_email: string;
+  status: string;
+  expected_arrival: string | null;
+  email_id: string | null;
+  created_at: string;
+  sent_at: string | null;
+}
+
+interface EmailRow {
+  email_id: string;
+  purpose: string;
+  related_type: string;
+  related_id: string;
+  to_email: string;
+  from_email: string;
+  subject: string;
+  body: string;
+  status: string;
+  created_at: string;
+}
+
+const ADMIN_DEMO_SKU = "ACM-CSJ-033";
+const ADMIN_DEMO_QUERY = "admin=1";
+
+function hasAdminDemoAccess(req: Request): boolean {
+  return req.query.admin === "1";
+}
+
+function requireAdminDemoAccess(req: Request, res: Response): boolean {
+  if (hasAdminDemoAccess(req)) return true;
+  res.status(404).send("Not found");
+  return false;
+}
+
+function adminUrl(path: string): string {
+  return `${path}${path.includes("?") ? "&" : "?"}${ADMIN_DEMO_QUERY}`;
+}
+
+function getPerformanceRows(sku: string): PerformanceRow[] {
+  return db
+    .prepare(
+      "SELECT * FROM product_performance_daily WHERE sku = ? ORDER BY date ASC",
+    )
+    .all(sku) as PerformanceRow[];
+}
+
+function getAdminProduct(sku: string): AdminProductRow | undefined {
+  return db
+    .prepare(
+      "SELECT sku, name, brand, category, price, stock_qty, stock_status, delivery_estimate, image_url, rating, review_count FROM products WHERE sku = ?",
+    )
+    .get(sku) as AdminProductRow | undefined;
+}
+
+function getLatestReorder(sku: string): ReorderRow | null {
+  return (
+    (db
+      .prepare(
+        "SELECT * FROM supplier_reorders WHERE sku = ? ORDER BY created_at DESC LIMIT 1",
+      )
+      .get(sku) as ReorderRow | undefined) || null
+  );
+}
+
+function calculateProductSignal(sku: string) {
+  const product = getAdminProduct(sku);
+  if (!product) return null;
+  const performance = getPerformanceRows(sku);
+  const first = performance[0];
+  const latest = performance[performance.length - 1];
+  const reorder = getLatestReorder(sku);
+
+  if (!first || !latest) {
+    return { product, performance, reorder, metrics: null };
+  }
+
+  const conversionDropPct =
+    first.conversion_rate > 0
+      ? ((first.conversion_rate - latest.conversion_rate) /
+          first.conversion_rate) *
+        100
+      : 0;
+  const trafficChangePct =
+    first.sessions > 0 ? ((latest.sessions - first.sessions) / first.sessions) * 100 : 0;
+  const unitsDropPct =
+    first.units_sold > 0
+      ? ((first.units_sold - latest.units_sold) / first.units_sold) * 100
+      : 0;
+  const stockDrop = first.stock_qty - latest.stock_qty;
+
+  return {
+    product,
+    performance,
+    reorder,
+    metrics: {
+      start_date: first.date,
+      end_date: latest.date,
+      first_sessions: first.sessions,
+      latest_sessions: latest.sessions,
+      traffic_change_pct: +trafficChangePct.toFixed(1),
+      first_conversion_rate: first.conversion_rate,
+      latest_conversion_rate: latest.conversion_rate,
+      conversion_drop_pct: +conversionDropPct.toFixed(1),
+      first_units_sold: first.units_sold,
+      latest_units_sold: latest.units_sold,
+      units_drop_pct: +unitsDropPct.toFixed(1),
+      first_stock_qty: first.stock_qty,
+      latest_stock_qty: latest.stock_qty,
+      stock_drop: stockDrop,
+    },
+  };
+}
+
+function getAdminTickets() {
+  return db
+    .prepare(
+      `SELECT t.*, o.items, o.total, o.currency, o.order_date
+       FROM support_tickets t
+       LEFT JOIN orders o ON o.order_id = t.order_id
+       ORDER BY t.created_at DESC`,
+    )
+    .all() as Array<TicketRow & {
+    items: string | null;
+    total: number | null;
+    currency: string | null;
+    order_date: string | null;
+  }>;
+}
+
+function getAttentionReportData() {
+  const primary = calculateProductSignal(ADMIN_DEMO_SKU);
+  const secondary = calculateProductSignal("ACM-ELEC-018");
+  const tickets = getAdminTickets();
+  const openTickets = tickets.filter(
+    (t) => !["resolved", "closed", "replied"].includes(t.status),
+  );
+
+  const flags: Array<Record<string, unknown>> = [];
+  if (primary?.metrics) {
+    flags.push({
+      id: "stock-sales-asics",
+      type: "stock_sales",
+      severity: "critical",
+      title: "ASICS GT-1000 sales are falling while traffic is flat",
+      summary:
+        "Sessions are essentially flat, but conversion and units sold are dropping as stock falls to 4 units.",
+      sku: primary.product.sku,
+      product_name: primary.product.name,
+      admin_url: adminUrl(`/admin/analytics?sku=${primary.product.sku}`),
+      metrics: primary.metrics,
+      reorder: primary.reorder,
+    });
+  }
+
+  const demoTicket = tickets.find((t) => t.ticket_id === "TKT-DEMO-ASICS");
+  if (demoTicket) {
+    flags.push({
+      id: "support-ticket-asics",
+      type: "support_ticket",
+      severity: demoTicket.status === "replied" ? "handled" : "high",
+      title: "New support ticket mentions ASICS restock delay",
+      summary: demoTicket.description,
+      ticket_id: demoTicket.ticket_id,
+      status: demoTicket.status,
+      priority: demoTicket.priority,
+      admin_url: adminUrl("/admin/support"),
+    });
+  } else if (openTickets[0]) {
+    flags.push({
+      id: `support-ticket-${openTickets[0].ticket_id}`,
+      type: "support_ticket",
+      severity: "high",
+      title: `Open support ticket ${openTickets[0].ticket_id}`,
+      summary: openTickets[0].description,
+      ticket_id: openTickets[0].ticket_id,
+      status: openTickets[0].status,
+      priority: openTickets[0].priority,
+      admin_url: adminUrl("/admin/support"),
+    });
+  }
+
+  if (secondary?.metrics) {
+    flags.push({
+      id: "stock-watch-linksys",
+      type: "stock_watch",
+      severity: "medium",
+      title: "Linksys Hydra 6 is also approaching stockout",
+      summary:
+        "Conversion is softening and stock is down to 4 units; watch after the ASICS reorder.",
+      sku: secondary.product.sku,
+      product_name: secondary.product.name,
+      admin_url: adminUrl(`/admin/analytics?sku=${secondary.product.sku}`),
+      metrics: secondary.metrics,
+      reorder: secondary.reorder,
+    });
+  }
+
+  return {
+    generated_at: new Date().toISOString(),
+    week: "2026-07-07 to 2026-07-13",
+    flags,
+    primary,
+    open_ticket_count: openTickets.length,
+  };
+}
+
+app.get("/api/admin/attention", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  res.json(getAttentionReportData());
+});
+
+app.get("/api/admin/products/:sku/performance", (req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(req, res)) return;
+  const skuParam = req.params.sku;
+  const sku = typeof skuParam === "string" ? skuParam : ADMIN_DEMO_SKU;
+  const signal = calculateProductSignal(sku);
+  if (!signal) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+  res.json(signal);
+});
+
+app.get("/api/admin/support", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  const tickets = getAdminTickets();
+  const emails = db
+    .prepare(
+      "SELECT * FROM sent_emails WHERE related_type = 'support_ticket' ORDER BY created_at DESC",
+    )
+    .all() as EmailRow[];
+  res.json({ tickets, emails });
+});
+
+app.get("/api/admin/reorders", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  const reorders = db
+    .prepare("SELECT * FROM supplier_reorders ORDER BY created_at DESC")
+    .all() as ReorderRow[];
+  res.json({ reorders });
+});
+
+app.get("/api/admin/emails", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  const emails = db
+    .prepare("SELECT * FROM sent_emails ORDER BY created_at DESC")
+    .all() as EmailRow[];
+  res.json({ emails });
+});
+
 // ── Checkout API ─────────────────────────────────────────────
 interface OrderRow {
   order_id: string;
@@ -650,6 +934,25 @@ app.get("/support/:ticketId", async (req: Request, res: Response) => {
   if (!user) { res.redirect("/login"); return; }
   res.setHeader("Content-Type", "text/html");
   res.send(renderTicketDetailPage());
+});
+
+// ── Admin demo pages ────────────────────────────────────────
+app.get("/admin", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderAdminDashboardPage());
+});
+
+app.get("/admin/analytics", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderAdminAnalyticsPage());
+});
+
+app.get("/admin/support", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderAdminSupportPage());
 });
 
 // ── Product Detail API ───────────────────────────────────────

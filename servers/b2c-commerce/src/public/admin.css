@@ -1,0 +1,377 @@
+.admin-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.admin-topbar h1 {
+  font-size: 28px;
+  line-height: 1.15;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.admin-topbar p {
+  color: #6b7280;
+  font-size: 14px;
+  max-width: 620px;
+}
+
+.admin-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: #eef2f7;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.admin-tabs a {
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.admin-tabs a.active {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.admin-loading,
+.admin-empty {
+  padding: 24px;
+  color: #6b7280;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.admin-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-metric,
+.admin-panel,
+.admin-product-head {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+.admin-metric {
+  padding: 16px;
+  min-height: 102px;
+}
+
+.admin-metric span,
+.admin-kicker {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.admin-metric strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 26px;
+  line-height: 1;
+  color: #111827;
+}
+
+.admin-metric small {
+  display: block;
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.admin-panel {
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.admin-panel-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.admin-panel-title h2 {
+  font-size: 16px;
+  color: #111827;
+}
+
+.admin-panel-title span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.admin-flags,
+.admin-tickets {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-flag,
+.admin-ticket,
+.admin-reorder-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.admin-flag-critical { border-left: 4px solid #dc2626; }
+.admin-flag-high { border-left: 4px solid #ea580c; }
+.admin-flag-medium { border-left: 4px solid #2563eb; }
+.admin-flag-handled { border-left: 4px solid #16a34a; }
+
+.admin-flag-main,
+.admin-ticket-main {
+  min-width: 0;
+}
+
+.admin-flag-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.admin-flag-top span,
+.admin-flag-top b {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0;
+}
+
+.admin-flag-top b {
+  color: #111827;
+}
+
+.admin-flag h2,
+.admin-ticket h2 {
+  font-size: 15px;
+  margin-bottom: 5px;
+  color: #111827;
+}
+
+.admin-flag p,
+.admin-ticket p {
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.admin-flag a {
+  flex-shrink: 0;
+  text-decoration: none;
+  color: #fff;
+  background: #111827;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-product-head {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) 180px;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-product-head img {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.admin-product-head h2 {
+  margin: 4px 0 6px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.admin-product-head p {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.admin-stock-card {
+  border-left: 1px solid #e5e7eb;
+  padding-left: 16px;
+}
+
+.admin-stock-card span,
+.admin-stock-card small {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.admin-stock-card strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 30px;
+}
+
+.admin-sparkline {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(46px, 1fr));
+  gap: 10px;
+  align-items: end;
+  min-height: 150px;
+}
+
+.admin-bar-wrap {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  align-items: end;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.admin-bar {
+  width: 100%;
+  max-width: 44px;
+  background: #2563eb;
+  border-radius: 5px 5px 2px 2px;
+}
+
+.admin-bar-wrap small {
+  min-height: 14px;
+  color: #111827;
+  font-weight: 700;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px 8px;
+  font-size: 13px;
+}
+
+.admin-table th {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.admin-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: #eef2f7;
+  color: #374151;
+}
+
+.admin-status-open,
+.admin-status-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-status-replied,
+.admin-status-sent {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-ticket-side {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  min-width: 160px;
+}
+
+.admin-ticket small,
+.admin-ticket-side small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+@media (max-width: 860px) {
+  .admin-topbar,
+  .admin-flag,
+  .admin-ticket,
+  .admin-reorder-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-tabs {
+    width: 100%;
+  }
+
+  .admin-tabs a {
+    flex: 1;
+    text-align: center;
+  }
+
+  .admin-grid-4,
+  .admin-product-head {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stock-card {
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+    padding: 14px 0 0;
+  }
+
+  .admin-ticket-side {
+    justify-items: start;
+  }
+}

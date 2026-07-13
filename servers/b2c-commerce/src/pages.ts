@@ -4,7 +4,7 @@ const HEADER_SVG = {
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
 };
 
-function siteHeader(activePage: string): string {
+function siteHeader(activePage: string, showAdmin = false): string {
   return `<header class="site-header">
   <div class="site-header-inner">
     <a href="/" class="site-logo">${HEADER_SVG.logo} Acme Store</a>
@@ -12,6 +12,7 @@ function siteHeader(activePage: string): string {
       <a href="/"${activePage === 'shop' ? ' class="active"' : ''}>Shop</a>
       <a href="/orders"${activePage === 'orders' ? ' class="active"' : ''}>Orders</a>
       <a href="/support"${activePage === 'support' ? ' class="active"' : ''}>Support</a>
+      ${showAdmin ? `<a href="/admin?admin=1"${activePage === 'admin' ? ' class="active"' : ''}>Admin</a>` : ''}
     </nav>
     <a href="/cart" class="header-cart-link" title="Cart">${HEADER_SVG.cart}</a>
     <div class="user-bar" id="user-bar"></div>
@@ -313,6 +314,105 @@ export function renderTicketDetailPage(): string {
   </div>
   <script src="/static/app.js"></script>
   <script src="/static/tickets.js"></script>
+</body>
+</html>`;
+}
+
+export function renderAdminDashboardPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body data-admin-view="dashboard">
+  ${siteHeader('admin', true)}
+  <main class="admin-shell">
+    <div class="admin-topbar">
+      <div>
+        <h1>Store Attention</h1>
+        <p>Weekly operational signals across stock, sales, traffic, conversion, and support.</p>
+      </div>
+      <nav class="admin-tabs">
+        <a href="/admin?admin=1" class="active">Attention</a>
+        <a href="/admin/analytics?admin=1">Analytics</a>
+        <a href="/admin/support?admin=1">Support</a>
+      </nav>
+    </div>
+    <section id="admin-content" class="admin-loading">Loading attention report...</section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/admin.js"></script>
+</body>
+</html>`;
+}
+
+export function renderAdminAnalyticsPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Analytics — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body data-admin-view="analytics">
+  ${siteHeader('admin', true)}
+  <main class="admin-shell">
+    <div class="admin-topbar">
+      <div>
+        <h1>Product Analytics</h1>
+        <p>Traffic, conversion, units sold, revenue, stock, and incoming reorder state.</p>
+      </div>
+      <nav class="admin-tabs">
+        <a href="/admin?admin=1">Attention</a>
+        <a href="/admin/analytics?admin=1" class="active">Analytics</a>
+        <a href="/admin/support?admin=1">Support</a>
+      </nav>
+    </div>
+    <section id="admin-content" class="admin-loading">Loading product analytics...</section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/admin.js"></script>
+</body>
+</html>`;
+}
+
+export function renderAdminSupportPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Support — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body data-admin-view="support">
+  ${siteHeader('admin', true)}
+  <main class="admin-shell">
+    <div class="admin-topbar">
+      <div>
+        <h1>Support Inbox</h1>
+        <p>Operator view of tickets and logged customer replies.</p>
+      </div>
+      <nav class="admin-tabs">
+        <a href="/admin?admin=1">Attention</a>
+        <a href="/admin/analytics?admin=1">Analytics</a>
+        <a href="/admin/support?admin=1" class="active">Support</a>
+      </nav>
+    </div>
+    <section id="admin-content" class="admin-loading">Loading support inbox...</section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/admin.js"></script>
 </body>
 </html>`;
 }

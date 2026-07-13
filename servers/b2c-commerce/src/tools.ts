@@ -23,6 +23,10 @@ const BASE_URL = process.env["RAILWAY_PUBLIC_DOMAIN"]
   : process.env["BASE_URL"] ||
     `http://localhost:${process.env["PORT"] || "3001"}`;
 
+function adminDemoUrl(path: string): string {
+  return `${BASE_URL}${path}${path.includes("?") ? "&" : "?"}admin=1`;
+}
+
 interface Product {
   sku: string;
   name: string;
@@ -100,6 +104,43 @@ interface Order {
   currency: string;
   eligible_for_return: number;
   return_deadline: string | null;
+}
+
+interface ProductPerformanceDaily {
+  sku: string;
+  date: string;
+  sessions: number;
+  product_views: number;
+  conversion_rate: number;
+  units_sold: number;
+  revenue: number;
+  stock_qty: number;
+}
+
+interface SupplierReorder {
+  reorder_id: string;
+  sku: string;
+  quantity: number;
+  supplier_name: string;
+  supplier_email: string;
+  status: string;
+  expected_arrival: string | null;
+  email_id: string | null;
+  created_at: string;
+  sent_at: string | null;
+}
+
+interface SentEmail {
+  email_id: string;
+  purpose: string;
+  related_type: string;
+  related_id: string;
+  to_email: string;
+  from_email: string;
+  subject: string;
+  body: string;
+  status: string;
+  created_at: string;
 }
 
 function withLog(
@@ -188,6 +229,135 @@ function stockUrgencyNotice(db: Database.Database, p: Product): string {
 function formatDiscount(p: Product): string {
   if (!p.discount || !p.original_price) return "";
   return ` ~~$${p.original_price.toFixed(2)}~~ ${p.discount}`;
+}
+
+function findAdminProduct(db: Database.Database, product: string): Product | undefined {
+  const direct = db
+    .prepare("SELECT * FROM products WHERE sku = ?")
+    .get(product) as Product | undefined;
+  if (direct) return direct;
+
+  const substringMatch = db
+    .prepare("SELECT * FROM products WHERE LOWER(name) LIKE ? ORDER BY stock_qty ASC LIMIT 1")
+    .get(`%${product.toLowerCase()}%`) as Product | undefined;
+  if (substringMatch) return substringMatch;
+
+  const tokens = product
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 2);
+  if (tokens.length === 0) return undefined;
+
+  const candidates = db.prepare("SELECT * FROM products").all() as Product[];
+  const scored = candidates
+    .map((candidate) => {
+      const text = `${candidate.sku} ${candidate.name} ${candidate.brand} ${candidate.category}`.toLowerCase();
+      const score = tokens.reduce(
+        (sum, token) => sum + (text.includes(token) ? 1 : 0),
+        0,
+      );
+      return { candidate, score };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return a.candidate.stock_qty - b.candidate.stock_qty;
+    });
+
+  const best = scored[0];
+  if (!best || best.score < Math.min(2, tokens.length)) return undefined;
+  return best.candidate;
+}
+
+function getProductPerformance(
+  db: Database.Database,
+  sku: string,
+): ProductPerformanceDaily[] {
+  return db
+    .prepare(
+      "SELECT * FROM product_performance_daily WHERE sku = ? ORDER BY date ASC",
+    )
+    .all(sku) as ProductPerformanceDaily[];
+}
+
+function getLatestSupplierReorder(
+  db: Database.Database,
+  sku: string,
+): SupplierReorder | undefined {
+  return db
+    .prepare(
+      "SELECT * FROM supplier_reorders WHERE sku = ? ORDER BY created_at DESC LIMIT 1",
+    )
+    .get(sku) as SupplierReorder | undefined;
+}
+
+function getPerformanceSummary(rows: ProductPerformanceDaily[]) {
+  const first = rows[0];
+  const latest = rows[rows.length - 1];
+  if (!first || !latest) return null;
+
+  const trafficChangePct =
+    first.sessions > 0 ? ((latest.sessions - first.sessions) / first.sessions) * 100 : 0;
+  const conversionDropPct =
+    first.conversion_rate > 0
+      ? ((first.conversion_rate - latest.conversion_rate) / first.conversion_rate) * 100
+      : 0;
+  const unitsDropPct =
+    first.units_sold > 0
+      ? ((first.units_sold - latest.units_sold) / first.units_sold) * 100
+      : 0;
+
+  return {
+    first,
+    latest,
+    trafficChangePct,
+    conversionDropPct,
+    unitsDropPct,
+    stockDrop: first.stock_qty - latest.stock_qty,
+  };
+}
+
+function recordDemoEmail(
+  db: Database.Database,
+  input: {
+    purpose: string;
+    relatedType: string;
+    relatedId: string;
+    toEmail: string;
+    fromEmail: string;
+    subject: string;
+    body: string;
+  },
+): SentEmail {
+  const emailId = `EMAIL-${randomUUID().substring(0, 8).toUpperCase()}`;
+  db.prepare(
+    `INSERT INTO sent_emails
+      (email_id, purpose, related_type, related_id, to_email, from_email, subject, body, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    emailId,
+    input.purpose,
+    input.relatedType,
+    input.relatedId,
+    input.toEmail,
+    input.fromEmail,
+    input.subject,
+    input.body,
+    "logged",
+  );
+
+  return db
+    .prepare("SELECT * FROM sent_emails WHERE email_id = ?")
+    .get(emailId) as SentEmail;
+}
+
+function formatPerformanceRows(rows: ProductPerformanceDaily[]): string {
+  return rows
+    .map(
+      (r) =>
+        `${r.date}: sessions ${r.sessions}, conversion ${(r.conversion_rate * 100).toFixed(1)}%, units ${r.units_sold}, stock ${r.stock_qty}`,
+    )
+    .join("\n");
 }
 
 export function registerB2CTools(
@@ -2624,6 +2794,433 @@ export function registerB2CTools(
           };
         },
       );
+    },
+  );
+
+  // ── get_store_attention_report ──
+  server.registerTool(
+    "get_store_attention_report",
+    {
+      title: "Store Attention Report",
+      description:
+        "Back-office weekly attention report for the store. Combines stock, sales trend, traffic, conversion, reviews, and support tickets. Use for prompts like 'What needs my attention across the store this week?'",
+      inputSchema: {},
+    },
+    async () => {
+      return withLog(db, "get_store_attention_report", getSessionId(), {}, () => {
+        const target = findAdminProduct(db, "ACM-CSJ-033");
+        const secondary = findAdminProduct(db, "ACM-ELEC-018");
+        if (!target) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: "Demo attention data is not available because the target product is missing.",
+              },
+            ],
+          };
+        }
+
+        const targetRows = getProductPerformance(db, target.sku);
+        const targetSummary = getPerformanceSummary(targetRows);
+        const reorder = getLatestSupplierReorder(db, target.sku);
+        const tickets = db
+          .prepare("SELECT * FROM support_tickets ORDER BY created_at DESC")
+          .all() as SupportTicket[];
+        const demoTicket = tickets.find(
+          (t) => t.ticket_id === "TKT-DEMO-ASICS",
+        );
+        const openTickets = tickets.filter(
+          (t) => !["resolved", "closed", "replied"].includes(t.status),
+        );
+
+        const secondaryRows = secondary
+          ? getProductPerformance(db, secondary.sku)
+          : [];
+        const secondarySummary = getPerformanceSummary(secondaryRows);
+
+        const lines: string[] = [];
+        if (targetSummary) {
+          lines.push(
+            `1. **${target.name}** needs stock attention. Traffic is flat (${targetSummary.trafficChangePct.toFixed(1)}%), but conversion fell ${targetSummary.conversionDropPct.toFixed(1)}% and units sold fell ${targetSummary.unitsDropPct.toFixed(1)}% while stock dropped from ${targetSummary.first.stock_qty} to ${targetSummary.latest.stock_qty}. ${reorder ? `Reorder ${reorder.reorder_id} is already ${reorder.status} for ${reorder.quantity} units.` : "No incoming supplier reorder is logged yet."}`,
+          );
+        }
+
+        if (demoTicket) {
+          lines.push(
+            `2. **Support ticket ${demoTicket.ticket_id}** is ${demoTicket.status}: ${demoTicket.description} View it at ${adminDemoUrl("/admin/support")}.`,
+          );
+        } else if (openTickets[0]) {
+          lines.push(
+            `2. **Support ticket ${openTickets[0].ticket_id}** is ${openTickets[0].status}: ${openTickets[0].description}`,
+          );
+        }
+
+        if (secondary && secondarySummary) {
+          lines.push(
+            `3. **${secondary.name}** is a watch item. Stock is ${secondarySummary.latest.stock_qty} and conversion is down ${secondarySummary.conversionDropPct.toFixed(1)}%. Prioritize after the ASICS issue.`,
+          );
+        }
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text:
+                `## Store Attention Report\n\nWeek: 2026-07-07 to 2026-07-13\nAdmin dashboard: ${adminDemoUrl("/admin")}\n\n` +
+                lines.join("\n\n"),
+            },
+          ],
+        };
+      }) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── diagnose_product_drop ──
+  server.registerTool(
+    "diagnose_product_drop",
+    {
+      title: "Diagnose Product Drop",
+      description:
+        "Diagnose whether a product's drop is driven by traffic, conversion, or stock by comparing daily traffic, conversion, sales, and inventory trend data.",
+      inputSchema: {
+        product: z.string().describe("Product name or SKU to diagnose"),
+      },
+    },
+    async ({ product }) => {
+      return withLog(
+        db,
+        "diagnose_product_drop",
+        getSessionId(),
+        { product },
+        () => {
+          const match = findAdminProduct(db, product);
+          if (!match) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `No product found matching "${product}".`,
+                },
+              ],
+            };
+          }
+
+          const rows = getProductPerformance(db, match.sku);
+          const summary = getPerformanceSummary(rows);
+          if (!summary) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `No performance trend data found for ${match.name} (${match.sku}).`,
+                },
+              ],
+            };
+          }
+
+          const conclusion =
+            Math.abs(summary.trafficChangePct) < 5 &&
+            summary.conversionDropPct > 40 &&
+            summary.stockDrop > 5
+              ? "Stock is the likely driver. Traffic is flat, while conversion and units sold fall in parallel with inventory."
+              : "The driver is mixed. Review the daily rows before taking action.";
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text:
+                  `## Drop Diagnosis: ${match.name}\n\n` +
+                  `**Conclusion:** ${conclusion}\n\n` +
+                  `Traffic: ${summary.first.sessions} to ${summary.latest.sessions} (${summary.trafficChangePct.toFixed(1)}%).\n` +
+                  `Conversion: ${(summary.first.conversion_rate * 100).toFixed(1)}% to ${(summary.latest.conversion_rate * 100).toFixed(1)}% (${summary.conversionDropPct.toFixed(1)}% drop).\n` +
+                  `Units sold: ${summary.first.units_sold} to ${summary.latest.units_sold} (${summary.unitsDropPct.toFixed(1)}% drop).\n` +
+                  `Stock: ${summary.first.stock_qty} to ${summary.latest.stock_qty} (${summary.stockDrop} fewer units).\n\n` +
+                  `Admin analytics: ${adminDemoUrl(`/admin/analytics?sku=${match.sku}`)}\n\n` +
+                  `Daily data:\n${formatPerformanceRows(rows)}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── get_product_performance ──
+  server.registerTool(
+    "get_product_performance",
+    {
+      title: "Get Product Performance",
+      description:
+        "Return raw back-office product performance rows: sessions, product views, conversion rate, units sold, revenue, and stock by day.",
+      inputSchema: {
+        product: z.string().describe("Product name or SKU"),
+      },
+    },
+    async ({ product }) => {
+      return withLog(
+        db,
+        "get_product_performance",
+        getSessionId(),
+        { product },
+        () => {
+          const match = findAdminProduct(db, product);
+          if (!match)
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `No product found matching "${product}".`,
+                },
+              ],
+            };
+          const rows = getProductPerformance(db, match.sku);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `## Performance: ${match.name}\n\n${formatPerformanceRows(rows)}\n\nAdmin analytics: ${adminDemoUrl(`/admin/analytics?sku=${match.sku}`)}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── place_supplier_reorder ──
+  server.registerTool(
+    "place_supplier_reorder",
+    {
+      title: "Place Supplier Reorder",
+      description:
+        "Place a demo supplier reorder for a low-stock product. Logs the supplier email, creates a reorder record, and makes the incoming order visible in the admin dashboard.",
+      inputSchema: {
+        product: z.string().describe("Product name or SKU to reorder"),
+        quantity: z
+          .number()
+          .min(1)
+          .max(1000)
+          .default(120)
+          .describe("Units to reorder"),
+      },
+    },
+    async ({ product, quantity }) => {
+      return withLog(
+        db,
+        "place_supplier_reorder",
+        getSessionId(),
+        { product, quantity },
+        () => {
+          const match = findAdminProduct(db, product);
+          if (!match) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `No product found matching "${product}".`,
+                },
+              ],
+            };
+          }
+
+          const existing = getLatestSupplierReorder(db, match.sku);
+          if (existing && ["sent", "incoming", "received"].includes(existing.status)) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text:
+                    `A supplier reorder is already active for **${match.name}**.\n\n` +
+                    `**Reorder:** ${existing.reorder_id}\n**Quantity:** ${existing.quantity}\n**Status:** ${existing.status}\n**Expected arrival:** ${existing.expected_arrival || "TBD"}\n\n` +
+                    `Admin dashboard: ${adminDemoUrl("/admin")}`,
+                },
+              ],
+            };
+          }
+
+          const reorderId = `REO-${randomUUID().substring(0, 8).toUpperCase()}`;
+          const expectedArrival = "2026-07-18";
+          const supplierName = "Acme Sports Supply";
+          const supplierEmail = "orders@supplier.example";
+          const subject = `Reorder request: ${match.sku} - ${match.name}`;
+          const body =
+            `Hello,\n\nPlease ship ${quantity} units of ${match.name} (${match.sku}). ` +
+            `Current on-hand stock is ${match.stock_qty}, and weekly conversion is dropping as inventory runs down.\n\n` +
+            `Requested ETA: ${expectedArrival}.\n\nThanks,\nAcme Store Operations`;
+
+          const email = recordDemoEmail(db, {
+            purpose: "supplier_reorder",
+            relatedType: "supplier_reorder",
+            relatedId: reorderId,
+            toEmail: supplierEmail,
+            fromEmail: "ops@acmestore.example",
+            subject,
+            body,
+          });
+
+          db.prepare(
+            `INSERT INTO supplier_reorders
+              (reorder_id, sku, quantity, supplier_name, supplier_email, status, expected_arrival, email_id, sent_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+          ).run(
+            reorderId,
+            match.sku,
+            quantity,
+            supplierName,
+            supplierEmail,
+            "sent",
+            expectedArrival,
+            email.email_id,
+          );
+
+          db.prepare(
+            "UPDATE products SET delivery_estimate = ? WHERE sku = ?",
+          ).run(`Restock incoming by ${expectedArrival}`, match.sku);
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text:
+                  `## Supplier Reorder Placed\n\n` +
+                  `**Product:** ${match.name}\n**SKU:** ${match.sku}\n**Quantity:** ${quantity}\n**Supplier:** ${supplierName} <${supplierEmail}>\n**Status:** sent\n**Expected arrival:** ${expectedArrival}\n\n` +
+                  `Logged demo email ${email.email_id}. Admin dashboard now shows the incoming reorder: ${adminDemoUrl("/admin")}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── get_next_attention_item ──
+  server.registerTool(
+    "get_next_attention_item",
+    {
+      title: "Get Next Attention Item",
+      description:
+        "After a previous operational issue is handled, return the next unresolved back-office attention item. Use for prompts like 'Anything else?'",
+      inputSchema: {},
+    },
+    async () => {
+      return withLog(db, "get_next_attention_item", getSessionId(), {}, () => {
+        const ticket = db
+          .prepare(
+            "SELECT * FROM support_tickets WHERE status NOT IN ('resolved', 'closed', 'replied') ORDER BY priority DESC, created_at DESC LIMIT 1",
+          )
+          .get() as SupportTicket | undefined;
+
+        if (ticket) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text:
+                  `Yes. **${ticket.ticket_id}** is still waiting in support.\n\n` +
+                  `Complaint: ${ticket.description}\nStatus: ${ticket.status}\nPriority: ${ticket.priority}\n\n` +
+                  `Support inbox: ${adminDemoUrl("/admin/support")}\n\n` +
+                  `Ask whether you should reply to the customer.`,
+              },
+            ],
+          };
+        }
+
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `No unresolved high-priority back-office items remain. Admin dashboard: ${adminDemoUrl("/admin")}`,
+            },
+          ],
+        };
+      }) as { content: Array<{ type: "text"; text: string }> };
+    },
+  );
+
+  // ── reply_to_support_ticket ──
+  server.registerTool(
+    "reply_to_support_ticket",
+    {
+      title: "Reply To Support Ticket",
+      description:
+        "Send a demo customer support reply by logging an email and updating the ticket status to replied.",
+      inputSchema: {
+        ticket_id: z
+          .string()
+          .default("TKT-DEMO-ASICS")
+          .describe("Support ticket ID"),
+        message: z.string().describe("Reply message to send to the customer"),
+      },
+    },
+    async ({ ticket_id, message }) => {
+      return withLog(
+        db,
+        "reply_to_support_ticket",
+        getSessionId(),
+        { ticket_id, message },
+        () => {
+          const ticket = db
+            .prepare("SELECT * FROM support_tickets WHERE ticket_id = ?")
+            .get(ticket_id) as SupportTicket | undefined;
+          if (!ticket) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Ticket "${ticket_id}" not found.`,
+                },
+              ],
+            };
+          }
+
+          const existingEmail = db
+            .prepare(
+              "SELECT * FROM sent_emails WHERE related_type = 'support_ticket' AND related_id = ? ORDER BY created_at DESC LIMIT 1",
+            )
+            .get(ticket.ticket_id) as SentEmail | undefined;
+
+          if (ticket.status === "replied" && existingEmail) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text:
+                    `Ticket ${ticket.ticket_id} is already marked replied.\n\n` +
+                    `Latest logged reply: ${existingEmail.email_id}\nSupport inbox: ${adminDemoUrl("/admin/support")}`,
+                },
+              ],
+            };
+          }
+
+          const email = recordDemoEmail(db, {
+            purpose: "customer_support_reply",
+            relatedType: "support_ticket",
+            relatedId: ticket.ticket_id,
+            toEmail: "morgan.lee@example.com",
+            fromEmail: "support@acmestore.example",
+            subject: `Update on ticket ${ticket.ticket_id}`,
+            body: message,
+          });
+
+          db.prepare(
+            "UPDATE support_tickets SET status = 'replied', resolution = ?, updated_at = datetime('now') WHERE ticket_id = ?",
+          ).run(message, ticket.ticket_id);
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text:
+                  `## Customer Reply Logged\n\n` +
+                  `**Ticket:** ${ticket.ticket_id}\n**Email:** ${email.email_id}\n**To:** ${email.to_email}\n**Status:** replied\n\n` +
+                  `Support inbox updated: ${adminDemoUrl("/admin/support")}`,
+              },
+            ],
+          };
+        },
+      ) as { content: Array<{ type: "text"; text: string }> };
     },
   );
 

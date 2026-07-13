@@ -207,6 +207,9 @@ function ensureRuntimeTables(db: Database.Database): void {
     )
   `);
 
+  ensureBackOfficeTables(db);
+  seedBackOfficeDemoData(db);
+
   // Add user_id columns to existing tables if missing (upgrade path)
   const tablesToPatch = [
     "cart_items",
@@ -227,4 +230,168 @@ function ensureRuntimeTables(db: Database.Database): void {
       /* table may not exist yet */
     }
   }
+}
+
+function ensureBackOfficeTables(db: Database.Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS product_performance_daily (
+      id TEXT PRIMARY KEY,
+      sku TEXT NOT NULL,
+      date TEXT NOT NULL,
+      sessions INTEGER NOT NULL,
+      product_views INTEGER NOT NULL,
+      conversion_rate REAL NOT NULL,
+      units_sold INTEGER NOT NULL,
+      revenue REAL NOT NULL,
+      stock_qty INTEGER NOT NULL,
+      UNIQUE(sku, date)
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS supplier_reorders (
+      reorder_id TEXT PRIMARY KEY,
+      sku TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      supplier_name TEXT NOT NULL,
+      supplier_email TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      expected_arrival TEXT,
+      email_id TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      sent_at TEXT
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS sent_emails (
+      email_id TEXT PRIMARY KEY,
+      purpose TEXT NOT NULL,
+      related_type TEXT NOT NULL,
+      related_id TEXT NOT NULL,
+      to_email TEXT NOT NULL,
+      from_email TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      body TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'logged',
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+}
+
+function seedBackOfficeDemoData(db: Database.Database): void {
+  const targetSku = "ACM-CSJ-033";
+  const product = db
+    .prepare("SELECT sku, name, price, stock_qty FROM products WHERE sku = ?")
+    .get(targetSku) as
+    | { sku: string; name: string; price: number; stock_qty: number }
+    | undefined;
+
+  if (!product) return;
+
+  const performanceRows = [
+    ["2026-07-07", 1230, 402, 0.052, 21, 18],
+    ["2026-07-08", 1218, 397, 0.048, 19, 15],
+    ["2026-07-09", 1244, 411, 0.041, 17, 12],
+    ["2026-07-10", 1226, 405, 0.034, 14, 9],
+    ["2026-07-11", 1251, 409, 0.026, 11, 7],
+    ["2026-07-12", 1238, 401, 0.019, 8, 5],
+    ["2026-07-13", 1241, 406, 0.012, 5, 4],
+  ] as const;
+
+  const insertPerformance = db.prepare(`
+    INSERT OR IGNORE INTO product_performance_daily
+      (id, sku, date, sessions, product_views, conversion_rate, units_sold, revenue, stock_qty)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  for (const [date, sessions, views, conversion, units, stock] of performanceRows) {
+    insertPerformance.run(
+      `perf-${targetSku}-${date}`,
+      targetSku,
+      date,
+      sessions,
+      views,
+      conversion,
+      units,
+      +(units * product.price).toFixed(2),
+      stock,
+    );
+  }
+
+  const secondarySku = "ACM-ELEC-018";
+  const secondaryProduct = db
+    .prepare("SELECT sku, price FROM products WHERE sku = ?")
+    .get(secondarySku) as { sku: string; price: number } | undefined;
+  if (secondaryProduct) {
+    const secondaryRows = [
+      ["2026-07-07", 880, 280, 0.044, 12, 12],
+      ["2026-07-08", 906, 291, 0.043, 13, 10],
+      ["2026-07-09", 899, 287, 0.041, 12, 8],
+      ["2026-07-10", 914, 293, 0.038, 11, 7],
+      ["2026-07-11", 902, 286, 0.036, 10, 6],
+      ["2026-07-12", 918, 295, 0.033, 9, 5],
+      ["2026-07-13", 911, 289, 0.030, 8, 4],
+    ] as const;
+
+    for (const [date, sessions, views, conversion, units, stock] of secondaryRows) {
+      insertPerformance.run(
+        `perf-${secondarySku}-${date}`,
+        secondarySku,
+        date,
+        sessions,
+        views,
+        conversion,
+        units,
+        +(units * secondaryProduct.price).toFixed(2),
+        stock,
+      );
+    }
+  }
+
+  db.prepare(`
+    INSERT OR IGNORE INTO orders
+      (order_id, status, carrier, tracking_number, delivery_estimate, order_date, items, total, currency, eligible_for_return, return_deadline, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    "ACM-2026-DEMO1",
+    "delivered",
+    "Acme Ship",
+    "ACMTRACKDEMO1",
+    "2026-07-10",
+    "2026-07-06",
+    JSON.stringify([
+      {
+        sku: targetSku,
+        name: product.name,
+        quantity: 1,
+        price: product.price,
+        image_url:
+          "https://m.media-amazon.com/images/I/61wReiFg2mL.__AC_SX395_SY395_QL70_FMwebp_.jpg",
+      },
+    ]),
+    product.price,
+    "USD",
+    1,
+    "2026-08-09",
+    null,
+  );
+
+  db.prepare(`
+    INSERT OR IGNORE INTO support_tickets
+      (ticket_id, order_id, issue_type, description, status, priority, created_at, updated_at, resolution, session_id, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    "TKT-DEMO-ASICS",
+    "ACM-2026-DEMO1",
+    "late_delivery",
+    "Customer says the ASICS GT-1000 shoes are still marked delayed and asks whether the size 10 restock is coming soon.",
+    "open",
+    "high",
+    "2026-07-13T09:15:00.000Z",
+    "2026-07-13T09:15:00.000Z",
+    null,
+    null,
+    null,
+  );
 }
