@@ -22,6 +22,11 @@
     return "admin-status admin-status-" + String(status || "unknown").replace(/_/g, "-");
   }
 
+  function currentPathId() {
+    var parts = window.location.pathname.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "";
+  }
+
   function loadJson(url) {
     var sep = url.indexOf("?") === -1 ? "?" : "&";
     var query = adminQuery.replace(/^\?/, "");
@@ -91,7 +96,7 @@
       '<section class="admin-panel"><div class="admin-panel-title"><h2>Flagged This Week</h2><span>' + esc(data.week) + '</span></div><div class="admin-flags">' + flags + '</div></section>' +
       '<section class="admin-panel"><div class="admin-panel-title"><h2>Current Reorder State</h2></div>' +
         (reorder
-          ? '<div class="admin-reorder-row"><span class="' + statusClass(reorder.status) + '">' + esc(reorder.status) + '</span><strong>' + esc(reorder.quantity) + ' units incoming</strong><span>ETA ' + esc(reorder.expected_arrival || "TBD") + '</span><span>' + esc(reorder.supplier_email) + '</span></div>'
+          ? '<a class="admin-reorder-row admin-row-link" href="/admin/suppliers/' + esc(reorder.reorder_id) + '?admin=1"><span class="' + statusClass(reorder.status) + '">' + esc(reorder.status) + '</span><strong>' + esc(reorder.quantity) + ' units incoming</strong><span>ETA ' + esc(reorder.expected_arrival || "TBD") + '</span><span>' + esc(reorder.supplier_email) + '</span></a>'
           : '<div class="admin-empty">No supplier reorder has been placed yet.</div>') +
       '</section>';
   }
@@ -135,12 +140,12 @@
   function renderSupport(data) {
     var emailsByTicket = {};
     (data.emails || []).forEach(function (email) {
-      emailsByTicket[email.related_id] = email;
+      if (!emailsByTicket[email.related_id]) emailsByTicket[email.related_id] = email;
     });
 
     var tickets = (data.tickets || []).map(function (t) {
       var email = emailsByTicket[t.ticket_id];
-      return '<article class="admin-ticket">' +
+      return '<a class="admin-ticket admin-row-link" href="/admin/support/' + esc(t.ticket_id) + '?admin=1">' +
         '<div class="admin-ticket-main">' +
           '<div class="admin-flag-top"><span>' + esc(t.ticket_id) + '</span><b>' + esc(t.priority) + '</b></div>' +
           '<h2>' + esc(t.issue_type).replace(/_/g, " ") + '</h2>' +
@@ -150,11 +155,110 @@
         '<div class="admin-ticket-side"><span class="' + statusClass(t.status) + '">' + esc(t.status).replace(/_/g, " ") + '</span>' +
           (email ? '<small>Reply logged: ' + esc(email.created_at) + '</small>' : '<small>No reply logged</small>') +
         '</div>' +
-      '</article>';
+      '</a>';
     }).join("");
 
     content.innerHTML =
       '<section class="admin-panel"><div class="admin-panel-title"><h2>Inbox</h2><span>' + (data.tickets || []).length + ' tickets</span></div><div class="admin-tickets">' + tickets + '</div></section>';
+  }
+
+  function renderMessages(messages) {
+    if (!messages.length) return '<div class="admin-empty">No messages logged yet.</div>';
+    return '<div class="admin-conversation">' + messages.map(function (message) {
+      return '<article class="admin-message admin-message-' + esc(message.direction) + '">' +
+        '<div class="admin-message-meta">' +
+          '<strong>' + esc(message.label) + '</strong>' +
+          '<span>' + esc(message.timestamp || "") + '</span>' +
+        '</div>' +
+        (message.subject ? '<h3>' + esc(message.subject) + '</h3>' : '') +
+        '<p>' + esc(message.body || "").replace(/\n/g, "<br>") + '</p>' +
+      '</article>';
+    }).join("") + '</div>';
+  }
+
+  function renderSupportDetail(data) {
+    var t = data.ticket;
+    var emails = data.emails || [];
+    var messages = [{
+      direction: "inbound",
+      label: "Customer",
+      timestamp: t.created_at,
+      subject: esc(t.issue_type).replace(/_/g, " "),
+      body: t.description || ""
+    }].concat(emails.map(function (email) {
+      return {
+        direction: "outbound",
+        label: email.from_email + " to " + email.to_email,
+        timestamp: email.created_at,
+        subject: email.subject,
+        body: email.body
+      };
+    }));
+
+    content.innerHTML =
+      '<div class="admin-detail-actions"><a href="/admin/support?admin=1">Back to inbox</a><span>Auto-refreshes every 4 seconds while visible</span></div>' +
+      '<section class="admin-panel">' +
+        '<div class="admin-detail-head">' +
+          '<div><div class="admin-kicker">' + esc(t.ticket_id) + '</div><h2>' + esc(t.issue_type).replace(/_/g, " ") + '</h2><p>Order ' + esc(t.order_id) + (t.order_date ? ' · Ordered ' + esc(t.order_date) : '') + '</p></div>' +
+          '<div class="admin-ticket-side"><span class="' + statusClass(t.status) + '">' + esc(t.status).replace(/_/g, " ") + '</span><small>Priority ' + esc(t.priority) + '</small></div>' +
+        '</div>' +
+        (t.resolution ? '<div class="admin-resolution"><strong>Latest resolution</strong><p>' + esc(t.resolution).replace(/\n/g, "<br>") + '</p></div>' : '') +
+      '</section>' +
+      '<section class="admin-panel"><div class="admin-panel-title"><h2>Conversation</h2><span>' + messages.length + ' messages</span></div>' + renderMessages(messages) + '</section>';
+  }
+
+  function renderSuppliers(data) {
+    var reorders = (data.reorders || []).map(function (r) {
+      return '<a class="admin-ticket admin-row-link" href="/admin/suppliers/' + esc(r.reorder_id) + '?admin=1">' +
+        '<div class="admin-ticket-main">' +
+          '<div class="admin-flag-top"><span>' + esc(r.reorder_id) + '</span><b>' + esc(r.sku) + '</b></div>' +
+          '<h2>' + esc(r.product_name || r.sku) + '</h2>' +
+          '<p>' + esc(r.quantity) + ' units requested from ' + esc(r.supplier_name) + ' · ETA ' + esc(r.expected_arrival || "TBD") + '</p>' +
+          '<small>' + esc(r.supplier_email) + ' · Created ' + esc(r.created_at) + '</small>' +
+        '</div>' +
+        '<div class="admin-ticket-side"><span class="' + statusClass(r.status) + '">' + esc(r.status).replace(/_/g, " ") + '</span>' +
+          (r.email_id ? '<small>Email ' + esc(r.email_id) + '</small>' : '<small>No email logged</small>') +
+        '</div>' +
+      '</a>';
+    }).join("");
+
+    content.innerHTML =
+      '<section class="admin-panel"><div class="admin-panel-title"><h2>Supplier Reorders</h2><span>' + (data.reorders || []).length + ' conversations</span></div>' +
+        (reorders ? '<div class="admin-tickets">' + reorders + '</div>' : '<div class="admin-empty">No supplier reorder communication has been logged yet.</div>') +
+      '</section>';
+  }
+
+  function renderSupplierDetail(data) {
+    var r = data.reorder;
+    var emails = data.emails || [];
+    var messages = emails.map(function (email) {
+      return {
+        direction: "outbound",
+        label: email.from_email + " to " + email.to_email,
+        timestamp: email.created_at,
+        subject: email.subject,
+        body: email.body
+      };
+    });
+
+    content.innerHTML =
+      '<div class="admin-detail-actions"><a href="/admin/suppliers?admin=1">Back to suppliers</a><span>Auto-refreshes every 4 seconds while visible</span></div>' +
+      '<section class="admin-product-head">' +
+        '<img src="' + esc(r.image_url || "") + '" alt="">' +
+        '<div><div class="admin-kicker">' + esc(r.reorder_id) + '</div><h2>' + esc(r.product_name || r.sku) + '</h2><p>' + esc(r.sku) + ' · ' + esc(r.quantity) + ' units · Supplier ' + esc(r.supplier_name) + '</p></div>' +
+        '<div class="admin-stock-card"><span>Reorder status</span><strong>' + esc(r.status).replace(/_/g, " ") + '</strong><small>ETA ' + esc(r.expected_arrival || "TBD") + '</small></div>' +
+      '</section>' +
+      '<section class="admin-panel"><div class="admin-panel-title"><h2>Communication</h2><span>' + messages.length + ' messages</span></div>' + renderMessages(messages) + '</section>';
+  }
+
+  function startPolling(loader) {
+    loader();
+    var intervalId = window.setInterval(function () {
+      if (document.visibilityState === "visible") loader();
+    }, 4000);
+    window.addEventListener("pagehide", function () {
+      window.clearInterval(intervalId);
+    });
   }
 
   if (!content) return;
@@ -173,6 +277,9 @@
             return loadJson("/api/admin/products/" + encodeURIComponent(sku) + "/performance").then(renderAnalytics);
           }
           if (view === "support") return loadJson("/api/admin/support").then(renderSupport);
+          if (view === "support-detail") return loadJson("/api/admin/support/" + encodeURIComponent(currentPathId())).then(renderSupportDetail);
+          if (view === "suppliers") return loadJson("/api/admin/reorders").then(renderSuppliers);
+          if (view === "supplier-detail") return loadJson("/api/admin/reorders/" + encodeURIComponent(currentPathId())).then(renderSupplierDetail);
           return loadJson("/api/admin/attention").then(renderDashboard);
         })
         .catch(function (error) {
@@ -190,6 +297,18 @@
     loadJson("/api/admin/products/" + encodeURIComponent(sku) + "/performance").then(renderAnalytics).catch(renderError);
   } else if (view === "support") {
     loadJson("/api/admin/support").then(renderSupport).catch(renderError);
+  } else if (view === "support-detail") {
+    startPolling(function () {
+      loadJson("/api/admin/support/" + encodeURIComponent(currentPathId())).then(renderSupportDetail).catch(renderError);
+    });
+  } else if (view === "suppliers") {
+    startPolling(function () {
+      loadJson("/api/admin/reorders").then(renderSuppliers).catch(renderError);
+    });
+  } else if (view === "supplier-detail") {
+    startPolling(function () {
+      loadJson("/api/admin/reorders/" + encodeURIComponent(currentPathId())).then(renderSupplierDetail).catch(renderError);
+    });
   } else {
     loadJson("/api/admin/attention").then(renderDashboard).catch(renderError);
   }

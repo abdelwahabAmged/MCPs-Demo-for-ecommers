@@ -3034,7 +3034,7 @@ export function registerB2CTools(
                   text:
                     `A supplier reorder is already active for **${match.name}**.\n\n` +
                     `**Reorder:** ${existing.reorder_id}\n**Quantity:** ${existing.quantity}\n**Status:** ${existing.status}\n**Expected arrival:** ${existing.expected_arrival || "TBD"}\n\n` +
-                    `Admin dashboard: ${adminDemoUrl("/admin")}`,
+                    `Supplier conversation: ${adminDemoUrl(`/admin/suppliers/${existing.reorder_id}`)}`,
                 },
               ],
             };
@@ -3086,7 +3086,7 @@ export function registerB2CTools(
                 text:
                   `## Supplier Reorder Placed\n\n` +
                   `**Product:** ${match.name}\n**SKU:** ${match.sku}\n**Quantity:** ${quantity}\n**Supplier:** ${supplierName} <${supplierEmail}>\n**Status:** sent\n**Expected arrival:** ${expectedArrival}\n\n` +
-                  `Logged demo email ${email.email_id}. Admin dashboard now shows the incoming reorder: ${adminDemoUrl("/admin")}`,
+                  `Logged demo email ${email.email_id}. Supplier conversation: ${adminDemoUrl(`/admin/suppliers/${reorderId}`)}`,
               },
             ],
           };
@@ -3130,7 +3130,7 @@ export function registerB2CTools(
                 text:
                   `Yes. **${ticket.ticket_id}** is still waiting in support.\n\n` +
                   `Complaint: ${ticket.description}\nStatus: ${ticket.status}\nPriority: ${ticket.priority}\n\n` +
-                  `Support inbox: ${adminDemoUrl("/admin/support")}\n\n` +
+                  `Support conversation: ${adminDemoUrl(`/admin/support/${ticket.ticket_id}`)}\n\n` +
                   `Ask whether you should reply to the customer.`,
               },
             ],
@@ -3198,7 +3198,7 @@ export function registerB2CTools(
                   type: "text" as const,
                   text:
                     `Ticket ${ticket.ticket_id} is already marked replied.\n\n` +
-                    `Latest logged reply: ${existingEmail.email_id}\nSupport inbox: ${adminDemoUrl("/admin/support")}`,
+                    `Latest logged reply: ${existingEmail.email_id}\nSupport conversation: ${adminDemoUrl(`/admin/support/${ticket.ticket_id}`)}`,
                 },
               ],
             };
@@ -3225,7 +3225,7 @@ export function registerB2CTools(
                 text:
                   `## Customer Reply Logged\n\n` +
                   `**Ticket:** ${ticket.ticket_id}\n**Email:** ${email.email_id}\n**To:** ${email.to_email}\n**Status:** replied\n\n` +
-                  `Support inbox updated: ${adminDemoUrl("/admin/support")}`,
+                  `Support conversation updated: ${adminDemoUrl(`/admin/support/${ticket.ticket_id}`)}`,
               },
             ],
           };

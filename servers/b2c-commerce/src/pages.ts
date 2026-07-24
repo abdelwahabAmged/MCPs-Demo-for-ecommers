@@ -341,6 +341,7 @@ export function renderAdminDashboardPage(): string {
         <a href="/admin?admin=1" class="active">Attention</a>
         <a href="/admin/analytics?admin=1">Analytics</a>
         <a href="/admin/support?admin=1">Support</a>
+        <a href="/admin/suppliers?admin=1">Suppliers</a>
       </nav>
       <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
     </div>
@@ -375,6 +376,7 @@ export function renderAdminAnalyticsPage(): string {
         <a href="/admin?admin=1">Attention</a>
         <a href="/admin/analytics?admin=1" class="active">Analytics</a>
         <a href="/admin/support?admin=1">Support</a>
+        <a href="/admin/suppliers?admin=1">Suppliers</a>
       </nav>
       <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
     </div>
@@ -409,10 +411,116 @@ export function renderAdminSupportPage(): string {
         <a href="/admin?admin=1">Attention</a>
         <a href="/admin/analytics?admin=1">Analytics</a>
         <a href="/admin/support?admin=1" class="active">Support</a>
+        <a href="/admin/suppliers?admin=1">Suppliers</a>
       </nav>
       <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
     </div>
     <section id="admin-content" class="admin-loading">Loading support inbox...</section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/admin.js"></script>
+</body>
+</html>`;
+}
+
+export function renderAdminSupportTicketPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Ticket Conversation — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body data-admin-view="support-detail">
+  ${siteHeader('admin', true)}
+  <main class="admin-shell">
+    <div class="admin-topbar">
+      <div>
+        <h1>Support Conversation</h1>
+        <p>Live operator view of the selected customer ticket and logged replies.</p>
+      </div>
+      <nav class="admin-tabs">
+        <a href="/admin?admin=1">Attention</a>
+        <a href="/admin/analytics?admin=1">Analytics</a>
+        <a href="/admin/support?admin=1" class="active">Support</a>
+        <a href="/admin/suppliers?admin=1">Suppliers</a>
+      </nav>
+      <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
+    </div>
+    <section id="admin-content" class="admin-loading">Loading support conversation...</section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/admin.js"></script>
+</body>
+</html>`;
+}
+
+export function renderAdminSuppliersPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Supplier Communication — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body data-admin-view="suppliers">
+  ${siteHeader('admin', true)}
+  <main class="admin-shell">
+    <div class="admin-topbar">
+      <div>
+        <h1>Supplier Communication</h1>
+        <p>Reorder conversations and outbound supplier email log.</p>
+      </div>
+      <nav class="admin-tabs">
+        <a href="/admin?admin=1">Attention</a>
+        <a href="/admin/analytics?admin=1">Analytics</a>
+        <a href="/admin/support?admin=1">Support</a>
+        <a href="/admin/suppliers?admin=1" class="active">Suppliers</a>
+      </nav>
+      <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
+    </div>
+    <section id="admin-content" class="admin-loading">Loading supplier communication...</section>
+  </main>
+  <script src="/static/app.js"></script>
+  <script src="/static/admin.js"></script>
+</body>
+</html>`;
+}
+
+export function renderAdminSupplierConversationPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Supplier Conversation — Acme Store</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body data-admin-view="supplier-detail">
+  ${siteHeader('admin', true)}
+  <main class="admin-shell">
+    <div class="admin-topbar">
+      <div>
+        <h1>Supplier Conversation</h1>
+        <p>Live view of the selected reorder and supplier email.</p>
+      </div>
+      <nav class="admin-tabs">
+        <a href="/admin?admin=1">Attention</a>
+        <a href="/admin/analytics?admin=1">Analytics</a>
+        <a href="/admin/support?admin=1">Support</a>
+        <a href="/admin/suppliers?admin=1" class="active">Suppliers</a>
+      </nav>
+      <button class="admin-reset-btn" id="admin-reset-btn" type="button">Reset Demo</button>
+    </div>
+    <section id="admin-content" class="admin-loading">Loading supplier conversation...</section>
   </main>
   <script src="/static/app.js"></script>
   <script src="/static/admin.js"></script>

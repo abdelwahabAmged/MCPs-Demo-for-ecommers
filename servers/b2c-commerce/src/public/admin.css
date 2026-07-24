@@ -189,6 +189,18 @@
   background: #fff;
 }
 
+.admin-row-link {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.admin-row-link:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
 .admin-flag-critical { border-left: 4px solid #dc2626; }
 .admin-flag-high { border-left: 4px solid #ea580c; }
 .admin-flag-medium { border-left: 4px solid #2563eb; }
@@ -241,6 +253,128 @@
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.admin-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.admin-detail-actions a {
+  color: #111827;
+  text-decoration: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #fff;
+}
+
+.admin-detail-actions a:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.admin-detail-actions span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.admin-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-detail-head h2 {
+  margin: 4px 0 6px;
+  font-size: 20px;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.admin-detail-head p {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.admin-resolution {
+  margin-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 14px;
+}
+
+.admin-resolution strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #111827;
+  font-size: 13px;
+}
+
+.admin-resolution p {
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-conversation {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-message {
+  width: min(760px, 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.admin-message-outbound {
+  justify-self: end;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.admin-message-inbound {
+  justify-self: start;
+  background: #f9fafb;
+}
+
+.admin-message-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-message-meta strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.admin-message-meta span {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.admin-message h3 {
+  margin-bottom: 8px;
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.admin-message p {
+  color: #374151;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .admin-product-head {
@@ -417,5 +551,20 @@
 
   .admin-ticket-side {
     justify-items: start;
+  }
+
+  .admin-detail-actions,
+  .admin-detail-head,
+  .admin-message-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-detail-actions a {
+    text-align: center;
+  }
+
+  .admin-message {
+    width: 100%;
   }
 }

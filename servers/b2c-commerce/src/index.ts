@@ -15,6 +15,9 @@ import {
   renderAdminDashboardPage,
   renderAdminAnalyticsPage,
   renderAdminSupportPage,
+  renderAdminSupportTicketPage,
+  renderAdminSuppliersPage,
+  renderAdminSupplierConversationPage,
 } from "./pages.js";
 import type { Request, Response } from "express";
 import express from "express";
@@ -382,6 +385,13 @@ interface ReorderRow {
   sent_at: string | null;
 }
 
+interface AdminReorderRow extends ReorderRow {
+  product_name: string | null;
+  image_url: string | null;
+  stock_qty: number | null;
+  delivery_estimate: string | null;
+}
+
 interface EmailRow {
   email_id: string;
   purpose: string;
@@ -410,6 +420,14 @@ function requireAdminDemoAccess(req: Request, res: Response): boolean {
 
 function adminUrl(path: string): string {
   return `${path}${path.includes("?") ? "&" : "?"}${ADMIN_DEMO_QUERY}`;
+}
+
+function getEmailsFor(relatedType: string, relatedId: string): EmailRow[] {
+  return db
+    .prepare(
+      "SELECT * FROM sent_emails WHERE related_type = ? AND related_id = ? ORDER BY created_at ASC",
+    )
+    .all(relatedType, relatedId) as EmailRow[];
 }
 
 function resetBackOfficeDemoState() {
@@ -540,6 +558,46 @@ function getAdminTickets() {
   }>;
 }
 
+function getAdminTicket(ticketId: string) {
+  return db
+    .prepare(
+      `SELECT t.*, o.items, o.total, o.currency, o.order_date
+       FROM support_tickets t
+       LEFT JOIN orders o ON o.order_id = t.order_id
+       WHERE t.ticket_id = ?`,
+    )
+    .get(ticketId) as
+    | (TicketRow & {
+        items: string | null;
+        total: number | null;
+        currency: string | null;
+        order_date: string | null;
+      })
+    | undefined;
+}
+
+function getAdminReorders(): AdminReorderRow[] {
+  return db
+    .prepare(
+      `SELECT r.*, p.name AS product_name, p.image_url, p.stock_qty, p.delivery_estimate
+       FROM supplier_reorders r
+       LEFT JOIN products p ON p.sku = r.sku
+       ORDER BY r.created_at DESC`,
+    )
+    .all() as AdminReorderRow[];
+}
+
+function getAdminReorder(reorderId: string): AdminReorderRow | undefined {
+  return db
+    .prepare(
+      `SELECT r.*, p.name AS product_name, p.image_url, p.stock_qty, p.delivery_estimate
+       FROM supplier_reorders r
+       LEFT JOIN products p ON p.sku = r.sku
+       WHERE r.reorder_id = ?`,
+    )
+    .get(reorderId) as AdminReorderRow | undefined;
+}
+
 function getAttentionReportData() {
   const primary = calculateProductSignal(ADMIN_DEMO_SKU);
   const secondary = calculateProductSignal("ACM-ELEC-018");
@@ -576,7 +634,7 @@ function getAttentionReportData() {
       ticket_id: demoTicket.ticket_id,
       status: demoTicket.status,
       priority: demoTicket.priority,
-      admin_url: adminUrl("/admin/support"),
+      admin_url: adminUrl(`/admin/support/${demoTicket.ticket_id}`),
     });
   } else if (openTickets[0]) {
     flags.push({
@@ -588,7 +646,7 @@ function getAttentionReportData() {
       ticket_id: openTickets[0].ticket_id,
       status: openTickets[0].status,
       priority: openTickets[0].priority,
-      admin_url: adminUrl("/admin/support"),
+      admin_url: adminUrl(`/admin/support/${openTickets[0].ticket_id}`),
     });
   }
 
@@ -645,12 +703,46 @@ app.get("/api/admin/support", (_req: Request, res: Response) => {
   res.json({ tickets, emails });
 });
 
+app.get("/api/admin/support/:ticketId", (req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(req, res)) return;
+  const ticketId = Array.isArray(req.params.ticketId)
+    ? req.params.ticketId[0]
+    : req.params.ticketId;
+  if (!ticketId) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+  const ticket = getAdminTicket(ticketId);
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+  const emails = getEmailsFor("support_ticket", ticket.ticket_id);
+  res.json({ ticket, emails });
+});
+
 app.get("/api/admin/reorders", (_req: Request, res: Response) => {
   if (!requireAdminDemoAccess(_req, res)) return;
-  const reorders = db
-    .prepare("SELECT * FROM supplier_reorders ORDER BY created_at DESC")
-    .all() as ReorderRow[];
+  const reorders = getAdminReorders();
   res.json({ reorders });
+});
+
+app.get("/api/admin/reorders/:reorderId", (req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(req, res)) return;
+  const reorderId = Array.isArray(req.params.reorderId)
+    ? req.params.reorderId[0]
+    : req.params.reorderId;
+  if (!reorderId) {
+    res.status(404).json({ error: "Reorder not found" });
+    return;
+  }
+  const reorder = getAdminReorder(reorderId);
+  if (!reorder) {
+    res.status(404).json({ error: "Reorder not found" });
+    return;
+  }
+  const emails = getEmailsFor("supplier_reorder", reorder.reorder_id);
+  res.json({ reorder, emails });
 });
 
 app.get("/api/admin/emails", (_req: Request, res: Response) => {
@@ -995,6 +1087,24 @@ app.get("/admin/support", (_req: Request, res: Response) => {
   if (!requireAdminDemoAccess(_req, res)) return;
   res.setHeader("Content-Type", "text/html");
   res.send(renderAdminSupportPage());
+});
+
+app.get("/admin/support/:ticketId", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderAdminSupportTicketPage());
+});
+
+app.get("/admin/suppliers", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderAdminSuppliersPage());
+});
+
+app.get("/admin/suppliers/:reorderId", (_req: Request, res: Response) => {
+  if (!requireAdminDemoAccess(_req, res)) return;
+  res.setHeader("Content-Type", "text/html");
+  res.send(renderAdminSupplierConversationPage());
 });
 
 // ── Product Detail API ───────────────────────────────────────
